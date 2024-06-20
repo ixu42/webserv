@@ -6,17 +6,16 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/20 13:40:31 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/20 17:23:23 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
-#include "Server.hpp"
+#include "TestServer.hpp"
 
 int	main()
 {
-	Server server;
-	if (!server.launch())
+	TestServer testServer;
+	if (!testServer.launch())
 		return 1;
 
 	return 0;

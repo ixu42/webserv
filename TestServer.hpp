@@ -1,38 +1,38 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Server.hpp                                         :+:      :+:    :+:   */
+/*   TestServer.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/20 17:23:47 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/20 17:23:41 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef SERVER_HPP
-# define SERVER_HPP
+#ifndef TESTSERVER_HPP
+# define TESTSERVER_HPP
 
-# include "Socket.hpp"
+# include "Server.hpp"
+# include <string>
 
-class Server
+class TestServer : public Server
 {
-	protected:
-		Socket				_serverSocket;
-		int					_port;
-		struct sockaddr_in	_address;
-		int					_backlog;
+	private:
+		int							_clientSocketFd;
+		char 						_buffer[30000];
+		static const std::string	_hello;
 
 	public:
-		Server();
-		virtual ~Server();
+		TestServer();
+		~TestServer() override;
 
-		virtual bool		launch() = 0;
+		bool						launch() override;
 
 	private:
-		virtual int			accepter() = 0;
-		virtual void		handler() = 0;
-		virtual void		responder() = 0;
+		int							accepter() override;
+		void						handler() override;
+		void						responder() override;
 };
 
 #endif

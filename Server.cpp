@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/20 14:01:21 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/20 14:59:54 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ bool	Server::launch()
 	DEBUG("Server::launch() called");
 	if (!_serverSocket.create() ||
 		!_serverSocket.bindAddress(_address) ||
-		!_serverSocket.listenForConnections(10))
+		!_serverSocket.listenForConnections(_backlog))
 	{
 		std::cerr << "Failed to launch server" << std::endl;
 		return false;

@@ -1,12 +1,12 @@
 # **************************************************************************** #
 #                                                                              #
 #                                                         :::      ::::::::    #
-#    Makefile_debug                                     :+:      :+:    :+:    #
+#    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
 #    By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/08 17:44:55 by ixu               #+#    #+#              #
-#    Updated: 2024/06/19 14:10:54 by ixu              ###   ########.fr        #
+#    Updated: 2024/06/20 13:20:22 by ixu              ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,7 +17,7 @@ NAME := webserv
 OBJS_DIR := objs/
 
 # Source files
-SRCS = $(addsuffix .cpp, main Socket)
+SRCS = $(addsuffix .cpp, main Socket Server)
 
 # Object files derived from sources
 OBJS = $(addprefix $(OBJS_DIR), $(SRCS:.cpp=.o))

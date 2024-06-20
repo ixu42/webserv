@@ -1,23 +1,33 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/20 13:40:31 by ixu              ###   ########.fr       */
+/*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
+/*   Updated: 2024/06/20 13:59:45 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
-#include "Server.hpp"
+#ifndef SERVER_HPP
+# define SERVER_HPP
 
-int	main()
+# include "Socket.hpp"
+
+class Server
 {
-	Server server;
-	if (!server.launch())
-		return 1;
+	private:
+		Socket				_serverSocket;
+		int					_port;
+		struct sockaddr_in	_address;
+		int					_backlog;
 
-	return 0;
-}
+	public:
+		Server();
+		~Server();
+
+		bool				launch();
+};
+
+#endif

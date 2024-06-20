@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:46 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/20 12:18:48 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/20 12:41:47 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,12 +18,9 @@
 #include <errno.h> // errno
 #include <string.h> // strerror()
 
-Socket::Socket()
+Socket::Socket() : _socketFd(-1)
 {
 	DEBUG("Socket default constructor called");
-	_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (_socket_fd == -1)
-		print_error("socket() error: ");
 	std::memset((char *)&_addr, 0, sizeof(_addr));
 	_addr.sin_family = AF_INET;
 	_addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -31,12 +28,9 @@ Socket::Socket()
 	_backlog = 10;
 }
 
-Socket::Socket(int domain, int type, int protocol, int port, int backlog)
+Socket::Socket(int domain, int port, int backlog) : _socketFd(-1)
 {
 	DEBUG("Socket parameterized constructor called");
-	_socket_fd = socket(domain, type, protocol);
-	if (_socket_fd == -1)
-		print_error("socket() error: ");
 	std::memset((char *)&_addr, 0, sizeof(_addr));
 	_addr.sin_family = domain;
 	_addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -49,36 +43,57 @@ Socket::~Socket()
 	DEBUG("Socket default destructor called");
 }
 
-bool	Socket::bind_to_socket()
+bool	Socket::create()
 {
-	DEBUG("Socket::bind_to_socket() called");
-	socklen_t	addrlen = sizeof(_addr);
-	if (bind(_socket_fd, (struct sockaddr*)&_addr, addrlen) == -1)
+	DEBUG("Socket::create() called");
+	_socketFd = socket(AF_INET, SOCK_STREAM, 0);
+	if (!isValid(_socketFd))
 	{
-		print_error("bind() error: ");
-		return false;
-	}
-	return true;		
-}
-
-bool	Socket::listen_on_socket()
-{
-	DEBUG("Socket::listen_on_socket() called");
-	if (listen(_socket_fd, _backlog) == -1)
-	{
-		print_error("listen() error: ");
+		printError("socket() error: ");
 		return false;
 	}
 	return true;
 }
 
-int	Socket::get_socket_fd()
+bool	Socket::bindToSocket()
 {
-	DEBUG("Socket::get_socket_fd() called");
-	return _socket_fd;
+	DEBUG("Socket::bindToSocket() called");
+	socklen_t	addrlen = sizeof(_addr);
+	int	ret = bind(_socketFd, (struct sockaddr*)&_addr, addrlen);
+	if (!isValid(ret))
+	{
+		printError("bind() error: ");
+		return false;
+	}
+	return true;		
 }
 
-void	Socket::print_error(const std::string& msg)
+bool	Socket::listenOnSocket()
+{
+	DEBUG("Socket::listenOnSocket() called");
+	int	ret = listen(_socketFd, _backlog);
+	if (!isValid(ret))
+	{
+		printError("listen() error: ");
+		return false;
+	}
+	return true;
+}
+
+int	Socket::getSocketFd()
+{
+	DEBUG("Socket::getSocketFd() called");
+	return _socketFd;
+}
+
+bool	Socket::isValid(int funcReturn)
+{
+	if (funcReturn < 0)
+		return false;
+	return true;
+}
+
+void	Socket::printError(const std::string& msg)
 {
 	std::cerr << msg << strerror(errno) << std::endl;
 }

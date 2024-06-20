@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:53 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/20 12:21:40 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/20 12:41:49 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,21 +19,23 @@
 class Socket
 {
 	private:
-		int					_socket_fd;
+		int					_socketFd;
 		int					_backlog;
 		struct sockaddr_in	_addr;
 
 	public:
 		Socket();
-		Socket(int domain, int type, int protocol, int port, int backlog);
+		Socket(int domain, int port, int backlog);
 		~Socket();
 
-		int					get_socket_fd();
-		bool				bind_to_socket();
-		bool				listen_on_socket();
+		int					getSocketFd();
+		bool				create();
+		bool				bindToSocket();
+		bool				listenOnSocket();
 
 	private:
-		void				print_error(const std::string& msg);
+		bool				isValid(int funcReturn);
+		void				printError(const std::string& msg);
 };
 
 #endif

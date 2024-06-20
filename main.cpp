@@ -4,11 +4,12 @@ int main()
 {
 	try
 	{
-		throw ServerException("dummy exception from main");
+		// throw ServerException("dummy exception from main"); // throws exception
 		// Server testServer;
 		// Server testServer("10.11.5.17", 6500);
 		// Server testServer("127.127.3.1", 80);
-		Server testServer("", 6500);
+		Server testServer("123.123.123.123", 6500); // throws exception
+		// Server testServer("", 6500); // throws exception
 	}
 	catch (const ServerException& e)
 	{

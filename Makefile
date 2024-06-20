@@ -5,7 +5,8 @@ FLAGS = -Wall -Wextra -Werror -std=c++17
 NAME = webserv
 
 SRCS = main.cpp \
-		Server.cpp
+		Server.cpp \
+		ServerManager.cpp
 
 OBJ_DIR = objs/
 OBJS = $(addprefix $(OBJ_DIR), $(SRCS:.cpp=.o))

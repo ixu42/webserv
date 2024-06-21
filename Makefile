@@ -1,12 +1,12 @@
 
 COMPILER = c++
-FLAGS = -Wall -Wextra -Werror -std=c++17
+FLAGS = -Wall -Wextra -Werror -std=c++17 -g
 
 NAME = webserv
 
 SRCS = main.cpp \
 		Server.cpp \
-		ServerManager.cpp
+		ServersManager.cpp
 
 OBJ_DIR = objs/
 OBJS = $(addprefix $(OBJ_DIR), $(SRCS:.cpp=.o))

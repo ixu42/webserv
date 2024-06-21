@@ -1,8 +1,9 @@
-#include "ServerManager.hpp"
+#include "ServersManager.hpp"
 
-std::vector<Server *> ServerManager::servers;
+std::vector<Server *> ServersManager::servers;
+ServersManager* ServersManager::instance = nullptr;
 
-void ServerManager::signalHandler(int signal)
+void ServersManager::signalHandler(int signal)
 {
 	std::cout << "Signal " << signal << " received." << std::endl;
 
@@ -10,32 +11,43 @@ void ServerManager::signalHandler(int signal)
 	// setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
 	// Handle cleanup tasks or other actions here
-	// For example, gracefully shut down the server
-	for (Server *server : servers)
-	{
-		server->shutdown();
-	}
-	exit(signal); // Exit the program with the received signal as exit code
+	
+	// ServersManager::getInstance()->poll_fds.clear();
+	delete instance;
+	// servers.clear();
+	std::exit(signal); // Exit the program with the received signal as exit code
 }
 
-ServerManager::ServerManager()
+ServersManager::ServersManager()
 {
-	signal(SIGINT, ServerManager::signalHandler);
-	servers.push_back(new Server("127.0.0.1", 8003));
-	servers.push_back(new Server("127.0.0.1", 8004));
+	signal(SIGINT, ServersManager::signalHandler);
+	servers.push_back(new Server("127.0.0.1", 8001));
+	servers.push_back(new Server("127.0.0.1", 8002));
+	std::cout << "ServersManager created" << std::endl;
 }
 
-ServerManager::~ServerManager()
+ServersManager::~ServersManager()
 {
 	for (Server *server : servers)
 	{
+		server->~Server();
 		delete server;
 	}
 }
 
-void ServerManager::run()
+ServersManager* ServersManager::getInstance()
 {
-	std::vector<pollfd> poll_fds;
+	if (instance == nullptr)
+	{
+		instance = new ServersManager();
+	}
+	return instance;
+}
+
+
+void ServersManager::run()
+{
+	// std::vector<pollfd> poll_fds;
 
 	for (Server *server : servers)
 	{

@@ -55,6 +55,7 @@ class Server
 	public:
 		Server();
 		Server(std::string address, int port);
+		~Server();
 
 		void initialize();
 		void createSocket();

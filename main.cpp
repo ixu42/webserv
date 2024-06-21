@@ -1,11 +1,11 @@
-#include "ServerManager.hpp"
+#include "ServersManager.hpp"
 #include "Server.hpp"
 
 int main()
 {
 	{
-		ServerManager manager;
-		manager.run();
+		ServersManager* manager = ServersManager::getInstance();
+		manager->run();
 	}
 
 

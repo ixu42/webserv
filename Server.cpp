@@ -14,6 +14,12 @@ Server::Server(std::string ipAddress, int port)
 	initialize();
 }
 
+Server::~Server()
+{
+	shutdown();
+	close(clientSocket);
+}
+
 void Server::initialize()
 {
 	createSocket();

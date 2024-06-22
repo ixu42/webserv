@@ -104,23 +104,107 @@ void Server::listenConnection()
 
 void Server::handleRequest()
 {
-	// char response[] = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\n\r\n<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world\r\n\t</h1>\r\n</body>\r\n</html>";
+
+	/* Dummy response start */
 	std::string response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\n";
-	std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world\r\n\t</h1>\r\n</body>\r\n</html>";
+	// std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world\r\n\t</h1>\r\n</body>\r\n</html>";
+	std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world " + std::to_string(time(NULL)) + "\r\n\t</h1>\r\n</body>\r\n</html>";
 	std::string contentLength = "Content-Length: " + std::to_string(body.length()) + "\r\n";
-	std::cout << contentLength << std::endl;
+	// std::cout << contentLength << std::endl;
 	response = response + contentLength + "\r\n" + body;
-	char buffer[300000] = {0};
-	int valread = read(this->clientSocket, buffer, 300000);
-	std::cout << "Valread" << valread << std::endl; // message length
-	std::cout << "Buffer: " << buffer << std::endl;
-	// if (valread != -1)
+	/* Dummy response end */
+
+
+	int bufferSize = 1024;
+	char buffer[bufferSize];
+	int bytesRead;
+	std::string request;
+	buffer[bufferSize - 1] = '\0';
+	int count = 0;
+
+	while (request.empty())
+	{
+		if (count == 0)
+			std::cout << "=== Waiting for request ===" << std::endl;
+		count++;
+
+		// while ((bytesRead = read(this->clientSocket, buffer, 1024) > 0))
+		while (1)
+		{
+			bytesRead = read(this->clientSocket, buffer, bufferSize);
+			if (bytesRead > 0)
+			{
+				std::cout << "=== Input read! ===" << std::endl;
+				std::cout << "bytesRead: " << bytesRead << std::endl;
+			}
+			if (bytesRead <= 0)
+				// std::cout << "bytesRead: " << bytesRead << std::endl;
+				break;
+			request += std::string(buffer);
+		}
+	}
+	std::cout << "Last bytesRead: " << bytesRead << std::endl;
+	std::cout << "=== Request read in chunks ===" << std::endl;
+	std::cout << TEXT_YELLOW << request << RESET << std::endl;
+
+	Request req(request);
+
+	// Testing request
+	std::cout << TEXT_CYAN;
+	std::cout << req.getStartLine()["method"] << std::endl;
+	std::cout << req.getStartLine()["target"] << std::endl;
+	std::cout << req.getStartLine()["version"] << std::endl;
+	std::cout << RESET;
+
+	// std::cout << "bytesRead" << bytesRead << std::endl; // message length
+	std::cout << "=== Buffer ===" << std::endl;
+	std::cout << buffer << std::endl;
+
+
+/* 	
+	// Sending dummy response
+	write(clientSocket, response.c_str(), response.length());
+	std::cout << "Response message sent: " <<  response.c_str() << std::endl;
+ */
+
+	// int fd = open(req.getStartLine()["target"].c_str(), O_RDONLY);
+/* 	int fd = open("test.html", O_RDONLY);
+	if (fd < 0)
+	{
+		std::cerr << "Error: " << strerror(errno) << std::endl;
+		throw ServerException("Error: " + std::string(strerror(errno)));
+	}
+	else
+	{
+		std::cout << "File opened" << std::endl;
+
+		response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\n";
+		std::string body = "";
+
+	} */
+
+	// response = "";
+	// while (1)
 	// {
-		write(clientSocket, response.c_str(), response.length());
-		std::cout << "Response message sent: " <<  response.c_str() << std::endl;
+	// 	bytesRead = read(fd, buffer, bufferSize);
+	// 	if (bytesRead > 0)
+	// 	{
+	// 		std::cout << "=== File read! ===" << std::endl;
+	// 		std::cout << "bytesRead: " << bytesRead << std::endl;
+	// 	}
+	// 	if (bytesRead <= 0)
+	// 		// std::cout << "bytesRead: " << bytesRead << std::endl;
+	// 		break;
+	// 	response += std::string(buffer);
 	// }
-		close(this->clientSocket);
-		std::cout << "Connection closed" << std::endl;
+	std::cout << TEXT_GREEN;
+	std::cout << "=== Response message sent ===" << std::endl;
+	std::cout << response.c_str() << std::endl;
+	std::cout << RESET;
+	write(clientSocket, response.c_str(), response.length());
+
+	close(this->clientSocket);
+	std::cout << "Connection closed" << std::endl;
 }
 
 void Server::shutdown()

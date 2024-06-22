@@ -48,33 +48,59 @@ std::vector<std::string> splitString(const std::string &request, const std::stri
 	return seglist;
 }
 
+
+Request::Request(std::string request)
+{
+	parse(request);
+}
+
 void Request::parse(std::string request)
 {
+	// std::cout << "Request: " << request << "||||||||" << std::endl;
+
 	// Split start line, headers, and body:
 	// substr until empty line
-	int emptyLinePosition = request.find("\n\n");
-	std::string headers = request.substr(0, emptyLinePosition);
-	std::string body = request.substr(emptyLinePosition + 2);
 
-	// Split headers into lines
-	std::vector<std::string> headerLines = splitString(request);
+	// int emptyLinePosition = request.find("\n\n");
+	// std::cout << "Empty line position: " << emptyLinePosition << std::endl;
 
-	// Parse the start line
-	std::vector<std::string> startLineSplit = splitString(headerLines[0], " ");
+	int emptyLinePosition = request.find("\r\n\r\n");
+	std::cout << "Empty line position: " << emptyLinePosition << std::endl;
 
-	this->startLine["method"] = trim(startLineSplit[0]);
-	this->startLine["target"] = trim(startLineSplit[1]);
-	this->startLine["version"] = trim(startLineSplit[2]);
-
-	// Parse the headers
-	for (int i = 1; i < headerLines.size(); i++)
+	if (emptyLinePosition != -1)
 	{
-		std::vector<std::string> headerSplit = splitString(headerLines[i], ": ");
-		this->headers[trim(headerSplit[0])] = trim(headerSplit[1]);
-	}
+		std::string headers = request.substr(0, emptyLinePosition);
+		std::string body = request.substr(emptyLinePosition + 2);
 
-	// Parse the body
-	this->body = trim(body);
+		// Split headers into lines
+		std::vector<std::string> headerLines = splitString(request);
+
+		// Parse the start line
+		std::vector<std::string> startLineSplit = splitString(headerLines[0], " ");
+
+		this->startLine["method"] = trim(startLineSplit[0]);
+		this->startLine["target"] = trim(startLineSplit[1]);
+		this->startLine["version"] = trim(startLineSplit[2]);
+
+		// Parse the headers
+		for (unsigned int i = 1; i < headerLines.size(); i++)
+		{
+			std::vector<std::string> headerSplit = splitString(headerLines[i], ": ");
+			this->headers[trim(headerSplit[0])] = trim(headerSplit[1]);
+		}
+
+		// Parse the body
+		this->body = trim(body);
+	}
+}
+
+Request::QueryStringParameters Request::getStartLine()
+{
+	return this->startLine;
+}
+Request::QueryStringParameters Request::getHeaders()
+{
+	return this->headers;
 }
 
 

@@ -5,6 +5,8 @@
 #include <sstream>
 #include <algorithm>
 
+#include <iostream>
+
 class Request
 {
 	typedef std::map<std::string, std::string> QueryStringParameters;
@@ -15,5 +17,10 @@ class Request
 
 	public:
 		Request();
+		Request(std::string request);
+
 		void parse(std::string request);
+		
+		QueryStringParameters getStartLine();
+		QueryStringParameters getHeaders();
 };

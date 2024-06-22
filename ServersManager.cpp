@@ -48,7 +48,7 @@ ServersManager* ServersManager::getInstance()
 void ServersManager::run()
 {
 	// std::vector<pollfd> poll_fds;
-
+	
 	for (Server *server : servers)
 	{
 		pollfd pfd;
@@ -56,7 +56,7 @@ void ServersManager::run()
 		pfd.events = POLLIN;
 		poll_fds.push_back(pfd);
 	}
-
+	/* Waiting for incoming connections */
 	while (true)
 	{
 		int ret = poll(poll_fds.data(), poll_fds.size(), -1);

@@ -29,14 +29,6 @@ Request::Request(std::string request)
 
 void Request::parse(std::string request)
 {
-	// std::cout << "Request: " << request << "||||||||" << std::endl;
-
-	// Split start line, headers, and body:
-	// substr until empty line
-
-	// int emptyLinePosition = request.find("\n\n");
-	// std::cout << "Empty line position: " << emptyLinePosition << std::endl;
-
 	int emptyLinePosition = request.find("\r\n\r\n");
 	std::cout << "Empty line position: " << emptyLinePosition << std::endl;
 

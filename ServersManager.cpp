@@ -2,7 +2,7 @@
 
 std::vector<Server *> ServersManager::servers;
 ServersManager* ServersManager::instance = nullptr;
-volatile sig_atomic_t stop = 0;
+Config* ServersManager::webservConfig = nullptr;
 
 void ServersManager::signalHandler(int signal)
 {
@@ -11,14 +11,13 @@ void ServersManager::signalHandler(int signal)
 	// Handle cleanup tasks or other actions here
 	
 	// ServersManager::getInstance()->poll_fds.clear();
-	stop = 1;
 	delete instance;
 	// servers.clear();
 
 	std::exit(signal); // Exit the program with the received signal as exit code
 }
 
-ServersManager::ServersManager()
+/* ServersManager::ServersManager()
 {
 	signal(SIGINT, ServersManager::signalHandler);
 
@@ -32,6 +31,22 @@ ServersManager::ServersManager()
 	// servers.push_back(new Server("127.0.0.1", 8004));
 
 	std::cout << "ServersManager created" << std::endl;
+} */
+ServersManager::ServersManager()
+{
+	// Handle ctrl+c
+	signal(SIGINT, ServersManager::signalHandler);
+
+	// Initialize config
+	// Config serverConfig("config/default.conf");
+
+	// Add servers
+	for (auto server : webservConfig->getServers())
+		servers.push_back(new Server(server.ipAddress, server.port));
+	// servers.push_back(new Server("127.0.0.1", 8001));
+	// servers.push_back(new Server("127.0.0.1", 8002));
+
+	std::cout << "ServersManager created" << std::endl;
 }
 
 ServersManager::~ServersManager()
@@ -43,8 +58,10 @@ ServersManager::~ServersManager()
 	}
 }
 
-ServersManager* ServersManager::getInstance()
+ServersManager* ServersManager::getInstance(char *configFileName)
 {
+	webservConfig = new Config(configFileName);
+
 	if (instance == nullptr)
 	{
 		instance = new ServersManager();
@@ -65,7 +82,7 @@ void ServersManager::run()
 		poll_fds.push_back(pfd);
 	}
 	/* Waiting for incoming connections */
-	while (stop != 1)
+	while (true)
 	{
 		int ret = poll(poll_fds.data(), poll_fds.size(), -1);
 		if (ret < 0)

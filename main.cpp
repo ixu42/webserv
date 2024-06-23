@@ -1,10 +1,18 @@
 #include "ServersManager.hpp"
 #include "Server.hpp"
+#include "Config.hpp"
+#include <iostream>
 
-int main()
+int main(int argc, char *argv[])
 {
+	if (argc != 2)
 	{
-		ServersManager* manager = ServersManager::getInstance();
+		std::cout << "Usage: ./webserv <config>" << std::endl;
+		return 1;
+	}
+
+	{
+		ServersManager* manager = ServersManager::getInstance(argv[1]);
 		manager->run();
 	}
 

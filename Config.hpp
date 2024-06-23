@@ -46,7 +46,7 @@ class Config
 	private:
 		std::string filePath;
 		std::string configString;
-		std::vector<ServerConfig> config;
+		std::vector<ServerConfig> servers;
 		Config() = delete;
 
 	public:
@@ -56,4 +56,6 @@ class Config
 		void parseServers(std::vector<std::string> serverStrings);
 		void parseLocations(ServerConfig& serverConfig, std::vector<std::string> locations);
 		void printConfig();
+
+		std::vector<ServerConfig> getServers();
 };

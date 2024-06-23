@@ -80,14 +80,18 @@ void Config::printConfig()
 void Config::parse()
 {
 	std::cout << "=== Parsing the config ===" << std::endl;
-	std::vector<std::string> servers;
-	servers = Utility::splitString(this->configString, "[server]");
-	this->config.resize(servers.size());
-	// std::cout << "server: " << servers[0] << std::endl;
-	// std::cout << "server: " << servers[1] << std::endl;
+	std::vector<std::string> serverStrings = Utility::splitString(this->configString, "[server]");
+	this->config.resize(serverStrings.size());
 
+	parseServers(serverStrings);
+
+	std::cout << "=== Parsing done ===" << std::endl;
+}
+
+void Config::parseServers(std::vector<std::string> serverStrings)
+{
 	int i = 0;
-	for (std::string server : servers)
+	for (std::string server : serverStrings)
 	{
 		ServerConfig serverConfig;
 		std::string generalConfig;
@@ -145,15 +149,24 @@ void Config::parse()
 		}
 
 		// Parsing server locations
-		std::vector<std::string> locations(split.begin() + 1, split.end());
-		this->config[i].locations.resize(locations.size());
+		std::vector<std::string> locationStrings(split.begin() + 1, split.end());
+		this->config[i].locations.resize(locationStrings.size());
+		parseLocations(this->config[i], locationStrings);
+
+		i++;
+	}
+}
+
+void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string> locationStrings)
+{
+		serverConfig.locations.resize(locationStrings.size());
 		int j = 0;
-		for (std::string location : locations)
+		for (std::string location : locationStrings)
 		{
 			std::cout << "location: " << location << std::endl;
 			
-			stream.clear();
-			stream.str(location);
+			std::istringstream stream(location);
+			std::string line;
 			while (std::getline(stream, line))
 			{	
 				if (line.empty()) continue;
@@ -168,85 +181,29 @@ void Config::parse()
 				if (key == "path")
 				{
 					std::cout << "path: " << value << std::endl;
-					this->config[i].locations[j].path = value;
+					serverConfig.locations[j].path = value;
 				}
 				else if (key == "redirect")
-					this->config[i].locations[j].redirect = value;
+					serverConfig.locations[j].redirect = value;
 				else if (key == "root")
-					this->config[i].locations[j].root = value;
+					serverConfig.locations[j].root = value;
 				else if (key == "uploadPath")
-					this->config[i].locations[j].uploadPath = value;
+					serverConfig.locations[j].uploadPath = value;
 				else if (key == "directoryListing" && value == "on")
-						this->config[i].locations[j].directoryListing = true;
+						serverConfig.locations[j].directoryListing = true;
 				else if (key == "index")
 				{
 					std::vector<std::string> indexes = Utility::splitString(value, ",");
 					for (std::string index : indexes)
-						this->config[i].locations[j].index.push_back(index);
+						serverConfig.locations[j].index.push_back(index);
 				}
 				else if (key == "methods")
 				{
 					std::vector<std::string> methods = Utility::splitString(value, ",");
 					for (std::string method : methods)
-						this->config[i].locations[j].methods.push_back(method);
+						serverConfig.locations[j].methods.push_back(method);
 				}
 			}
 			j++;
 		}
-
-		i++;
-	}
-
-	std::cout << "=== Parsing done ===" << std::endl;
 }
-
-// void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string> locations)
-// {
-// 		serverCOnfig.locations.resize(locations.size());
-// 		int j = 0;
-// 		for (std::string location : locations)
-// 		{
-// 			std::cout << "location: " << location << std::endl;
-			
-// 			std::istringstream stream(location);
-// 			std::string line;
-// 			while (std::getline(stream, line))
-// 			{	
-// 				if (line.empty()) continue;
-
-// 				std::cout << "Line: " << line << std::endl;
-
-// 				// Split line into keys and values
-// 				std::vector<std::string> keyValue = Utility::splitString(line, " ");
-// 				std::string key = Utility::trim(keyValue[0]);
-// 				std::string value = Utility::trim(keyValue[1]);
-
-// 				if (key == "path")
-// 				{
-// 					std::cout << "path: " << value << std::endl;
-// 					serverCOnfig.locations[j].path = value;
-// 				}
-// 				else if (key == "redirect")
-// 					serverCOnfig.locations[j].redirect = value;
-// 				else if (key == "root")
-// 					serverCOnfig.locations[j].root = value;
-// 				else if (key == "uploadPath")
-// 					serverCOnfig.locations[j].uploadPath = value;
-// 				else if (key == "directoryListing" && value == "on")
-// 						serverCOnfig.locations[j].directoryListing = true;
-// 				else if (key == "index")
-// 				{
-// 					std::vector<std::string> indexes = Utility::splitString(value, ",");
-// 					for (std::string index : indexes)
-// 						serverCOnfig.locations[j].index.push_back(index);
-// 				}
-// 				else if (key == "methods")
-// 				{
-// 					std::vector<std::string> methods = Utility::splitString(value, ",");
-// 					for (std::string method : methods)
-// 						serverCOnfig.locations[j].methods.push_back(method);
-// 				}
-// 			}
-// 			j++;
-// 		}
-// }

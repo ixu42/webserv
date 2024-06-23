@@ -90,17 +90,23 @@ void Config::parse()
 		std::string line;
 		while (std::getline(stream, line))
 		{	
-			if (!line.empty())
-				std::cout << "Line: " << line << std::endl;
+			if (line.empty()) continue;
 
 			// Split line into keys and values
-			std::vector<std::string> keyValue = Utility::splitString(line, " ");
-			// if (keyValue.size() == 2)
-			//{
-				std::string key = Utility::trim(keyValue[0]);
-				std::string value = Utility::trim(keyValue[1]);
-				std::cout << "key: " << key << " value: " << value << std::endl;
-			// }
+			std::vector<std::string> keyValue;
+				std::cout << "Line: " << line << std::endl;
+			
+			// Split line into keys and values
+			keyValue = Utility::splitString(line, " ");
+
+			// Trime whitespace from both ends of a string
+			for (std::string str : keyValue)
+			{
+				str = Utility::trim(str);
+			}
+
+			std::string key = keyValue[0];
+			std::string value = keyValue[1];
 			
 			if (key == "ipAddress")
 				this->config[index].ipAddress = value;

@@ -14,6 +14,8 @@ Server::Server(std::string ipAddress, int port)
 	// this->address = inet_addr(ipAddress.c_str());
 	this->port = port;
 	initialize();
+
+	std::cout << "Server with address: " << whoAmI() << " was created" << std::endl;
 }
 
 Server::~Server()
@@ -59,6 +61,14 @@ void Server::createSocket()
 		close(this->serverSocket);
 		throw ServerException("Failed to set non-blocking mode on socket");
 	}
+
+	// Reuse address after interruption even if ports are in the TIME_WAIT state
+	int opt = 1;
+	if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
+	{
+		close(this->serverSocket);
+		throw ServerException("Failed to set SO_REUSEADDR option");
+	}
 }
 
 void Server::bindSocket()
@@ -68,7 +78,7 @@ void Server::bindSocket()
 	if (bind(this->serverSocket, (struct sockaddr *)&this->sockAddress, sizeof(this->sockAddress)) < 0)
 	{
 		close(this->serverSocket);
-		throw ServerException("Server socket failed binding");
+		throw ServerException("Server socket (" + whoAmI() + ") failed binding");
 	}
 }
 
@@ -77,7 +87,7 @@ void Server::listenConnection()
 	if (listen(this->serverSocket, 10) < 0)
 	{
 		close(this->serverSocket);
-		throw ServerException("Server socket failed listening");
+		throw ServerException("Server socket (" + whoAmI() + ") failed listening");
 	}
 }
 
@@ -110,7 +120,7 @@ void Server::handleRequest()
 	/* Dummy response start */
 	std::string response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\n";
 	// std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world\r\n\t</h1>\r\n</body>\r\n</html>";
-	std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world " + std::to_string(time(NULL)) + "\r\n\t</h1>\r\n</body>\r\n</html>";
+	std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world " + std::to_string(time(NULL)) + " " + whoAmI() + "\r\n\t</h1>\r\n</body>\r\n</html>";
 	std::string contentLength = "Content-Length: " + std::to_string(body.length()) + "\r\n";
 	// std::cout << contentLength << std::endl;
 	response = response + contentLength + "\r\n" + body;
@@ -130,10 +140,15 @@ void Server::handleRequest()
 			std::cout << "=== Waiting for request ===" << std::endl;
 		count++;
 
-		// while ((bytesRead = read(this->clientSocket, buffer, 1024) > 0))
+		// If the request was never read
+		if (count >1000)
+			break;
+
+		// Waiting capturing the request even if the first read fails
 		while (1)
 		{
 			bytesRead = read(this->clientSocket, buffer, bufferSize);
+			std::cout << "Reading in chunks bytes: " << bytesRead << std::endl;
 			if (bytesRead > 0)
 			{
 				std::cout << "=== Input read! ===" << std::endl;
@@ -151,12 +166,12 @@ void Server::handleRequest()
 
 	Request req(request);
 
-	// Testing request
+/*	// Testing request
 	std::cout << TEXT_CYAN;
 	std::cout << req.getStartLine()["method"] << std::endl;
 	std::cout << req.getStartLine()["target"] << std::endl;
 	std::cout << req.getStartLine()["version"] << std::endl;
-	std::cout << RESET;
+	std::cout << RESET; */
 
 	// std::cout << "bytesRead" << bytesRead << std::endl; // message length
 	std::cout << "=== Buffer ===" << std::endl;
@@ -171,12 +186,12 @@ void Server::handleRequest()
 
 
 	// int fileFd = open("test.html", O_RDONLY);
-	int fileFd = open((std::string("." + req.getStartLine()["target"])).c_str(), O_RDONLY);
+/* 	int fileFd = open((std::string("." + req.getStartLine()["target"])).c_str(), O_RDONLY);
 
 	std::cout << TEXT_CYAN;
 	std::cout << "filename: " << req.getStartLine()["target"] << std::endl;
 	std::cout << "fd for file: " << fileFd << std::endl;
-	std::cout << RESET;
+	std::cout << RESET; */
 
 /* 	if (fileFd < 0)
 	{
@@ -219,9 +234,14 @@ void Server::handleRequest()
 void Server::shutdown()
 {
 	if (close(this->serverSocket) == 0)
-		std::cout << "Server with address: " << this->addressString << ":" << this->port << " was closed" << std::endl;
+		std::cout << "Server with address: " + whoAmI() + " was closed" << std::endl;
 	else
 		throw ServerException("Server with address: " + this->addressString + ":"  + std::to_string(this->port) + " could not be closed");
+}
+
+std::string Server::whoAmI() const
+{
+	return this->addressString + ":" + std::to_string(this->port);
 }
 
 int Server::getSocket() const

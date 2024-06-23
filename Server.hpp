@@ -55,6 +55,7 @@ class Server
  
 		void handleRequest();
 		void shutdown();
+		std::string whoAmI() const;
 		
 		/* Getters */
 		int					getSocket() const;

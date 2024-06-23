@@ -2,17 +2,16 @@
 
 std::vector<Server *> ServersManager::servers;
 ServersManager* ServersManager::instance = nullptr;
+volatile sig_atomic_t stop = 0;
 
 void ServersManager::signalHandler(int signal)
 {
 	std::cout << std::endl << "Signal " << signal << " received." << std::endl;
 
-	// int opt = 1;
-	// setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-
 	// Handle cleanup tasks or other actions here
 	
 	// ServersManager::getInstance()->poll_fds.clear();
+	stop = 1;
 	delete instance;
 	// servers.clear();
 
@@ -29,6 +28,8 @@ ServersManager::ServersManager()
 	// Add servers
 	servers.push_back(new Server("127.0.0.1", 8001));
 	servers.push_back(new Server("127.0.0.1", 8002));
+	// servers.push_back(new Server("127.0.0.1", 8003));
+	// servers.push_back(new Server("127.0.0.1", 8004));
 
 	std::cout << "ServersManager created" << std::endl;
 }
@@ -64,7 +65,7 @@ void ServersManager::run()
 		poll_fds.push_back(pfd);
 	}
 	/* Waiting for incoming connections */
-	while (true)
+	while (stop != 1)
 	{
 		int ret = poll(poll_fds.data(), poll_fds.size(), -1);
 		if (ret < 0)
@@ -91,12 +92,14 @@ void ServersManager::run()
 					int flags = fcntl(clientSocket, F_GETFL, 0);
 					if (flags == -1)
 					{
-						close(clientSocket);
+						if (close(clientSocket) == -1)
+							throw ServerException("Failed to close socket");
 						throw ServerException("Failed to get socket flags");
 					}
 					if (fcntl(clientSocket, F_SETFL, flags | O_NONBLOCK) == -1)
 					{
-						close(clientSocket);
+						if (close(clientSocket) == -1)
+							throw ServerException("Failed to close socket");
 						throw ServerException("Failed to set non-blocking mode on socket");
 					}
 

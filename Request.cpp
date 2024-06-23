@@ -42,23 +42,26 @@ void Request::parse(std::string request)
 
 	if (emptyLinePosition != -1)
 	{
-		std::string headers = request.substr(0, emptyLinePosition);
-		std::string body = request.substr(emptyLinePosition + 2);
+		std::string headers = Utility::trim(request.substr(0, emptyLinePosition));
+		std::string body = Utility::trim(request.substr(emptyLinePosition + 2));
 
 		// Split headers into lines
-		std::vector<std::string> headerLines = Utility::splitString(request, "\n");
+		std::vector<std::string> headerLines = Utility::splitString(headers, "\n");
 
 		// Parse the start line
 		std::vector<std::string> startLineSplit = Utility::splitString(headerLines[0], " ");
 
-		this->startLine["method"] = Utility::trim(startLineSplit[0]);
+ 		this->startLine["method"] = Utility::trim(startLineSplit[0]);
 		this->startLine["target"] = Utility::trim(startLineSplit[1]);
 		this->startLine["version"] = Utility::trim(startLineSplit[2]);
 
 		// Parse the headers
 		for (unsigned int i = 1; i < headerLines.size(); i++)
 		{
+			// if (headerLines[i].empty())
+			// 	continue;
 			std::vector<std::string> headerSplit = Utility::splitString(headerLines[i], ": ");
+			std::cout << "Header: " << headerSplit[0] << " Value: " << headerSplit[1] << std::endl;
 			this->headers[Utility::trim(headerSplit[0])] = Utility::trim(headerSplit[1]);
 		}
 

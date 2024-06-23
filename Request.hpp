@@ -3,9 +3,9 @@
 #include <map>
 #include <string>
 #include <sstream>
-#include <algorithm>
-
 #include <iostream>
+
+#include "Utility.hpp"
 
 class Request
 {

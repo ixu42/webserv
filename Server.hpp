@@ -34,6 +34,8 @@ class Server
 		int					type = SOCK_STREAM;
 		int					protocol = 0;
 
+		std::string			addressString = "0.0.0.0";
+
 		in_addr_t			address = DEFAULT_ADDRESS;
 		int					port = DEFAULT_PORT;
 		struct sockaddr_in	sockAddress;

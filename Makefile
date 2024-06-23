@@ -7,7 +7,9 @@ NAME = webserv
 SRCS = main.cpp \
 		Server.cpp \
 		ServersManager.cpp \
-		Request.cpp
+		Request.cpp \
+		Config.cpp \
+		Utility.cpp
 
 OBJ_DIR = objs/
 OBJS = $(addprefix $(OBJ_DIR), $(SRCS:.cpp=.o))

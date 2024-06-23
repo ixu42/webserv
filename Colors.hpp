@@ -26,3 +26,5 @@
 
 // Reset macros
 #define RESET "\033[0m"
+#define RESET_UNDERLINE "\033[24m"
+#define RESET_BOLD "\033[22m"

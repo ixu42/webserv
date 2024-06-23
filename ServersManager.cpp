@@ -5,7 +5,7 @@ ServersManager* ServersManager::instance = nullptr;
 
 void ServersManager::signalHandler(int signal)
 {
-	std::cout << "Signal " << signal << " received." << std::endl;
+	std::cout << std::endl << "Signal " << signal << " received." << std::endl;
 
 	// int opt = 1;
 	// setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -15,22 +15,29 @@ void ServersManager::signalHandler(int signal)
 	// ServersManager::getInstance()->poll_fds.clear();
 	delete instance;
 	// servers.clear();
+
 	std::exit(signal); // Exit the program with the received signal as exit code
 }
 
 ServersManager::ServersManager()
 {
 	signal(SIGINT, ServersManager::signalHandler);
+
+	// Initialize config
+	Config serverConfig("config/default.conf");
+
+	// Add servers
 	servers.push_back(new Server("127.0.0.1", 8001));
 	servers.push_back(new Server("127.0.0.1", 8002));
+
 	std::cout << "ServersManager created" << std::endl;
 }
 
 ServersManager::~ServersManager()
 {
+	std::cout << servers.size() << " servers will be deleted" << std::endl;
 	for (Server *server : servers)
 	{
-		server->~Server();
 		delete server;
 	}
 }
@@ -48,7 +55,7 @@ ServersManager* ServersManager::getInstance()
 void ServersManager::run()
 {
 	// std::vector<pollfd> poll_fds;
-	
+
 	for (Server *server : servers)
 	{
 		pollfd pfd;
@@ -79,6 +86,20 @@ void ServersManager::run()
 				if (clientSocket >= 0)
 				{
 					servers[i]->setClientSocket(clientSocket);
+
+					// Set socket to non-blocking mode
+					int flags = fcntl(clientSocket, F_GETFL, 0);
+					if (flags == -1)
+					{
+						close(clientSocket);
+						throw ServerException("Failed to get socket flags");
+					}
+					if (fcntl(clientSocket, F_SETFL, flags | O_NONBLOCK) == -1)
+					{
+						close(clientSocket);
+						throw ServerException("Failed to set non-blocking mode on socket");
+					}
+
 					servers[i]->handleRequest();
 				}
 			}

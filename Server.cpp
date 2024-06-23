@@ -7,6 +7,8 @@ Server::Server()
 
 Server::Server(std::string ipAddress, int port)
 {
+	this->addressString = ipAddress;
+
 	if (inet_pton(this->domain, ipAddress.c_str(), &(this->address)) != 1)
 		throw ServerException("Conversion failed");
 	// this->address = inet_addr(ipAddress.c_str());
@@ -136,11 +138,11 @@ void Server::handleRequest()
 			{
 				std::cout << "=== Input read! ===" << std::endl;
 				std::cout << "bytesRead: " << bytesRead << std::endl;
+				request += std::string(buffer, bytesRead);
 			}
 			if (bytesRead <= 0)
 				// std::cout << "bytesRead: " << bytesRead << std::endl;
 				break;
-			request += std::string(buffer);
 		}
 	}
 	std::cout << "Last bytesRead: " << bytesRead << std::endl;
@@ -167,36 +169,43 @@ void Server::handleRequest()
 	std::cout << "Response message sent: " <<  response.c_str() << std::endl;
  */
 
-	// int fd = open(req.getStartLine()["target"].c_str(), O_RDONLY);
-/* 	int fd = open("test.html", O_RDONLY);
-	if (fd < 0)
+
+	// int fileFd = open("test.html", O_RDONLY);
+	int fileFd = open((std::string("." + req.getStartLine()["target"])).c_str(), O_RDONLY);
+
+	std::cout << TEXT_CYAN;
+	std::cout << "filename: " << req.getStartLine()["target"] << std::endl;
+	std::cout << "fd for file: " << fileFd << std::endl;
+	std::cout << RESET;
+
+/* 	if (fileFd < 0)
 	{
 		std::cerr << "Error: " << strerror(errno) << std::endl;
-		throw ServerException("Error: " + std::string(strerror(errno)));
+		// throw ServerException("Error: " + std::string(strerror(errno)));
 	}
 	else
 	{
 		std::cout << "File opened" << std::endl;
+		std::string header = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\n";
+		std::string body;
 
-		response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\n";
-		std::string body = "";
-
+		while (1)
+		{
+			bytesRead = read(fileFd, buffer, bufferSize);
+			if (bytesRead > 0)
+			{
+				std::cout << "=== File read! ===" << std::endl;
+				std::cout << "bytesRead: " << bytesRead << std::endl;
+				body += std::string(buffer, bytesRead);
+			}
+			if (bytesRead <= 0)
+				// std::cout << "bytesRead: " << bytesRead << std::endl;
+				break;
+		}
+		std::string contentLength = "Content-Length: " + std::to_string(body.length()) + "\r\n";
+		response = header + contentLength + "\r\n" + body;
 	} */
 
-	// response = "";
-	// while (1)
-	// {
-	// 	bytesRead = read(fd, buffer, bufferSize);
-	// 	if (bytesRead > 0)
-	// 	{
-	// 		std::cout << "=== File read! ===" << std::endl;
-	// 		std::cout << "bytesRead: " << bytesRead << std::endl;
-	// 	}
-	// 	if (bytesRead <= 0)
-	// 		// std::cout << "bytesRead: " << bytesRead << std::endl;
-	// 		break;
-	// 	response += std::string(buffer);
-	// }
 	std::cout << TEXT_GREEN;
 	std::cout << "=== Response message sent ===" << std::endl;
 	std::cout << response.c_str() << std::endl;
@@ -209,7 +218,10 @@ void Server::handleRequest()
 
 void Server::shutdown()
 {
-	close(this->serverSocket);
+	if (close(this->serverSocket) == 0)
+		std::cout << "Server with address: " << this->addressString << ":" << this->port << " was closed" << std::endl;
+	else
+		throw ServerException("Server with address: " + this->addressString + ":"  + std::to_string(this->port) + " could not be closed");
 }
 
 int Server::getSocket() const

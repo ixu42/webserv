@@ -1,5 +1,6 @@
 #pragma once
 #include "Server.hpp"
+#include "Config.hpp"
 #include <vector>
 #include <poll.h>
 #include <csignal>

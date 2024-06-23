@@ -10,9 +10,10 @@ int main(int argc, char *argv[])
 		std::cout << "Usage: ./webserv <config>" << std::endl;
 		return 1;
 	}
-
 	{
-		ServersManager* manager = ServersManager::getInstance(argv[1]);
+		ServersManager::initConfig(argv[1]);
+
+		ServersManager* manager = ServersManager::getInstance();
 		manager->run();
 	}
 

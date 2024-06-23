@@ -47,7 +47,7 @@ class Config
 		std::string filePath;
 		std::string configString;
 		std::vector<ServerConfig> servers;
-		Config() = delete;
+		// Config() = delete;
 
 	public:
 		Config(std::string filePath);

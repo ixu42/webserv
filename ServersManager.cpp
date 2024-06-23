@@ -2,7 +2,7 @@
 
 std::vector<Server *> ServersManager::servers;
 ServersManager* ServersManager::instance = nullptr;
-Config* ServersManager::webservConfig = nullptr;
+Config* ServersManager::webservConfig;
 
 void ServersManager::signalHandler(int signal)
 {
@@ -37,14 +37,9 @@ ServersManager::ServersManager()
 	// Handle ctrl+c
 	signal(SIGINT, ServersManager::signalHandler);
 
-	// Initialize config
-	// Config serverConfig("config/default.conf");
-
 	// Add servers
 	for (auto server : webservConfig->getServers())
 		servers.push_back(new Server(server.ipAddress, server.port));
-	// servers.push_back(new Server("127.0.0.1", 8001));
-	// servers.push_back(new Server("127.0.0.1", 8002));
 
 	std::cout << "ServersManager created" << std::endl;
 }
@@ -56,16 +51,22 @@ ServersManager::~ServersManager()
 	{
 		delete server;
 	}
+	delete webservConfig;
 }
 
-ServersManager* ServersManager::getInstance(char *configFileName)
-{
-	webservConfig = new Config(configFileName);
 
+void ServersManager::initConfig(char *fileNameString)
+{
+	webservConfig = new Config(fileNameString);
+}
+
+ServersManager* ServersManager::getInstance()
+{
+	if (webservConfig == nullptr)
+		webservConfig = new Config(DEFAULT_CONFIG); // if config is not initialized with iniConfig, DEFAULT_CONFIG will be used
 	if (instance == nullptr)
-	{
 		instance = new ServersManager();
-	}
+		
 	return instance;
 }
 

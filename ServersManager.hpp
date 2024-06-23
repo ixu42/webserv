@@ -5,6 +5,8 @@
 #include <poll.h>
 #include <csignal>
 
+#define DEFAULT_CONFIG "config/default.conf"
+
 /* Can be only instatiated once */
 class ServersManager
 {
@@ -23,7 +25,8 @@ class ServersManager
 
 	public:
 		~ServersManager();
-		static ServersManager* getInstance(char *configFileName);
+		static ServersManager* getInstance();
 
 		void run();
+		static void initConfig(char *fileNameString);
 };

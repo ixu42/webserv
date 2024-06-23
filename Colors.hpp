@@ -23,8 +23,11 @@
 // Text style macros
 #define TEXT_BOLD      "\033[1m"
 #define TEXT_UNDERLINE "\033[4m"
+#define TEXT_BOLD_UNDERLINE "\033[1;4m"
 
 // Reset macros
 #define RESET "\033[0m"
 #define RESET_UNDERLINE "\033[24m"
 #define RESET_BOLD "\033[22m"
+#define RESET_BOLD_UNDERLINE "\033[22;24m"
+#define RESET_BG "\033[49m"

@@ -208,7 +208,7 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 		}
 }
 
-std::vector<ServerConfig> Config::getServers()
+std::vector<ServerConfig>& Config::getServers()
 {
 	return this->servers;
 }

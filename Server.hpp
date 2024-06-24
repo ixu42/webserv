@@ -42,6 +42,7 @@ class Server
 		struct sockaddr_in	sockAddress;
 
 		int					clientSocket;
+		ServerConfig*		config = nullptr;
 
 	public:
 		Server();
@@ -59,12 +60,16 @@ class Server
 		void handleRequest3();
 		void shutdown();
 		std::string whoAmI() const;
+
+		Location*				findLocation(Request* req);
 		
 		/* Getters */
 		int					getSocket() const;
 		struct sockaddr_in&	getSockAddress();
 		int					getClientSocket() const;
+		ServerConfig* 		getConfig();
 
 		/* Setters */
-		void setClientSocket(int newClientSocket);
+		void				setClientSocket(int newClientSocket);
+		void				setConfig(ServerConfig* serverConfig);
 };

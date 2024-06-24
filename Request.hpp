@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "Utility.hpp"
+#include "Config.hpp"
 
 class Request
 {
@@ -15,6 +16,8 @@ class Request
 		QueryStringParameters headers;
 		std::string body; // ???
 
+		Location* location;
+
 	public:
 		Request();
 		Request(std::string request);
@@ -23,4 +26,6 @@ class Request
 		
 		QueryStringParameters getStartLine();
 		QueryStringParameters getHeaders();
+
+		void setLocation(Location* location);
 };

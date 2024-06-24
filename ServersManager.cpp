@@ -23,8 +23,15 @@ ServersManager::ServersManager()
 	signal(SIGINT, ServersManager::signalHandler);
 
 	// Add servers
-	for (auto server : webservConfig->getServers())
-		servers.push_back(new Server(server.ipAddress, server.port));
+	int i = 0;
+	for (ServerConfig& serverConfig : webservConfig->getServers())
+	{
+		servers.push_back(new Server(serverConfig.ipAddress, serverConfig.port));
+		servers[i]->setConfig(&serverConfig);
+		servers[i]->getConfig();
+		// std::cout << "Server config and location: " << servers[i]->getConfig()->locations[0].path << std::endl;
+		i++;
+	}
 
 	std::cout << "ServersManager created" << std::endl;
 }
@@ -106,6 +113,16 @@ void ServersManager::run()
 						throw ServerException("Failed to set non-blocking mode on socket");
 					}
 
+
+
+					// std::cout << "Locations vector size: " << servers[i]->getConfig()->locations.size() << std::endl;
+					// if (servers[i]->getConfig()->locations.empty())
+					// 	return ;
+					// for (Location location : servers[i]->getConfig()->locations)
+					// {
+					// 	std::cout << "Server config and location: " << location.path << std::endl;
+					// }
+
 					servers[i]->handleRequest3();
 
 					close(clientSocket);
@@ -115,8 +132,8 @@ void ServersManager::run()
 		}
 	}
 
-	for (Server *server : servers)
-	{
-		server->shutdown();
-	}
+	// for (Server *server : servers)
+	// {
+	// 	server->shutdown();
+	// }
 }

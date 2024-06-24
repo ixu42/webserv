@@ -57,5 +57,5 @@ class Config
 		void parseLocations(ServerConfig& serverConfig, std::vector<std::string> locations);
 		void printConfig();
 
-		std::vector<ServerConfig> getServers();
+		std::vector<ServerConfig>& getServers();
 };

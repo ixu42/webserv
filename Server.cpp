@@ -169,6 +169,45 @@ int findContentLength(std::string request)
 }
 
 
+Location* Server::findLocation(Request* req)
+{
+	(void)req;
+	std::cout << "== Find location for current request ==" << std::endl;
+	// int i = 0;
+	std::cout << "Locations vector size: " << this->config->locations.size() << std::endl;
+	if (this->config->locations.empty())
+		return nullptr;
+
+	Location* foundLocation = nullptr;
+	size_t locationLength = 0;
+	std::string requestPath = req->getStartLine()["path"];
+
+	std::cout << "Let's find location for request path: " << requestPath << std::endl;
+	for (Location& location : this->config->locations)
+	{
+		std::cout << "Path: " << location.path << " RequestPath: " << requestPath << std::endl;
+		if (location.path == requestPath)
+		{
+			std::cout << "Location found, perfect match: " << location.path << std::endl;
+			foundLocation = &location;
+			break;
+		}
+		else if (requestPath.rfind(location.path, 0) == 0 && location.path[location.path.length() - 1] == '/')
+		{
+			std::cout << "Location found: " << location.path << std::endl;
+			if (location.path.length() > locationLength)
+			{
+				locationLength = location.path.length();
+				foundLocation = &location;
+			}
+		}
+
+		// std::cout << "Server config and location: " << location.path << std::endl;
+	}
+	return foundLocation;
+}
+
+
 void Server::handleRequest3()
 {
 	/* Dummy response start */
@@ -192,11 +231,11 @@ void Server::handleRequest3()
 	while (1)
 	{
 		bytesRead = read(this->clientSocket, buffer, bufferSize);
-		std::cout << "=== Reading in chunks bytes: " << bytesRead << std::endl;
+		// std::cout << "=== Reading in chunks bytes: " << bytesRead << std::endl;
 		if (bytesRead <= 0)
 			continue ;
 		request += std::string(buffer, bytesRead);
-		std::cout << "Request at the moment read: " << request << std::endl;
+		// std::cout << "Request at the moment read: " << request << std::endl;
 
 		// Check if the request is complete (ends with "\r\n\r\n")
 		if (!isHeadersRead && request.find("\r\n\r\n") != std::string::npos)
@@ -218,9 +257,29 @@ void Server::handleRequest3()
 	std::cout << TEXT_YELLOW << request << RESET << std::endl;
 
 	Request req(request);
+
+	// std::cout << "Locations vector size after request generated: " << this->config->locations.size() << std::endl;
+	// for (Location location : this->config->locations)
+	// {
+	// 	std::cout << "Server config and location from handleRequest: " << location.path << std::endl;
+	// }
+	Location* foundLocation = findLocation(&req);
+	if (foundLocation == nullptr)
+	{
+		// throw ServerException("Location not found");
+		response = "HTTP/1.1 404 Not Found\r\nServer: webserv\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
+	}
+	else
+	{
+		std::cout << "Great this is your location: " << foundLocation->path << std::endl;
+	}
+
+	// Testing request
+	std::cout << TEXT_CYAN;
 	std::cout << req.getStartLine()["method"] << std::endl;
 	std::cout << req.getStartLine()["path"] << std::endl;
 	std::cout << req.getStartLine()["version"] << std::endl;
+	std::cout << RESET;
 
 	std::cout << TEXT_GREEN;
 	std::cout << "=== Response message sent ===" << std::endl;
@@ -359,6 +418,10 @@ std::string Server::whoAmI() const
 	return this->addressString + ":" + std::to_string(this->port);
 }
 
+/**
+ * Getters
+ */
+
 int Server::getSocket() const
 {
 	return this->serverSocket;
@@ -374,7 +437,31 @@ int Server::getClientSocket() const
 	return this->clientSocket;
 }
 
+ServerConfig* Server::getConfig()
+{
+	return this->config;
+}
+
+/**
+ * Setters
+ */
+
 void Server::setClientSocket(int newClientSocket)
 {
 	this->clientSocket = newClientSocket;
+}
+
+void Server::setConfig(ServerConfig* serverConfig)
+{
+	if (serverConfig == nullptr)
+		return ;
+	// for (Location location : serverConfig->locations)
+	// {
+	// 	std::cout << "Server config and location: " << location.path << std::endl;
+	// }
+	this->config = serverConfig;
+	// for (Location location : this->config->locations)
+	// {
+	// 	std::cout << "Server config and location now: " << location.path << std::endl;
+	// }
 }

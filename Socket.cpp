@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:46 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/24 09:21:35 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/24 23:39:35 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include <string.h> // strerror()
 #include <unistd.h> // close()
 
-Socket::Socket() : _socketFd(-1)
+Socket::Socket() : _sockfd(-1)
 {
 	DEBUG("Socket constructor called");
 }
@@ -27,14 +27,14 @@ Socket::~Socket()
 	DEBUG("Socket destructor called");
 
 	if (isValidSocketFd())
-		close(_socketFd);
+		close(_sockfd);
 }
 
 bool	Socket::create()
 {
 	DEBUG("Socket::create() called");
 
-	_socketFd = socket(AF_INET, SOCK_STREAM, 0);
+	_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (!isValidSocketFd())
 	{
 		printError("socket() error: ");
@@ -51,7 +51,7 @@ bool	Socket::bindAddress(struct sockaddr_in addr)
 		return false;
 
 	int opt = 1;
-	int ret = setsockopt(_socketFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+	int ret = setsockopt(_sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 	if (ret < 0)
 	{
 		printError("setsockopt() error: ");
@@ -59,7 +59,7 @@ bool	Socket::bindAddress(struct sockaddr_in addr)
 	}
 
 	socklen_t addrlen = sizeof(addr);
-	ret = bind(_socketFd, (struct sockaddr*)&addr, addrlen);
+	ret = bind(_sockfd, (struct sockaddr*)&addr, addrlen);
 	if (ret < 0)
 	{
 		printError("bind() error: ");
@@ -75,7 +75,7 @@ bool	Socket::listenForConnections(int backlog)
 	if (!isValidSocketFd())
 		return false;
 
-	int ret = listen(_socketFd, backlog);
+	int ret = listen(_sockfd, backlog);
 	if (ret < 0)
 	{
 		printError("listen() error: ");
@@ -92,7 +92,7 @@ int	Socket::acceptConnection(struct sockaddr_in addr)
 		return false;
 
 	socklen_t addrlen = sizeof(addr);
-	int acceptedSocketFd = accept(_socketFd, (struct sockaddr*)&addr, &addrlen);
+	int acceptedSocketFd = accept(_sockfd, (struct sockaddr*)&addr, &addrlen);
 	if (acceptedSocketFd < 0)
 	{
 		printError("accept() error");
@@ -101,15 +101,15 @@ int	Socket::acceptConnection(struct sockaddr_in addr)
 	return acceptedSocketFd;
 }
 
-int	Socket::getSocketFd()
+int	Socket::getSockfd()
 {
 	DEBUG("Socket::getSocketFd() called");
-	return _socketFd;
+	return _sockfd;
 }
 
 bool	Socket::isValidSocketFd()
 {
-	if (_socketFd < 0)
+	if (_sockfd < 0)
 		return false;
 	return true;
 }
@@ -117,4 +117,6 @@ bool	Socket::isValidSocketFd()
 void	Socket::printError(const std::string& msg)
 {
 	std::cerr << msg << strerror(errno) << std::endl;
+	if (isValidSocketFd())
+		close(_sockfd);
 }

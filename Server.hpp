@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/24 09:03:42 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/24 21:40:28 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,27 +14,31 @@
 # define SERVER_HPP
 
 # include "Socket.hpp"
+# include <vector>
 
 class Server
 {
-	protected:
-		Socket				_serverSocket;
-		int					_port;
-		struct sockaddr_in	_address;
-		int					_backlog;
-		static bool			_running;
+	private:
+		Socket						_serverSocket;
+		int							_port;
+		struct sockaddr_in			_address;
+		int							_backlog;
+		static volatile bool		_running;
+		std::vector<int>			_clientSockfds;
+		std::vector<struct pollfd>	_fds;
 
 	public:
 		Server();
-		virtual ~Server();
-
-		virtual bool		launch() = 0;
+		~Server();
+		bool						run();
 
 	private:
-		virtual int			accepter() = 0;
-		virtual void		handler() = 0;
-		virtual void		responder() = 0;
-		static void			signal_handler(int signum);
+		static void					signalHandler(int signum);
+		bool						accepter();
+		void						handler(int clientSockfd);
+		void						responder(int clientSockfd);
+		void						removeClientSocket(int clientSockfd);
+		const std::string			getResponse();
 };
 
 #endif

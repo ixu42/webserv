@@ -176,8 +176,8 @@ Location* Server::findLocation(Request* req)
 	// int i = 0;
 	std::cout << "Locations vector size: " << this->config->locations.size() << std::endl;
 	if (this->config->locations.empty())
-		throw ServerException("No location specified in the server config");
-		// return nullptr;
+		return nullptr;
+		// throw ServerException("No location specified in the server config");
 
 	Location* foundLocation = nullptr;
 	size_t locationLength = 0;
@@ -278,26 +278,26 @@ void Server::handleRequest3()
 	else
 	{
 		std::cout << "Great this is your location: " << foundLocation->path << std::endl;
-	}
+		// Handling redirect
+		if (foundLocation->redirect != "")
+		{
+			std::string redirectUrl = foundLocation->redirect;
 
-	// Handling redirect
-	if (foundLocation->redirect != "")
-	{
-		std::string redirectUrl = foundLocation->redirect;
+			size_t requestUriPos = foundLocation->redirect.find("$request_uri");
 
-		size_t requestUriPos = foundLocation->redirect.find("$request_uri");
+			std::string pagePath = req.getStartLine()["path"];
+			pagePath.replace(0, foundLocation->path.length(), "");
 
-		std::string pagePath = req.getStartLine()["path"];
-		pagePath.replace(0, foundLocation->path.length(), "");
+			redirectUrl = redirectUrl.substr(0, requestUriPos);
 
-		redirectUrl = redirectUrl.substr(0, requestUriPos);
+			if (requestUriPos != std::string::npos)
+				redirectUrl.append(pagePath);
 
-		if (requestUriPos != std::string::npos)
-			redirectUrl.append(pagePath);
+			std::cout << "Redirect URL: " << redirectUrl << std::endl;
+			std::cout << "Page path: " << pagePath << std::endl;
+			response = "HTTP/1.1 307 Temporary Redirect\r\nServer: webserv\r\nLocation: " + redirectUrl + "\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
+		}
 
-		std::cout << "Redirect URL: " << redirectUrl << std::endl;
-		std::cout << "Page path: " << pagePath << std::endl;
-		response = "HTTP/1.1 307 Temporary Redirect\r\nServer: webserv\r\nLocation: " + redirectUrl + "\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
 	}
 
 	// Testing request

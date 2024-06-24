@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/24 09:12:01 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/24 11:36:32 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 #include <arpa/inet.h> // htonl(), htons()
 #include <signal.h> // signal()
 
-bool Server::_running = true;
+volatile bool Server::_running = true;
 
 Server::Server() : _serverSocket(Socket()), _port(8080), _backlog(10)
 {

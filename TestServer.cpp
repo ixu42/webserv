@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/24 09:06:17 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/24 09:26:12 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,6 @@
 #include "debug.hpp"
 #include <iostream>
 #include <unistd.h> // read(), write(), close()
-
-const std::string TestServer::_hello = "Hello from server!";
 
 TestServer::TestServer() : Server(), _clientSocketFd(-1), _buffer{}
 {
@@ -77,6 +75,12 @@ void	TestServer::responder()
 {
 	DEBUG("TestServer::responder() called");
 
-	write(_clientSocketFd, _hello.c_str(), _hello.length());
+	std::string response = "HTTP/1.1 200 OK\r\n";
+	response += "Content-Type: text/html\r\n";
+	response += "Content-Length: 45\r\n";
+	response += "Connection: close\r\n";
+	response += "\r\n";
+	response += "<html><body>Hello from server!</html></body>";
+	write(_clientSocketFd, response.c_str(), response.length());
 	close(_clientSocketFd);	
 }

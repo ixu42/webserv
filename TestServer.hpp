@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/20 17:23:41 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/24 09:25:56 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,6 @@ class TestServer : public Server
 	private:
 		int							_clientSocketFd;
 		char 						_buffer[30000];
-		static const std::string	_hello;
 
 	public:
 		TestServer();

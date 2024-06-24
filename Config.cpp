@@ -18,7 +18,7 @@ Config::Config(std::string filePath)
 void Config::printConfig()
 {
 	std::cout << TEXT_YELLOW;
-	std::cout << "=== Printing config ===" << std::endl;
+	std::cout << "=== Printing parsed config ===" << std::endl;
 	int index = 0;
 	for (ServerConfig server : this->servers)
 	{

@@ -219,10 +219,14 @@ Request Server::receiveRequest()
 
 	bool isHeadersRead = false;
 	std::size_t contentLengthNum = std::string::npos;
+	int count = 0;
 	while (1)
 	{
+		count++;
 		bytesRead = read(this->clientSocket, buffer, bufferSize);
-		// std::cout << "=== Reading in chunks bytes: " << bytesRead << std::endl;
+		std::cout << "=== Reading in chunks bytes: " << bytesRead << std::endl;
+		if (count > 10000)
+			break;
 		if (bytesRead <= 0)
 			continue ;
 		request += std::string(buffer, bytesRead);
@@ -273,7 +277,9 @@ void Server::handleRequest3()
 	if (foundLocation == nullptr)
 	{
 		// throw ServerException("Location not found");
+		std::cout << nullptr << std::endl;
 		response = "HTTP/1.1 404 Not Found\r\nServer: webserv\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
+		// response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
 	}
 	else
 	{
@@ -297,7 +303,6 @@ void Server::handleRequest3()
 			std::cout << "Page path: " << pagePath << std::endl;
 			response = "HTTP/1.1 307 Temporary Redirect\r\nServer: webserv\r\nLocation: " + redirectUrl + "\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
 		}
-
 	}
 
 	// Testing request

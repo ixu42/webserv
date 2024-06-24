@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:46 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/20 17:22:44 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/24 09:21:35 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,8 +50,16 @@ bool	Socket::bindAddress(struct sockaddr_in addr)
 	if (!isValidSocketFd())
 		return false;
 
+	int opt = 1;
+	int ret = setsockopt(_socketFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+	if (ret < 0)
+	{
+		printError("setsockopt() error: ");
+		return false;
+	}
+
 	socklen_t addrlen = sizeof(addr);
-	int ret = bind(_socketFd, (struct sockaddr*)&addr, addrlen);
+	ret = bind(_socketFd, (struct sockaddr*)&addr, addrlen);
 	if (ret < 0)
 	{
 		printError("bind() error: ");

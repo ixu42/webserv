@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/20 17:22:40 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/24 09:06:17 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ bool	TestServer::launch()
 		return false;
 	}
 
-	while(true)
+	while(_running)
 	{
 		std::cout << "\n=== WAITING FOR A NEW CONNECTION ===\n\n";
 		if (!accepter())
@@ -60,7 +60,10 @@ int	TestServer::accepter()
 		std::cerr << "Failed to launch server\n";
 		return false;
 	}
+	std::cout << "\n=== CONNECTION ESTABLISHED WITH CLIENT ===\n\n";
 	read(_clientSocketFd , _buffer, 30000);
+	if (!_running)
+		return false;
 	return true;
 }
 

@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/20 17:23:47 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/24 09:03:42 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ class Server
 		int					_port;
 		struct sockaddr_in	_address;
 		int					_backlog;
+		static bool			_running;
 
 	public:
 		Server();
@@ -33,6 +34,7 @@ class Server
 		virtual int			accepter() = 0;
 		virtual void		handler() = 0;
 		virtual void		responder() = 0;
+		static void			signal_handler(int signum);
 };
 
 #endif

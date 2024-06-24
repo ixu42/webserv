@@ -43,3 +43,31 @@ std::string Utility::strToLower(std::string str)
 
 	return str;
 }
+
+std::string Utility::readFile(std::string filePath)
+{
+	std::string result;
+
+	int fd = open(filePath.c_str(), O_RDONLY);
+	if (fd == -1)
+	{
+		// std::cerr << "Error: " << strerror(errno) << std::endl;
+		throw ServerException("Error: " + std::string(strerror(errno)));
+	}
+
+	int stringSize = 1024;
+	char buffer[stringSize];
+	int bytesRead;
+
+	while (1)
+	{
+		bytesRead = read(fd, buffer, stringSize);
+		if (bytesRead <= 0)
+			break;
+		result.append(buffer, bytesRead);
+	}
+
+	close(fd);
+
+	return result;
+}

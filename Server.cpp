@@ -172,11 +172,12 @@ int findContentLength(std::string request)
 Location* Server::findLocation(Request* req)
 {
 	(void)req;
-	std::cout << "== Find location for current request ==" << std::endl;
+	std::cout << "== Finding location for current request ==" << std::endl;
 	// int i = 0;
 	std::cout << "Locations vector size: " << this->config->locations.size() << std::endl;
 	if (this->config->locations.empty())
-		return nullptr;
+		throw ServerException("No location specified in the server config");
+		// return nullptr;
 
 	Location* foundLocation = nullptr;
 	size_t locationLength = 0;
@@ -208,18 +209,8 @@ Location* Server::findLocation(Request* req)
 }
 
 
-void Server::handleRequest3()
+Request Server::receiveRequest()
 {
-	/* Dummy response start */
-	std::string response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\n";
-	// std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world\r\n\t</h1>\r\n</body>\r\n</html>";
-	std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world " + std::to_string(time(NULL)) + " " + whoAmI() + "\r\n\t</h1>\r\n</body>\r\n</html>";
-	std::string contentLength = "Content-Length: " + std::to_string(body.length()) + "\r\n";
-	// std::cout << contentLength << std::endl;
-	response = response + contentLength + "\r\n" + body;
-	/* Dummy response end */
-
-
 	const int bufferSize = 10;
 	char buffer[bufferSize] = {0};
 	int bytesRead;
@@ -256,7 +247,22 @@ void Server::handleRequest3()
 	std::cout << "=== Request read ===" << std::endl;
 	std::cout << TEXT_YELLOW << request << RESET << std::endl;
 
-	Request req(request);
+	return Request(request);
+}
+
+void Server::handleRequest3()
+{
+	/* Dummy response start */
+	std::string response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\n";
+	// std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world\r\n\t</h1>\r\n</body>\r\n</html>";
+	std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world " + std::to_string(time(NULL)) + " " + whoAmI() + "\r\n\t</h1>\r\n</body>\r\n</html>";
+	std::string contentLength = "Content-Length: " + std::to_string(body.length()) + "\r\n";
+	// std::cout << contentLength << std::endl;
+	response = response + contentLength + "\r\n" + body;
+	/* Dummy response end */
+
+
+	Request req = receiveRequest();
 
 	// std::cout << "Locations vector size after request generated: " << this->config->locations.size() << std::endl;
 	// for (Location location : this->config->locations)
@@ -272,6 +278,26 @@ void Server::handleRequest3()
 	else
 	{
 		std::cout << "Great this is your location: " << foundLocation->path << std::endl;
+	}
+
+	// Handling redirect
+	if (foundLocation->redirect != "")
+	{
+		std::string redirectUrl = foundLocation->redirect;
+
+		size_t requestUriPos = foundLocation->redirect.find("$request_uri");
+
+		std::string pagePath = req.getStartLine()["path"];
+		pagePath.replace(0, foundLocation->path.length(), "");
+
+		redirectUrl = redirectUrl.substr(0, requestUriPos);
+
+		if (requestUriPos != std::string::npos)
+			redirectUrl.append(pagePath);
+
+		std::cout << "Redirect URL: " << redirectUrl << std::endl;
+		std::cout << "Page path: " << pagePath << std::endl;
+		response = "HTTP/1.1 307 Temporary Redirect\r\nServer: webserv\r\nLocation: " + redirectUrl + "\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
 	}
 
 	// Testing request

@@ -51,7 +51,6 @@ class Config
 
 	public:
 		Config(std::string filePath);
-		void readFile();
 		void parse();
 		void parseServers(std::vector<std::string> serverStrings);
 		void parseLocations(ServerConfig& serverConfig, std::vector<std::string> locations);

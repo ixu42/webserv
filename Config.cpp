@@ -3,7 +3,8 @@
 Config::Config(std::string filePath)
 {
 	this->filePath = filePath;
-	readFile();
+	this->configString = Utility::readFile(this->filePath);
+
 	std::cout << TEXT_YELLOW;
 	std::cout << "=== Config file read === " << std::endl;
 	std::cout << this->configString << std::endl;
@@ -12,32 +13,6 @@ Config::Config(std::string filePath)
 	parse();
 
 	printConfig();
-}
-
-void Config::readFile()
-{
-	int fd = open(filePath.c_str(), O_RDONLY);
-	if (fd == -1)
-	{
-		// std::cerr << "Error: " << strerror(errno) << std::endl;
-		throw ServerException("Error: " + std::string(strerror(errno)));
-	}
-
-	int stringSize = 1024;
-	char buffer[stringSize];
-	int bytesRead;
-
-	while (1)
-	{
-		bytesRead = read(fd, buffer, stringSize);
-		if (bytesRead <= 0)
-			break;
-		this->configString.append(buffer, bytesRead);
-	}
-
-	// std::cout << this->configString << std::endl;
-
-	close(fd);
 }
 
 void Config::printConfig()

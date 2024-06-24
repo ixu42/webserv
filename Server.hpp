@@ -61,7 +61,8 @@ class Server
 		void shutdown();
 		std::string whoAmI() const;
 
-		Location*				findLocation(Request* req);
+		Request				receiveRequest();
+		Location*			findLocation(Request* req);
 		
 		/* Getters */
 		int					getSocket() const;

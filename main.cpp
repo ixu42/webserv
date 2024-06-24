@@ -1,6 +1,8 @@
 #include "ServersManager.hpp"
 #include "Server.hpp"
 #include "Config.hpp"
+#include "ServerException.hpp"
+#include "Colors.hpp"
 #include <iostream>
 
 int main(int argc, char *argv[])
@@ -11,10 +13,19 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 	{
-		ServersManager::initConfig(argv[1]);
+		try
+		{			
+			ServersManager::initConfig(argv[1]);
 
-		ServersManager* manager = ServersManager::getInstance();
-		manager->run();
+			ServersManager* manager = ServersManager::getInstance();
+			manager->run();
+		}
+		catch(const ServerException& e)
+		{
+			std::cerr << BG_RED << TEXT_WHITE;
+			std::cerr << "Server close with error: " << e.what() << '\n';
+			std::cerr << RESET;
+		}
 	}
 
 

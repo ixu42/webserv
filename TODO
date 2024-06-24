@@ -1,0 +1,6 @@
+Server/socket:
+✔ add signal handler @done(24-06-24 09:14)
+✔ fix address already in use from bind() @done(24-06-24 09:23)
+✔ write a simple response to client @done(24-06-24 09:39)
+☐ use poll() or equivalent for read/write operation
+☐ add a constructor for Socket with parameters (addr, port)

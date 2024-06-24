@@ -114,6 +114,121 @@ void Server::listenConnection()
 	std::cout << "Connection closed" << std::endl;
 } */
 
+void Server::handleRequest2()
+{
+
+	/* Dummy response start */
+	std::string response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\n";
+	// std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world\r\n\t</h1>\r\n</body>\r\n</html>";
+	std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world " + std::to_string(time(NULL)) + " " + whoAmI() + "\r\n\t</h1>\r\n</body>\r\n</html>";
+	std::string contentLength = "Content-Length: " + std::to_string(body.length()) + "\r\n";
+	// std::cout << contentLength << std::endl;
+	response = response + contentLength + "\r\n" + body;
+	/* Dummy response end */
+
+
+	const int bufferSize = 30000;
+	char buffer[bufferSize] = {0};
+	int bytesRead;
+	std::string request;
+
+
+	bytesRead = read(this->clientSocket, buffer, bufferSize);
+	std::cout << "Reading in chunks bytes: " << bytesRead << std::endl;
+	std::cout << "=== Input read! ===" << std::endl;
+	std::cout << "bytesRead: " << bytesRead << std::endl;
+	request += std::string(buffer, bytesRead);
+
+	std::cout << "=== Request read ===" << std::endl;
+	std::cout << TEXT_YELLOW << request << RESET << std::endl;
+
+
+
+	std::cout << TEXT_GREEN;
+	std::cout << "=== Response message sent ===" << std::endl;
+	std::cout << response.c_str() << std::endl;
+	std::cout << RESET;
+	write(this->clientSocket, response.c_str(), response.length());
+
+}
+
+int findContentLength(std::string request)
+{
+	std::string contentLength = "content-length: ";
+
+	Utility::strToLower(request);
+	unsigned long contentLengthPos = request.find(contentLength);
+	if (contentLengthPos != std::string::npos)
+	{
+		std::string contentLengthValue = request.substr(contentLengthPos + contentLength.length());
+		int contentLengthValueEnd = contentLengthValue.find("\r\n");
+		contentLengthValue = contentLengthValue.substr(0, contentLengthValueEnd);
+		return std::stoi(contentLengthValue);
+	}
+	return -1;
+}
+
+
+void Server::handleRequest3()
+{
+	/* Dummy response start */
+	std::string response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\n";
+	// std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world\r\n\t</h1>\r\n</body>\r\n</html>";
+	std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world " + std::to_string(time(NULL)) + " " + whoAmI() + "\r\n\t</h1>\r\n</body>\r\n</html>";
+	std::string contentLength = "Content-Length: " + std::to_string(body.length()) + "\r\n";
+	// std::cout << contentLength << std::endl;
+	response = response + contentLength + "\r\n" + body;
+	/* Dummy response end */
+
+
+	const int bufferSize = 10;
+	char buffer[bufferSize] = {0};
+	int bytesRead;
+	std::string request;
+	int emptyLinePos = -1;
+
+	bool isHeadersRead = false;
+	std::size_t contentLengthNum = std::string::npos;
+	while (1)
+	{
+		bytesRead = read(this->clientSocket, buffer, bufferSize);
+		std::cout << "=== Reading in chunks bytes: " << bytesRead << std::endl;
+		// if (bytesRead <= 0)
+		// 	break;
+		request += std::string(buffer, bytesRead);
+		std::cout << "Request at the moment read: " << request << std::endl;
+
+		// Check if the request is complete (ends with "\r\n\r\n")
+		if (!isHeadersRead && request.find("\r\n\r\n") != std::string::npos)
+		{
+			emptyLinePos = request.find("\r\n\r\n");
+			isHeadersRead = true;
+			contentLengthNum = findContentLength(request);
+			if (contentLengthNum == std::string::npos)
+				break;
+		}
+		if (isHeadersRead && contentLengthNum != -std::string::npos)
+		{
+			if (request.length() - emptyLinePos - 4 >= contentLengthNum)
+				break;
+		}
+	}
+
+	std::cout << "=== Request read ===" << std::endl;
+	std::cout << TEXT_YELLOW << request << RESET << std::endl;
+
+	Request req(request);
+	std::cout << req.getStartLine()["method"] << std::endl;
+	std::cout << req.getStartLine()["path"] << std::endl;
+	std::cout << req.getStartLine()["version"] << std::endl;
+
+	std::cout << TEXT_GREEN;
+	std::cout << "=== Response message sent ===" << std::endl;
+	std::cout << response.c_str() << std::endl;
+	std::cout << RESET;
+	write(this->clientSocket, response.c_str(), response.length());
+}
+
 void Server::handleRequest()
 {
 
@@ -169,7 +284,7 @@ void Server::handleRequest()
 /*	// Testing request
 	std::cout << TEXT_CYAN;
 	std::cout << req.getStartLine()["method"] << std::endl;
-	std::cout << req.getStartLine()["target"] << std::endl;
+	std::cout << req.getStartLine()["path"] << std::endl;
 	std::cout << req.getStartLine()["version"] << std::endl;
 	std::cout << RESET; */
 
@@ -186,10 +301,10 @@ void Server::handleRequest()
 
 
 	// int fileFd = open("test.html", O_RDONLY);
-/* 	int fileFd = open((std::string("." + req.getStartLine()["target"])).c_str(), O_RDONLY);
+/* 	int fileFd = open((std::string("." + req.getStartLine()["path"])).c_str(), O_RDONLY);
 
 	std::cout << TEXT_CYAN;
-	std::cout << "filename: " << req.getStartLine()["target"] << std::endl;
+	std::cout << "filename: " << req.getStartLine()["path"] << std::endl;
 	std::cout << "fd for file: " << fileFd << std::endl;
 	std::cout << RESET; */
 
@@ -225,10 +340,10 @@ void Server::handleRequest()
 	std::cout << "=== Response message sent ===" << std::endl;
 	std::cout << response.c_str() << std::endl;
 	std::cout << RESET;
-	write(clientSocket, response.c_str(), response.length());
+	write(this->clientSocket, response.c_str(), response.length());
 
-	close(this->clientSocket);
-	std::cout << "Connection closed" << std::endl;
+	// close(this->clientSocket);
+	// std::cout << "Connection closed" << std::endl;
 }
 
 void Server::shutdown()

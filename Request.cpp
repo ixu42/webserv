@@ -30,7 +30,7 @@ Request::Request(std::string request)
 void Request::parse(std::string request)
 {
 	int emptyLinePosition = request.find("\r\n\r\n");
-	std::cout << "Empty line position: " << emptyLinePosition << std::endl;
+	// std::cout << "Empty line position: " << emptyLinePosition << std::endl;
 
 	if (emptyLinePosition != -1)
 	{
@@ -44,17 +44,19 @@ void Request::parse(std::string request)
 		std::vector<std::string> startLineSplit = Utility::splitString(headerLines[0], " ");
 
  		this->startLine["method"] = Utility::trim(startLineSplit[0]);
-		this->startLine["target"] = Utility::trim(startLineSplit[1]);
+		this->startLine["path"] = Utility::trim(startLineSplit[1]);
 		this->startLine["version"] = Utility::trim(startLineSplit[2]);
 
-		// Parse the headers
+		// Parse the headers and convert to lower case
 		for (unsigned int i = 1; i < headerLines.size(); i++)
 		{
 			// if (headerLines[i].empty())
 			// 	continue;
 			std::vector<std::string> headerSplit = Utility::splitString(headerLines[i], ": ");
-			std::cout << "Header: " << headerSplit[0] << " Value: " << headerSplit[1] << std::endl;
-			this->headers[Utility::trim(headerSplit[0])] = Utility::trim(headerSplit[1]);
+			std::string key = Utility::strToLower(Utility::trim(headerSplit[0]));
+			std::string value = Utility::trim(headerSplit[1]);
+			this->headers[key] = value;
+			std::cout << "Header: " << key << " Value: " << value << std::endl;
 		}
 
 		// Parse the body

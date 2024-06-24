@@ -1,7 +1,7 @@
 #include "Utility.hpp"
 
 // Function to trim whitespace from both ends of a string
-std::string Utility::trim(const std::string& str)
+std::string Utility::trim(std::string str)
 {
 	std::string::const_iterator start = std::find_if_not(str.begin(), str.end(), [](int c) {
 		return std::isspace(c);
@@ -33,4 +33,13 @@ std::vector<std::string> Utility::splitString(const std::string &str, const std:
 	seglist.push_back(str.substr(start));
 
 	return seglist;
+}
+
+
+std::string Utility::strToLower(std::string str)
+{
+	for (char& c: str)
+		c = std::tolower(c);
+
+	return str;
 }

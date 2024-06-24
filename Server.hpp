@@ -11,6 +11,7 @@
 #include <cstring>
 #include <iostream>
 #include <string>
+#include <cctype>
 
 #include <arpa/inet.h> // For inet_pton
 
@@ -54,6 +55,8 @@ class Server
 		void acceptConnection(); // remove later? blocking for several servers
  
 		void handleRequest();
+		void handleRequest2();
+		void handleRequest3();
 		void shutdown();
 		std::string whoAmI() const;
 		

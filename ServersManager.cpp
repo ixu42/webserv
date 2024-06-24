@@ -17,21 +17,6 @@ void ServersManager::signalHandler(int signal)
 	std::exit(signal); // Exit the program with the received signal as exit code
 }
 
-/* ServersManager::ServersManager()
-{
-	signal(SIGINT, ServersManager::signalHandler);
-
-	// Initialize config
-	Config serverConfig("config/default.conf");
-
-	// Add servers
-	servers.push_back(new Server("127.0.0.1", 8001));
-	servers.push_back(new Server("127.0.0.1", 8002));
-	// servers.push_back(new Server("127.0.0.1", 8003));
-	// servers.push_back(new Server("127.0.0.1", 8004));
-
-	std::cout << "ServersManager created" << std::endl;
-} */
 ServersManager::ServersManager()
 {
 	// Handle ctrl+c
@@ -80,12 +65,12 @@ void ServersManager::run()
 		pollfd pfd;
 		pfd.fd = server->getSocket();
 		pfd.events = POLLIN;
-		poll_fds.push_back(pfd);
+		this->poll_fds.push_back(pfd);
 	}
 	/* Waiting for incoming connections */
 	while (true)
 	{
-		int ret = poll(poll_fds.data(), poll_fds.size(), -1);
+		int ret = poll(this->poll_fds.data(), this->poll_fds.size(), -1);
 		if (ret < 0)
 		{
 			if (errno == EINTR || errno == EWOULDBLOCK)
@@ -105,9 +90,9 @@ void ServersManager::run()
 				if (clientSocket >= 0)
 				{
 					servers[i]->setClientSocket(clientSocket);
-
 					// Set socket to non-blocking mode
-					int flags = fcntl(clientSocket, F_GETFL, 0);
+/* 					int flags = fcntl(clientSocket, F_GETFL, 0);
+
 					if (flags == -1)
 					{
 						if (close(clientSocket) == -1)
@@ -119,9 +104,12 @@ void ServersManager::run()
 						if (close(clientSocket) == -1)
 							throw ServerException("Failed to close socket");
 						throw ServerException("Failed to set non-blocking mode on socket");
-					}
+					} */
 
-					servers[i]->handleRequest();
+					servers[i]->handleRequest3();
+
+					close(clientSocket);
+					std::cout << "Connection closed" << std::endl;
 				}
 			}
 		}

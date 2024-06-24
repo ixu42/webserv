@@ -91,7 +91,7 @@ void ServersManager::run()
 				{
 					servers[i]->setClientSocket(clientSocket);
 					// Set socket to non-blocking mode
-/* 					int flags = fcntl(clientSocket, F_GETFL, 0);
+					int flags = fcntl(clientSocket, F_GETFL, 0);
 
 					if (flags == -1)
 					{
@@ -104,7 +104,7 @@ void ServersManager::run()
 						if (close(clientSocket) == -1)
 							throw ServerException("Failed to close socket");
 						throw ServerException("Failed to set non-blocking mode on socket");
-					} */
+					}
 
 					servers[i]->handleRequest3();
 

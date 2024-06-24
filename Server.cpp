@@ -193,8 +193,8 @@ void Server::handleRequest3()
 	{
 		bytesRead = read(this->clientSocket, buffer, bufferSize);
 		std::cout << "=== Reading in chunks bytes: " << bytesRead << std::endl;
-		// if (bytesRead <= 0)
-		// 	break;
+		if (bytesRead <= 0)
+			continue ;
 		request += std::string(buffer, bytesRead);
 		std::cout << "Request at the moment read: " << request << std::endl;
 

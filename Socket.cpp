@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:46 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/25 12:27:18 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/25 15:08:31 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #include "debug.hpp" // DEBUG()
 # include <sys/socket.h> // socket(), bind(), listen()
 #include <errno.h> // errno
-#include <string.h> // strerror()
+#include <cstring> // strerror()
 #include <unistd.h> // close()
 #include <fcntl.h> // fcntl()
 

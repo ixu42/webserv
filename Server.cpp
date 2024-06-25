@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/25 10:07:03 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/25 15:44:24 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,11 +16,16 @@
 #include <arpa/inet.h> // htons(), inet_pton()
 #include <signal.h> // signal()
 #include <poll.h> // poll()
+#include <string>
 
 volatile bool Server::_running = true;
 
-void	Server::initServer(char* ipAddr, int port)
+void	Server::initServer(const char* ipAddr, int port)
 {
+	_port = port;
+	std::string str(ipAddr);
+	_ipAddr = str;
+
 	std::memset((char*)&_address, 0, sizeof(_address));
 	_address.sin_family = AF_INET;
 	_address.sin_port = htons(port);
@@ -56,7 +61,7 @@ Server::Server() : _serverSocket(Socket())
 	initServer(nullptr, 8080);
 }
 
-Server::Server(char* ipAddr, int port) : _serverSocket(Socket())
+Server::Server(const char* ipAddr, int port) : _serverSocket(Socket())
 {
 	DEBUG("Server parameterized constructor called");
 
@@ -65,6 +70,7 @@ Server::Server(char* ipAddr, int port) : _serverSocket(Socket())
 
 Server::~Server()
 {
+
 	DEBUG("Server destructor called");
 
 	for (int client_socket : _clientSockfds)
@@ -106,7 +112,8 @@ bool	Server::run()
 				if (_fds[i].fd == _serverSocket.getSockfd())
 					accepter(); // accept new connection
 				else
-					handler(_fds[i].fd); // handle read operation
+					receiveRequest(_fds[i].fd);
+					// handler(_fds[i].fd); // handle read operation
 			}
 			if (_fds[i].revents & POLLOUT)	
 				responder(_fds[i].fd); // handle write operation
@@ -165,6 +172,77 @@ void	Server::handler(int clientSockfd)
 	}
 }
 
+int findContentLength(std::string request)
+{
+	std::string contentLength = "content-length: ";
+
+	Utility::strToLower(request);
+	unsigned long contentLengthPos = request.find(contentLength);
+	if (contentLengthPos != std::string::npos)
+	{
+		std::string contentLengthValue = request.substr(contentLengthPos + contentLength.length());
+		int contentLengthValueEnd = contentLengthValue.find("\r\n");
+		contentLengthValue = contentLengthValue.substr(0, contentLengthValueEnd);
+		return std::stoi(contentLengthValue);
+	}
+	return -1;
+}
+
+Request Server::receiveRequest(int clientSockfd)
+{
+	const int bufferSize = 10;
+	char buffer[bufferSize] = {0};
+	int bytesRead;
+	std::string request;
+	int emptyLinePos = -1;
+
+	bool isHeadersRead = false;
+	std::size_t contentLengthNum = std::string::npos;
+	int count = 0;
+	while (1)
+	{
+		count++;
+		bytesRead = read(clientSockfd, buffer, bufferSize);
+		std::cout << "=== Reading in chunks bytes: " << bytesRead << std::endl;
+		if (count > 10000)
+			break;
+		if (bytesRead <= 0)
+			continue ;
+		request += std::string(buffer, bytesRead);
+		// std::cout << "Request at the moment read: " << request << std::endl;
+
+		// Check if the request is complete (ends with "\r\n\r\n")
+		if (!isHeadersRead && request.find("\r\n\r\n") != std::string::npos)
+		{
+			emptyLinePos = request.find("\r\n\r\n");
+			isHeadersRead = true;
+			contentLengthNum = findContentLength(request);
+			if (contentLengthNum == std::string::npos)
+				break;
+		}
+		if (isHeadersRead && contentLengthNum != -std::string::npos)
+		{
+			if (request.length() - emptyLinePos - 4 >= contentLengthNum)
+				break;
+		}
+	}
+
+	std::cout << "=== Request read ===" << std::endl;
+	std::cout << TEXT_YELLOW << request << RESET << std::endl;
+
+	// change poll event to POLLOUT to write the response later
+	for (auto &fd : _fds)
+	{
+		if (fd.fd == clientSockfd)
+		{
+			fd.events = POLLOUT;
+			break;
+		}
+	}
+
+	return Request(request);
+}
+
 void	Server::responder(int clientSockfd)
 {
 	DEBUG("Server::responder() called");
@@ -204,11 +282,286 @@ void	Server::removeClientSocket(int clientSockfd)
 
 const std::string	Server::getResponse()
 {
-	std::string response = "HTTP/1.1 200 OK\r\n";
-	response += "Content-Type: text/html\r\n";
-	response += "Content-Length: 19\r\n";
-	response += "Connection: close\r\n";
-	response += "\r\n";
-	response += "Hello from server!";
+	// std::string response = "HTTP/1.1 200 OK\r\n";
+	// response += "Content-Type: text/html\r\n";
+	// response += "Content-Length: 19\r\n";
+	// response += "Connection: close\r\n";
+	// response += "\r\n";
+	// response += "Hello from server!";
+
+
+	// 	/* Dummy response start */
+	std::string response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\n";
+	// std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world\r\n\t</h1>\r\n</body>\r\n</html>";
+	std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world " + std::to_string(time(NULL)) + " " + whoAmI() + "\r\n\t</h1>\r\n</body>\r\n</html>";
+	std::string contentLength = "Content-Length: " + std::to_string(body.length()) + "\r\n";
+	// std::cout << contentLength << std::endl;
+	response = response + contentLength + "\r\n" + body;
+// 	/* Dummy response end */
 	return response;
 }
+
+
+std::string Server::whoAmI() const
+{
+	return _ipAddr + ":" + std::to_string(_port);
+}
+
+/**
+ * Getters
+*/
+
+ServerConfig* Server::getConfig()
+{
+	return _config;
+}
+
+int Server::getSocket()
+{
+	return _serverSocket.getSockfd();
+}
+
+/**
+ * Setters
+ */
+
+void Server::setConfig(ServerConfig* serverConfig)
+{
+	if (serverConfig == nullptr)
+		return ;
+	_config = serverConfig;
+}
+
+
+
+
+
+
+// Vladimir's Server.cpp
+/* #include "Server.hpp"
+
+Server::Server()
+{
+	initialize();
+}
+
+Server::Server(std::string ipAddress, int port)
+{
+	this->addressString = ipAddress;
+
+	if (inet_pton(this->domain, ipAddress.c_str(), &(this->address)) != 1)
+		throw ServerException("Conversion failed");
+	// this->address = inet_addr(ipAddress.c_str());
+	this->port = port;
+	initialize();
+
+	std::cout << "Server with address: " << whoAmI() << " was created" << std::endl;
+
+} */
+
+// void Server::handleRequest2()
+// {
+
+// 	/* Dummy response start */
+// 	std::string response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\n";
+// 	// std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world\r\n\t</h1>\r\n</body>\r\n</html>";
+// 	std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world " + std::to_string(time(NULL)) + " " + whoAmI() + "\r\n\t</h1>\r\n</body>\r\n</html>";
+// 	std::string contentLength = "Content-Length: " + std::to_string(body.length()) + "\r\n";
+// 	// std::cout << contentLength << std::endl;
+// 	response = response + contentLength + "\r\n" + body;
+// 	/* Dummy response end */
+
+
+// 	const int bufferSize = 30000;
+// 	char buffer[bufferSize] = {0};
+// 	int bytesRead;
+// 	std::string request;
+
+
+// 	bytesRead = read(this->clientSocket, buffer, bufferSize);
+// 	std::cout << "Reading in chunks bytes: " << bytesRead << std::endl;
+// 	std::cout << "=== Input read! ===" << std::endl;
+// 	std::cout << "bytesRead: " << bytesRead << std::endl;
+// 	request += std::string(buffer, bytesRead);
+
+// 	std::cout << "=== Request read ===" << std::endl;
+// 	std::cout << TEXT_YELLOW << request << RESET << std::endl;
+
+
+
+// 	std::cout << TEXT_GREEN;
+// 	std::cout << "=== Response message sent ===" << std::endl;
+// 	std::cout << response.c_str() << std::endl;
+// 	std::cout << RESET;
+// 	write(this->clientSocket, response.c_str(), response.length());
+
+// }
+
+
+
+
+// Location* Server::findLocation(Request* req)
+// {
+// 	(void)req;
+// 	std::cout << "== Finding location for current request ==" << std::endl;
+// 	// int i = 0;
+// 	std::cout << "Locations vector size: " << this->config->locations.size() << std::endl;
+// 	if (this->config->locations.empty())
+// 		return nullptr;
+// 		// throw ServerException("No location specified in the server config");
+
+// 	Location* foundLocation = nullptr;
+// 	size_t locationLength = 0;
+// 	std::string requestPath = req->getStartLine()["path"];
+
+// 	std::cout << "Let's find location for request path: " << requestPath << std::endl;
+// 	for (Location& location : this->config->locations)
+// 	{
+// 		std::cout << "Path: " << location.path << " RequestPath: " << requestPath << std::endl;
+// 		if (location.path == requestPath)
+// 		{
+// 			std::cout << "Location found, perfect match: " << location.path << std::endl;
+// 			foundLocation = &location;
+// 			break;
+// 		}
+// 		else if (requestPath.rfind(location.path, 0) == 0 && location.path[location.path.length() - 1] == '/')
+// 		{
+// 			std::cout << "Location found: " << location.path << std::endl;
+// 			if (location.path.length() > locationLength)
+// 			{
+// 				locationLength = location.path.length();
+// 				foundLocation = &location;
+// 			}
+// 		}
+
+// 		// std::cout << "Server config and location: " << location.path << std::endl;
+// 	}
+// 	return foundLocation;
+// }
+
+
+
+// 	std::cout << "=== Request read ===" << std::endl;
+// 	std::cout << TEXT_YELLOW << request << RESET << std::endl;
+
+// 	return Request(request);
+// }
+
+// void Server::handleRequest3()
+// {
+// 	/* Dummy response start */
+// 	std::string response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\n";
+// 	// std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world\r\n\t</h1>\r\n</body>\r\n</html>";
+// 	std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world " + std::to_string(time(NULL)) + " " + whoAmI() + "\r\n\t</h1>\r\n</body>\r\n</html>";
+// 	std::string contentLength = "Content-Length: " + std::to_string(body.length()) + "\r\n";
+// 	// std::cout << contentLength << std::endl;
+// 	response = response + contentLength + "\r\n" + body;
+// 	/* Dummy response end */
+
+
+// 	Request req = receiveRequest();
+
+// 	// std::cout << "Locations vector size after request generated: " << this->config->locations.size() << std::endl;
+// 	// for (Location location : this->config->locations)
+// 	// {
+// 	// 	std::cout << "Server config and location from handleRequest: " << location.path << std::endl;
+// 	// }
+// 	Location* foundLocation = findLocation(&req);
+// 	if (foundLocation == nullptr)
+// 	{
+// 		// throw ServerException("Location not found");
+// 		std::cout << nullptr << std::endl;
+// 		response = "HTTP/1.1 404 Not Found\r\nServer: webserv\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
+// 		// response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
+// 	}
+// 	else
+// 	{
+// 		std::cout << "Great this is your location: " << foundLocation->path << std::endl;
+// 		// Handling redirect
+// 		if (foundLocation->redirect != "")
+// 		{
+// 			std::string redirectUrl = foundLocation->redirect;
+
+// 			size_t requestUriPos = foundLocation->redirect.find("$request_uri");
+
+// 			std::string pagePath = req.getStartLine()["path"];
+// 			pagePath.replace(0, foundLocation->path.length(), "");
+
+// 			redirectUrl = redirectUrl.substr(0, requestUriPos);
+
+// 			if (requestUriPos != std::string::npos)
+// 				redirectUrl.append(pagePath);
+
+// 			std::cout << "Redirect URL: " << redirectUrl << std::endl;
+// 			std::cout << "Page path: " << pagePath << std::endl;
+// 			response = "HTTP/1.1 307 Temporary Redirect\r\nServer: webserv\r\nLocation: " + redirectUrl + "\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
+// 		}
+// 	}
+
+// 	// Testing request
+// 	std::cout << TEXT_CYAN;
+// 	std::cout << req.getStartLine()["method"] << std::endl;
+// 	std::cout << req.getStartLine()["path"] << std::endl;
+// 	std::cout << req.getStartLine()["version"] << std::endl;
+// 	std::cout << RESET;
+
+// 	std::cout << TEXT_GREEN;
+// 	std::cout << "=== Response message sent ===" << std::endl;
+// 	std::cout << response.c_str() << std::endl;
+// 	std::cout << RESET;
+// 	write(this->clientSocket, response.c_str(), response.length());
+// }
+
+
+// std::string Server::whoAmI() const
+// {
+// 	return this->addressString + ":" + std::to_string(this->port);
+// }
+
+// /**
+//  * Getters
+//  */
+
+// int Server::getSocket() const
+// {
+// 	return this->serverSocket;
+// }
+
+// struct sockaddr_in &Server::getSockAddress()
+// {
+// 	return this->sockAddress;
+// }
+
+// int Server::getClientSocket() const
+// {
+// 	return this->clientSocket;
+// }
+
+// ServerConfig* Server::getConfig()
+// {
+// 	return this->config;
+// }
+
+// /**
+//  * Setters
+//  */
+
+// void Server::setClientSocket(int newClientSocket)
+// {
+// 	this->clientSocket = newClientSocket;
+// }
+
+// void Server::setConfig(ServerConfig* serverConfig)
+// {
+// 	if (serverConfig == nullptr)
+// 		return ;
+// 	// for (Location location : serverConfig->locations)
+// 	// {
+// 	// 	std::cout << "Server config and location: " << location.path << std::endl;
+// 	// }
+// 	this->config = serverConfig;
+// 	// for (Location location : this->config->locations)
+// 	// {
+// 	// 	std::cout << "Server config and location now: " << location.path << std::endl;
+// 	// }
+// }

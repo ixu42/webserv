@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/24 21:05:25 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/25 10:06:07 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,9 +14,13 @@
 
 int	main()
 {
-	Server server;
-	if (!server.run())
+	Server server0;
+	if (!server0.run())
 		return 1;
+
+	/* Server server1(nullptr, 8090);
+	if (!server1.run())
+		return 1; */
 
 	return 0;
 }

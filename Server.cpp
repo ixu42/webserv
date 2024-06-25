@@ -6,38 +6,61 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/24 23:44:15 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/25 10:07:03 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 #include "debug.hpp"
 #include <cstring> // memset()
-#include <arpa/inet.h> // htons()
+#include <arpa/inet.h> // htons(), inet_pton()
 #include <signal.h> // signal()
 #include <poll.h> // poll()
 
 volatile bool Server::_running = true;
 
-Server::Server() : _serverSocket(Socket()), _port(8080), _backlog(10)
+void	Server::initServer(char* ipAddr, int port)
 {
-	DEBUG("Server constructor called");
-
-	std::memset((char *)&_address, 0, sizeof(_address));
+	std::memset((char*)&_address, 0, sizeof(_address));
 	_address.sin_family = AF_INET;
-	_address.sin_addr.s_addr = INADDR_ANY;
-	_address.sin_port = htons(_port);
+	_address.sin_port = htons(port);
+	if (ipAddr == nullptr)
+		_address.sin_addr.s_addr = INADDR_ANY;
+	else
+	{
+		int ret = inet_pton(AF_INET, ipAddr, &_address.sin_addr);
+		if (ret <= 0)
+		{
+			std::cerr << "inet_pton() error\n";
+			close(_serverSocket.getSockfd());
+			exit(EXIT_FAILURE);
+		}
+	}
 
 	if (!_serverSocket.create() ||
 		!_serverSocket.bindAddress(_address) ||
-		!_serverSocket.listenForConnections(_backlog))
+		!_serverSocket.listenForConnections(10))
 	{
-		std::cerr << "Failed to launch server\n";
+		std::cerr << "Failed to construct server\n";
 		exit(EXIT_FAILURE);
 	}
 
 	// add _serverSocket fd to _fds vector for polling
 	_fds.push_back({_serverSocket.getSockfd(), POLLIN, 0});
+}
+
+Server::Server() : _serverSocket(Socket())
+{
+	DEBUG("Server default constructor called");
+
+	initServer(nullptr, 8080);
+}
+
+Server::Server(char* ipAddr, int port) : _serverSocket(Socket())
+{
+	DEBUG("Server parameterized constructor called");
+
+	initServer(ipAddr, port);	
 }
 
 Server::~Server()

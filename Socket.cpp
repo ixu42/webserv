@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:46 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/24 23:39:35 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/25 12:27:18 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <errno.h> // errno
 #include <string.h> // strerror()
 #include <unistd.h> // close()
+#include <fcntl.h> // fcntl()
 
 Socket::Socket() : _sockfd(-1)
 {
@@ -50,11 +51,27 @@ bool	Socket::bindAddress(struct sockaddr_in addr)
 	if (!isValidSocketFd())
 		return false;
 
+	// make address in TIME_WAIT state reusable immediately 
 	int opt = 1;
 	int ret = setsockopt(_sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 	if (ret < 0)
 	{
 		printError("setsockopt() error: ");
+		return false;
+	}
+
+	// set socket to non-blocking mode
+	int flags = fcntl(_sockfd, F_GETFL, 0);
+	if (flags < 0)
+	{
+		printError("fcntl F_GETFL error: ");
+		return false;
+	}
+
+	ret = fcntl(_sockfd, F_SETFL, flags | O_NONBLOCK);
+	if (ret < 0)
+	{
+		printError("fcntl F_SETFL error: ");
 		return false;
 	}
 

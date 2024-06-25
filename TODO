@@ -1,6 +1,24 @@
-Server/socket:
-✔ add signal handler @done(24-06-24 09:14)
-✔ fix address already in use from bind() @done(24-06-24 09:23)
-✔ write a simple response to client @done(24-06-24 09:39)
-✔ use poll() or equivalent for read/write operation @done(24-06-24 23:37)
-☐ add a constructor for Socket with parameters (addr, port)
+
+Configuration file parsing:
+	☐ parse the configuration file and store the settings in appropriate data structures
+	☐ validate the configuration (e.g. port numbers, file paths)
+
+Network communication:
+	General:
+		✔ implement the network part of the server using sockets (e.g. creating, binding, listening, and accepting connections) @done(24-06-25 10:57)
+		☐ handle incoming HTTP requests and outgoing HTTP responses
+			✔ write a simple response to client @done(24-06-25 11:00)
+			✔ use poll() or equivalent for read/write operation @done(24-06-25 11:00)
+			☐ handle large read operations
+		✔ signal handling (SIGINT, SIGTERM handled) @done(24-06-25 10:58)
+	Bug fixing:
+		✔ fix address already in use from bind() @done(24-06-25 10:59)
+
+Request handling:
+	☐ parse HTTP requests (headers, method, URL, etc.)
+	☐ handle different HTTP methods (GET, POST, DELETE)
+	☐ CGI
+
+Response generation:
+	☐ generate HTTP responses (status line, headers, body)
+	☐ handle different response statuses (200 OK, 404 Not Found, 500 Internal Server Error, etc.)

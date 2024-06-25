@@ -1,6 +1,6 @@
 
 Configuration file parsing:
-	☐ parse the configuration file and store the settings in appropriate data structures
+	✔ parse the configuration file and store the settings in appropriate data structures @done(24-06-25 17:50)
 	☐ validate the configuration (e.g. port numbers, file paths)
 
 Network communication:
@@ -15,7 +15,7 @@ Network communication:
 		✔ fix address already in use from bind() @done(24-06-25 10:59)
 
 Request handling:
-	☐ parse HTTP requests (headers, method, URL, etc.)
+	✔ parse HTTP requests (headers, method, URL, etc.) @done(24-06-25 17:50)
 	☐ handle different HTTP methods (GET, POST, DELETE)
 	☐ CGI
 

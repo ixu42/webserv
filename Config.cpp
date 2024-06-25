@@ -2,12 +2,12 @@
 
 Config::Config(std::string filePath)
 {
-	this->filePath = filePath;
-	this->configString = Utility::readFile(this->filePath);
+	_filePath = filePath;
+	_configString = Utility::readFile(_filePath);
 
 	std::cout << TEXT_YELLOW;
 	std::cout << "=== Config file read === " << std::endl;
-	std::cout << this->configString << std::endl;
+	std::cout << _configString << std::endl;
 	std::cout << RESET;
 
 	parse();
@@ -20,7 +20,7 @@ void Config::printConfig()
 	std::cout << TEXT_YELLOW;
 	std::cout << "=== Printing parsed config ===" << std::endl;
 	int i = 0;
-	for (ServerConfig server : this->servers)
+	for (ServerConfig server : _servers)
 	{
 		std::cout << BG_YELLOW << TEXT_BLACK << TEXT_BOLD;
 		std::cout << "Server #" << i << RESET << std::endl;
@@ -55,8 +55,8 @@ void Config::printConfig()
 void Config::parse()
 {
 	std::cout << "=== Parsing the config ===" << std::endl;
-	std::vector<std::string> serverStrings = Utility::splitString(this->configString, "[server]");
-	this->servers.resize(serverStrings.size());
+	std::vector<std::string> serverStrings = Utility::splitString(_configString, "[server]");
+	_servers.resize(serverStrings.size());
 
 	parseServers(serverStrings);
 
@@ -99,34 +99,34 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 			std::string value = Utility::trim(keyValue[1]);
 			
 			if (key == "ipAddress")
-				this->servers[i].ipAddress = value;
+				_servers[i].ipAddress = value;
 			else if (key == "serverName")
-				this->servers[i].serverName = value;
+				_servers[i].serverName = value;
 			else if (key == "port")
-				this->servers[i].port = std::stoi(value);
+				_servers[i].port = std::stoi(value);
 			else if (key == "clientMaxBodySize")
-				this->servers[i].clientMaxBodySize = value;
+				_servers[i].clientMaxBodySize = value;
 			else if (key == "error")
 			{
 				std::cout << "error: " << value << std::endl;
 				std::vector<std::string> errorCodesString = Utility::splitString(value, ",");
 				for (std::string code : errorCodesString)
 				{
-					this->servers[i].errorPages[std::stoi(code)] = Utility::trim(keyValue[2]);
+					_servers[i].errorPages[std::stoi(code)] = Utility::trim(keyValue[2]);
 				}
 			}
 			else if (key == "cgis")
 			{
 				std::vector<std::string> cgis = Utility::splitString(value, ",");
 				for (std::string cgi : cgis)
-					this->servers[i].cgis[cgi] = true;
+					_servers[i].cgis[cgi] = true;
 			}
 		}
 
 		// Parsing server locations
 		std::vector<std::string> locationStrings(split.begin() + 1, split.end());
-		this->servers[i].locations.resize(locationStrings.size());
-		parseLocations(this->servers[i], locationStrings);
+		_servers[i].locations.resize(locationStrings.size());
+		parseLocations(_servers[i], locationStrings);
 
 		i++;
 	}
@@ -185,5 +185,5 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 
 std::vector<ServerConfig>& Config::getServers()
 {
-	return this->servers;
+	return _servers;
 }

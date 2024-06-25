@@ -12,9 +12,9 @@ class Request
 {
 	typedef std::map<std::string, std::string> QueryStringParameters;
 	private:
-		QueryStringParameters _startLine;
-		QueryStringParameters _headers;
-		std::string _body; // ???
+		QueryStringParameters	_startLine;
+		QueryStringParameters	_headers;
+		std::string				_body; // ???
 
 		Location* location;
 
@@ -22,10 +22,10 @@ class Request
 		Request();
 		Request(std::string request);
 
-		void parse(std::string request);
+		void					parse(std::string request);
 		
-		QueryStringParameters getStartLine();
-		QueryStringParameters getHeaders();
+		QueryStringParameters	getStartLine();
+		QueryStringParameters	getHeaders();
 
-		void setLocation(Location* location);
+		void					setLocation(Location* location);
 };

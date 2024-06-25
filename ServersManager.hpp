@@ -11,9 +11,9 @@
 class ServersManager
 {
 	private:
-		static ServersManager* instance;
-		static std::vector<Server*> servers;
-		static Config* webservConfig;
+		static ServersManager*		_instance;
+		static std::vector<Server*>	_servers;
+		static Config*				_webservConfig;
 		// std::vector<pollfd> poll_fds;
 
 		ServersManager();
@@ -21,12 +21,12 @@ class ServersManager
 		ServersManager(const ServersManager&) = delete;
 		ServersManager& operator=(const ServersManager&) = delete;
 		
-		static void signalHandler(int signal);
+		static void				signalHandler(int signal);
 
 	public:
 		~ServersManager();
-		static ServersManager* getInstance();
+		static ServersManager*	getInstance();
 
-		void run();
-		static void initConfig(char *fileNameString);
+		void					run();
+		static void				initConfig(char *fileNameString);
 };

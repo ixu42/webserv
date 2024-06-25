@@ -1,8 +1,8 @@
 #include "ServersManager.hpp"
 
-std::vector<Server *> ServersManager::servers;
-ServersManager* ServersManager::instance = nullptr;
-Config* ServersManager::webservConfig;
+std::vector<Server *> ServersManager::_servers;
+ServersManager* ServersManager::_instance = nullptr;
+Config* ServersManager::_webservConfig;
 
 void ServersManager::signalHandler(int signal)
 {
@@ -11,7 +11,7 @@ void ServersManager::signalHandler(int signal)
 	// Handle cleanup tasks or other actions here
 	
 	// ServersManager::getInstance()->poll_fds.clear();
-	delete instance;
+	delete _instance;
 	// servers.clear();
 
 	std::exit(signal); // Exit the program with the received signal as exit code
@@ -24,11 +24,11 @@ ServersManager::ServersManager()
 
 	// Add servers
 	int i = 0;
-	for (ServerConfig& serverConfig : webservConfig->getServers())
+	for (ServerConfig& serverConfig : _webservConfig->getServers())
 	{
-		servers.push_back(new Server(serverConfig.ipAddress.c_str(), serverConfig.port));
-		servers[i]->setConfig(&serverConfig);
-		servers[i]->getConfig();
+		_servers.push_back(new Server(serverConfig.ipAddress.c_str(), serverConfig.port));
+		_servers[i]->setConfig(&serverConfig);
+		_servers[i]->getConfig();
 		// std::cout << "Server config and location: " << servers[i]->getConfig()->locations[0].path << std::endl;
 		i++;
 	}
@@ -38,35 +38,35 @@ ServersManager::ServersManager()
 
 ServersManager::~ServersManager()
 {
-	std::cout << servers.size() << " servers will be deleted" << std::endl;
-	for (Server *server : servers)
+	std::cout << _servers.size() << " servers will be deleted" << std::endl;
+	for (Server *server : _servers)
 	{
 		delete server;
 	}
-	delete webservConfig;
+	delete _webservConfig;
 }
 
 
 void ServersManager::initConfig(char *fileNameString)
 {
-	webservConfig = new Config(fileNameString);
+	_webservConfig = new Config(fileNameString);
 }
 
 ServersManager* ServersManager::getInstance()
 {
-	if (webservConfig == nullptr)
-		webservConfig = new Config(DEFAULT_CONFIG); // if config is not initialized with iniConfig, DEFAULT_CONFIG will be used
-	if (instance == nullptr)
-		instance = new ServersManager();
+	if (_webservConfig == nullptr)
+		_webservConfig = new Config(DEFAULT_CONFIG); // if config is not initialized with iniConfig, DEFAULT_CONFIG will be used
+	if (_instance == nullptr)
+		_instance = new ServersManager();
 		
-	return instance;
+	return _instance;
 }
 
 
 void ServersManager::run()
 {
 
-	for (Server *server : servers)
+	for (Server *server : _servers)
 	{
 		if (!server->run())
 			throw ServerException("Server failed to run");

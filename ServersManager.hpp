@@ -14,7 +14,7 @@ class ServersManager
 		static ServersManager* instance;
 		static std::vector<Server*> servers;
 		static Config* webservConfig;
-		std::vector<pollfd> poll_fds;
+		// std::vector<pollfd> poll_fds;
 
 		ServersManager();
 		// ServersManager(Config& webservConfig);

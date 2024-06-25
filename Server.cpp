@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/25 15:44:24 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/06/25 17:39:47 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,7 @@ void	Server::initServer(const char* ipAddr, int port)
 	}
 
 	// add _serverSocket fd to _fds vector for polling
-	_fds.push_back({_serverSocket.getSockfd(), POLLIN, 0});
+	_fds.push_back({_serverSocket.getSockfd(), POLLIN | POLLOUT, 0});
 }
 
 Server::Server() : _serverSocket(Socket())
@@ -88,8 +88,8 @@ bool	Server::run()
 {
 	DEBUG("Server::run() called");
 
-	signal(SIGINT, signalHandler);
-	signal(SIGTERM, signalHandler);
+	// signal(SIGINT, signalHandler);
+	// signal(SIGTERM, signalHandler);
 
 	while (_running)
 	{
@@ -134,7 +134,7 @@ bool	Server::accepter()
 				<< clientSockfd << ") ===\n";
 
 	_clientSockfds.push_back(clientSockfd);
-	_fds.push_back({clientSockfd, POLLIN, 0});
+	_fds.push_back({clientSockfd, POLLIN | POLLOUT, 0});
 	return true;
 }
 
@@ -231,14 +231,14 @@ Request Server::receiveRequest(int clientSockfd)
 	std::cout << TEXT_YELLOW << request << RESET << std::endl;
 
 	// change poll event to POLLOUT to write the response later
-	for (auto &fd : _fds)
-	{
-		if (fd.fd == clientSockfd)
-		{
-			fd.events = POLLOUT;
-			break;
-		}
-	}
+	// for (auto &fd : _fds)
+	// {
+	// 	if (fd.fd == clientSockfd)
+	// 	{
+	// 		fd.events = POLLOUT;
+	// 		break;
+	// 	}
+	// }
 
 	return Request(request);
 }
@@ -255,6 +255,7 @@ void	Server::responder(int clientSockfd)
 	removeClientSocket(clientSockfd);
 	std::cout << "\n=== RESPONSE SENT AND CONNECTION CLOSED (SOCKET FD: "
 				<< clientSockfd << ") ===\n";
+	DEBUG("response: " << response);
 }
 
 void	Server::removeClientSocket(int clientSockfd)

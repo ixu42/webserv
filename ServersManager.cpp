@@ -73,7 +73,7 @@ void ServersManager::run()
 	}
 
 	// for (Server *server : servers)
-	// {
+	// {config
 	// 	pollfd pfd;
 	// 	pfd.fd = server->getSocket();
 	// 	pfd.events = POLLIN;

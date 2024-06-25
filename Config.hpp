@@ -36,7 +36,7 @@ struct ServerConfig
 		std::string serverName; // = "localhost";
 		std::string clientMaxBodySize = "100M";
 
-		std::map<int, std::string> errorPages = {{404, "404.html"}, {500, "500.html"}};
+		std::map<int, std::string> errorPages = {{404, "default/404.html"}, {500, "default/500.html"}};
 		std::map<std::string, bool> cgis = {{"php", false}, {"py", false}};
 
 		std::vector<Location> locations;

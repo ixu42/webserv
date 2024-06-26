@@ -45,7 +45,7 @@ struct ServerConfig
 class Config
 {
 	private:
-		std::string filePath;
+		std::string _filePath;
 		std::string configString;
 		std::vector<ServerConfig> servers;
 		// Config() = delete;

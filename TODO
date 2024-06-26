@@ -13,6 +13,7 @@ Network communication:
 		✔ signal handling (SIGINT, SIGTERM handled) @done(24-06-25 10:58)
 	Bug fixing:
 		✔ fix address already in use from bind() @done(24-06-25 10:59)
+		✔ fix when running multiple servers only first server works @done(24-06-26 11:29)
 
 Request handling:
 	✔ parse HTTP requests (headers, method, URL, etc.) @done(24-06-25 17:50)

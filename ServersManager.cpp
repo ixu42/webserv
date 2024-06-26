@@ -1,4 +1,5 @@
 #include "ServersManager.hpp"
+#include "debug.hpp"
 
 std::vector<Server *> ServersManager::servers;
 ServersManager* ServersManager::instance = nullptr;
@@ -16,7 +17,7 @@ void ServersManager::signalHandler(int signal)
 
 	std::exit(signal); // Exit the program with the received signal as exit code
 }
-
+ 
 ServersManager::ServersManager()
 {
 	// Handle ctrl+c
@@ -26,6 +27,7 @@ ServersManager::ServersManager()
 	int i = 0;
 	for (ServerConfig& serverConfig : webservConfig->getServers())
 	{
+		DEBUG("serverConfig.port: " << serverConfig.port);
 		servers.push_back(new Server(serverConfig.ipAddress.c_str(), serverConfig.port));
 		servers[i]->setConfig(&serverConfig);
 		servers[i]->getConfig();
@@ -65,12 +67,75 @@ ServersManager* ServersManager::getInstance()
 
 void ServersManager::run()
 {
-
-	for (Server *server : servers)
+	while (true)
 	{
-		if (!server->run())
-			throw ServerException("Server failed to run");
+		std::vector<pollfd> fds;
+
+		for (auto& server : servers)
+		{
+			// add server fd to pollfd vector
+			pollfd serverFd = {server->getServerSockfd(), POLLIN, 0};
+			fds.push_back(serverFd);
+
+			// add client fds to pollfd vector
+			for (int clientSockfd : server->getClientSockfds())
+			{
+				pollfd clientFd = {clientSockfd, POLLIN | POLLOUT, 0};
+				fds.push_back(clientFd);
+			}
+		}
+
+		int ready = poll(fds.data(), fds.size(), -1);
+		if (ready == -1)
+		{
+			std::cerr << "poll() failed: " << strerror(errno) << std::endl;
+			break;
+		}
+
+		for (auto& pfd : fds)
+		{
+			if (pfd.revents & POLLIN)
+			{
+				for (auto& server : servers)
+				{
+					if (pfd.fd == server->getServerSockfd())
+						server->accepter();
+					else
+					{
+						for (auto& clientSockfd : server->getClientSockfds())
+						{
+							if (pfd.fd == clientSockfd)
+								server->receiveRequest(pfd.fd);
+						}
+					}
+				}
+			}
+			if (pfd.revents & POLLOUT)
+			{
+				for (auto& server : servers)
+				{
+					for (auto& clientSockfd : server->getClientSockfds())
+					{
+						if (pfd.fd == clientSockfd)
+							server->responder(pfd.fd);
+					}
+				}
+			}
+		}
 	}
+}
+
+/**
+ * Previous approaches for ServersManager::run()
+ */
+
+// void ServersManager::run()
+// {
+	// for (Server *server : servers)
+	// {
+	// 	if (!server->run())
+	// 		throw ServerException("Server failed to run");
+	// }
 
 	// for (Server *server : servers)
 	// {config
@@ -136,4 +201,4 @@ void ServersManager::run()
 	// 		}
 	// 	}
 	// }
-}
+// }

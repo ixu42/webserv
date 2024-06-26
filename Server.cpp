@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/25 17:39:47 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/06/26 11:16:50 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,7 @@ void	Server::initServer(const char* ipAddr, int port)
 	}
 
 	// add _serverSocket fd to _fds vector for polling
-	_fds.push_back({_serverSocket.getSockfd(), POLLIN | POLLOUT, 0});
+	// _fds.push_back({_serverSocket.getSockfd(), POLLIN | POLLOUT, 0});
 }
 
 Server::Server() : _serverSocket(Socket())
@@ -84,7 +84,7 @@ void	Server::signalHandler(int signum)
 	_running = false;
 }
 
-bool	Server::run()
+/* bool	Server::run()
 {
 	DEBUG("Server::run() called");
 
@@ -120,7 +120,7 @@ bool	Server::run()
 		}
 	}
 	return true;
-}
+} */
 
 bool	Server::accepter()
 {
@@ -134,7 +134,7 @@ bool	Server::accepter()
 				<< clientSockfd << ") ===\n";
 
 	_clientSockfds.push_back(clientSockfd);
-	_fds.push_back({clientSockfd, POLLIN | POLLOUT, 0});
+	// _fds.push_back({clientSockfd, POLLIN | POLLOUT, 0});
 	return true;
 }
 
@@ -161,14 +161,14 @@ void	Server::handler(int clientSockfd)
 					<< std::string(buffer, bytesRead);
 
 		// change poll event to POLLOUT to write the response later
-		for (auto &fd : _fds)
-		{
-			if (fd.fd == clientSockfd)
-			{
-				fd.events = POLLOUT;
-				break;
-			}
-		}
+		// for (auto &fd : _fds)
+		// {
+		// 	if (fd.fd == clientSockfd)
+		// 	{
+		// 		fd.events = POLLOUT;
+		// 		break;
+		// 	}
+		// }
 	}
 }
 
@@ -271,14 +271,14 @@ void	Server::removeClientSocket(int clientSockfd)
 	}
 
 	// remove from _fds vector
-	for (auto fd_it = _fds.begin(); fd_it != _fds.end(); ++fd_it)
-	{
-		if (fd_it->fd == clientSockfd)
-		{
-			_fds.erase(fd_it);
-			break ;
-		}
-	}
+	// for (auto fd_it = _fds.begin(); fd_it != _fds.end(); ++fd_it)
+	// {
+	// 	if (fd_it->fd == clientSockfd)
+	// 	{
+	// 		_fds.erase(fd_it);
+	// 		break ;
+	// 	}
+	// }
 }
 
 const std::string	Server::getResponse()
@@ -317,9 +317,14 @@ ServerConfig* Server::getConfig()
 	return _config;
 }
 
-int Server::getSocket()
+int Server::getServerSockfd()
 {
 	return _serverSocket.getSockfd();
+}
+
+std::vector<int> Server::getClientSockfds()
+{
+	return _clientSockfds;
 }
 
 /**

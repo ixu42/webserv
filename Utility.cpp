@@ -71,3 +71,18 @@ std::string Utility::readFile(std::string filePath)
 
 	return result;
 }
+
+// Date: Sun, 18 Oct 2012 10:36:20 GMT
+std::string Utility::getDate()
+{
+	time_t rawtime;
+	struct tm *timeinfo;
+	char buffer[80];
+
+	time(&rawtime);
+	timeinfo = gmtime(&rawtime);
+
+	strftime(buffer, 80, "%a, %d %b %Y %H:%M:%S GMT", timeinfo);
+
+	return std::string(buffer);
+}

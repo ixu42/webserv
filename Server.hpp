@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/25 15:35:02 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/06/26 15:15:28 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,9 +24,7 @@ class Server
 	private:
 		Socket						_serverSocket;
 		struct sockaddr_in			_address;
-		static volatile bool		_running;
 		std::vector<int>			_clientSockfds;
-		std::vector<struct pollfd>	_fds;
 		ServerConfig*				_config = nullptr;
 
 		int							_port;
@@ -36,21 +34,22 @@ class Server
 		Server();
 		Server(const char* ipAddr, int port);
 		~Server();
-		bool						run();
+
 		void						setConfig(ServerConfig* serverConfig);
 		ServerConfig*				getConfig();
-		int							getSocket();
+		int							getServerSockfd();
+		std::vector<int>			getClientSockfds();
 		std::string					whoAmI() const;
+
+		int							accepter();
+		Request						receiveRequest(int clientSockfd);
+		void						responder(int clientSockfd);
 
 	private:
 		void						initServer(const char* ipAddr, int port);
-		static void					signalHandler(int signum);
-		bool						accepter();
-		void						handler(int clientSockfd);
-		void						responder(int clientSockfd);
-		void						removeClientSocket(int clientSockfd);
+		void						removeFromClientSockfds(int clientSockfd);
 		const std::string			getResponse();
-		Request						receiveRequest(int clientSockfd);
+		
 };
 
 #endif

@@ -26,11 +26,20 @@ ServersManager::ServersManager()
 	int i = 0;
 	for (ServerConfig& serverConfig : _webservConfig->getServers())
 	{
+
+		DEBUG("serverConfig.port: " << serverConfig.port);
 		_servers.push_back(new Server(serverConfig.ipAddress.c_str(), serverConfig.port));
 		_servers[i]->setConfig(&serverConfig);
 		_servers[i]->getConfig();
 		// std::cout << "Server config and location: " << servers[i]->getConfig()->locations[0].path << std::endl;
 		i++;
+	}
+
+	// Add all server fds to pollfd vector
+	for (auto& server : _servers)
+	{
+		pollfd serverFd = {server->getServerSockfd(), POLLIN, 0};
+		_fds.push_back(serverFd);
 	}
 
 	std::cout << "ServersManager created" << std::endl;
@@ -45,7 +54,6 @@ ServersManager::~ServersManager()
 	}
 	delete _webservConfig;
 }
-
 
 void ServersManager::initConfig(char *fileNameString)
 {
@@ -62,15 +70,101 @@ ServersManager* ServersManager::getInstance()
 	return _instance;
 }
 
-
 void ServersManager::run()
 {
 
-	for (Server *server : _servers)
+	while (true)
 	{
-		if (!server->run())
-			throw ServerException("Server failed to run");
+		int ready = poll(_fds.data(), _fds.size(), -1);
+		if (ready == -1)
+			throw ServerException("poll() error");
+
+		for (auto& pfd : _fds)
+		{
+			if (pfd.revents & POLLIN)
+				handleRead(pfd.fd);
+			if (pfd.revents & POLLOUT)
+				handleWrite(pfd.fd);
+		}
 	}
+}
+
+void	ServersManager::handleRead(int fdReadyForRead)
+{
+	bool fdFound = false;
+
+	for (auto& server : _servers)
+	{
+		if (fdReadyForRead == server->getServerSockfd())
+		{
+			int clientSockfd = server->accepter();
+			if (clientSockfd == -1)
+				throw ServerException("Server failed to accept a connection");
+			// Add connected client fd to pollfd vector
+			_fds.push_back({clientSockfd, POLLIN | POLLOUT, 0});
+			break ;
+		}
+		else
+		{
+			for (auto& clientSockfd : server->getClientSockfds())
+			{
+				if (fdReadyForRead == clientSockfd)
+				{
+					server->receiveRequest(fdReadyForRead);
+					fdFound = true;
+					break ;
+				}
+			}
+			if (fdFound)
+				break ;
+		}
+	}
+}
+
+void	ServersManager::handleWrite(int fdReadyForWrite)
+{
+	bool fdFound = false;
+
+	for (auto& server : _servers)
+	{
+		for (auto& clientSockfd : server->getClientSockfds())
+		{
+			if (fdReadyForWrite == clientSockfd)
+			{
+				server->responder(fdReadyForWrite);
+				removeFromPollfd(fdReadyForWrite);
+				fdFound = true;
+				break ;
+			}
+		}
+		if (fdFound)
+			break ;
+	}
+}
+
+void	ServersManager::removeFromPollfd(int fd)
+{
+	for (auto fd_it = _fds.begin(); fd_it != _fds.end(); ++fd_it)
+	{
+		if (fd_it->fd == fd)
+		{
+			_fds.erase(fd_it);
+			break ;
+		}
+	}
+}
+
+/**
+ * Previous approaches for ServersManager::run()
+ */
+
+// void ServersManager::run()
+// {
+	// for (Server *server : servers)
+	// {
+	// 	if (!server->run())
+	// 		throw ServerException("Server failed to run");
+	// }
 
 	// for (Server *server : servers)
 	// {config
@@ -136,4 +230,4 @@ void ServersManager::run()
 	// 		}
 	// 	}
 	// }
-}
+// }

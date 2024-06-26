@@ -4,6 +4,7 @@
 #include <vector>
 #include <poll.h>
 #include <csignal>
+#include "debug.hpp"
 
 #define DEFAULT_CONFIG "config/default.conf"
 
@@ -14,19 +15,23 @@ class ServersManager
 		static ServersManager*		_instance;
 		static std::vector<Server*>	_servers;
 		static Config*				_webservConfig;
-		// std::vector<pollfd> poll_fds;
+		std::vector<struct pollfd>	_fds;
 
 		ServersManager();
 		// ServersManager(Config& webservConfig);
 		ServersManager(const ServersManager&) = delete;
 		ServersManager& operator=(const ServersManager&) = delete;
 		
-		static void				signalHandler(int signal);
+
+		static void					signalHandler(int signal);
+		void						handleRead(int fdReadyForRead);
+		void						handleWrite(int fdReadyForWrite);
+		void						removeFromPollfd(int fd);
 
 	public:
 		~ServersManager();
-		static ServersManager*	getInstance();
+		static ServersManager*		getInstance();
 
-		void					run();
-		static void				initConfig(char *fileNameString);
+		void						run();
+		static void					initConfig(char *fileNameString);
 };

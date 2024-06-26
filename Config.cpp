@@ -3,7 +3,7 @@
 Config::Config(std::string filePath)
 {
 	_filePath = filePath;
-	_configString = Utility::readFile(_filePath);
+	_configString = Utility::readFile(this->_filePath);
 
 	std::cout << TEXT_YELLOW;
 	std::cout << "=== Config file read === " << std::endl;

@@ -2,8 +2,8 @@
 
 Config::Config(std::string filePath)
 {
-	this->filePath = filePath;
-	this->configString = Utility::readFile(this->filePath);
+	this->_filePath = filePath;
+	this->configString = Utility::readFile(this->_filePath);
 
 	std::cout << TEXT_YELLOW;
 	std::cout << "=== Config file read === " << std::endl;

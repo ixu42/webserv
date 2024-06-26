@@ -12,6 +12,8 @@
 // #include <string.h>
 #include <cstring>
 
+#include <ctime>
+
 #include "ServerException.hpp"
 
 class Utility

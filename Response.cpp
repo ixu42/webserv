@@ -73,7 +73,7 @@ Response::Response(std::string statusCode, std::string body, std::string fileFor
 	_headers["server"] = "webserv";
 	_headers["content-length"] = std::to_string(body.length());
 	_headers["connection"] = "close";
-	_headers["content-type"] = "text/html; charset=iso-8859-1";
+	_headers["content-type"] = mimeTypes.at(fileFormat);
 
 	_body = body;
 

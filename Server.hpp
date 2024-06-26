@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/26 11:16:20 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/26 15:15:28 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,9 +24,7 @@ class Server
 	private:
 		Socket						_serverSocket;
 		struct sockaddr_in			_address;
-		static volatile bool		_running;
 		std::vector<int>			_clientSockfds;
-		// std::vector<struct pollfd>	_fds;
 		ServerConfig*				_config = nullptr;
 
 		int							_port;
@@ -36,22 +34,20 @@ class Server
 		Server();
 		Server(const char* ipAddr, int port);
 		~Server();
-		// bool						run();
+
 		void						setConfig(ServerConfig* serverConfig);
 		ServerConfig*				getConfig();
 		int							getServerSockfd();
 		std::vector<int>			getClientSockfds();
 		std::string					whoAmI() const;
 
-		bool						accepter();
+		int							accepter();
 		Request						receiveRequest(int clientSockfd);
-		void						handler(int clientSockfd); // remove later
 		void						responder(int clientSockfd);
 
 	private:
 		void						initServer(const char* ipAddr, int port);
-		static void					signalHandler(int signum); // remove later
-		void						removeClientSocket(int clientSockfd);
+		void						removeFromClientSockfds(int clientSockfd);
 		const std::string			getResponse();
 		
 };

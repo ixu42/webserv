@@ -37,10 +37,7 @@ ServersManager::ServersManager()
 
 	// Add all server fds to pollfd vector
 	for (auto& server : _servers)
-	{
-		pollfd serverFd = {server->getServerSockfd(), POLLIN, 0};
-		_fds.push_back(serverFd);
-	}
+		_fds.push_back({server->getServerSockfd(), POLLIN, 0});
 
 	std::cout << "ServersManager created" << std::endl;
 }
@@ -72,9 +69,9 @@ ServersManager* ServersManager::getInstance()
 
 void ServersManager::run()
 {
-
 	while (true)
 	{
+		DEBUG("poll() waiting for an fd to be ready...");
 		int ready = poll(_fds.data(), _fds.size(), -1);
 		if (ready == -1)
 			throw ServerException("poll() error");
@@ -82,42 +79,40 @@ void ServersManager::run()
 		for (auto& pfd : _fds)
 		{
 			if (pfd.revents & POLLIN)
-				handleRead(pfd.fd);
+				handleRead(pfd);
 			if (pfd.revents & POLLOUT)
 				handleWrite(pfd.fd);
 		}
 	}
 }
 
-void	ServersManager::handleRead(int fdReadyForRead)
+void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 {
 	bool fdFound = false;
 
 	for (auto& server : _servers)
 	{
-		if (fdReadyForRead == server->getServerSockfd())
+		if (pfdReadyForRead.fd == server->getServerSockfd())
 		{
 			int clientSockfd = server->accepter();
 			if (clientSockfd == -1)
 				throw ServerException("Server failed to accept a connection");
 			// Add connected client fd to pollfd vector
-			_fds.push_back({clientSockfd, POLLIN | POLLOUT, 0});
+			_fds.push_back({clientSockfd, POLLIN, 0});
 			break ;
 		}
-		else
+		for (auto& clientSockfd : server->getClientSockfds())
 		{
-			for (auto& clientSockfd : server->getClientSockfds())
+			if (pfdReadyForRead.fd == clientSockfd)
 			{
-				if (fdReadyForRead == clientSockfd)
-				{
-					server->receiveRequest(fdReadyForRead);
-					fdFound = true;
-					break ;
-				}
-			}
-			if (fdFound)
+				server->receiveRequest(pfdReadyForRead.fd);
+				pfdReadyForRead.events = POLLOUT;
+				fdFound = true;
 				break ;
+			}
 		}
+		if (fdFound)
+			break ;
 	}
 }
 

@@ -24,7 +24,7 @@ class ServersManager
 		
 
 		static void					signalHandler(int signal);
-		void						handleRead(int fdReadyForRead);
+		void						handleRead(struct pollfd& pfdReadyForRead);
 		void						handleWrite(int fdReadyForWrite);
 		void						removeFromPollfd(int fd);
 

@@ -47,30 +47,22 @@ std::string Utility::strToLower(std::string str)
 std::string Utility::readFile(std::string filePath)
 {
 	std::string result;
+	std::ifstream file(filePath);
 
-	int fd = open(filePath.c_str(), O_RDONLY);
-	if (fd == -1)
-	{
-		// std::cerr << "Error: " << strerror(errno) << std::endl;
-		throw ServerException("Error: " + std::string(strerror(errno)));
-	}
+	if (!file.is_open())
+		throw ServerException("Can not open file: " + filePath);
 
-	int stringSize = 1024;
-	char buffer[stringSize];
-	int bytesRead;
+	// Create a string stream to hold the file contents
+	std::ostringstream ss;
 
-	while (1)
-	{
-		bytesRead = read(fd, buffer, stringSize);
-		if (bytesRead <= 0)
-			break;
-		result.append(buffer, bytesRead);
-	}
+	// Read the file contents into the string stream
+	ss << file.rdbuf();
 
-	close(fd);
+	file.close();
 
-	return result;
+	return ss.str();
 }
+
 
 // Date: Sun, 18 Oct 2012 10:36:20 GMT
 std::string Utility::getDate()

@@ -36,7 +36,7 @@ ServersManager::ServersManager()
 	}
 
 	// Add all server fds to pollfd vector
-	for (auto& server : _servers)
+	for (Server*& server : _servers)
 		_fds.push_back({server->getServerSockfd(), POLLIN, 0});
 
 	std::cout << "ServersManager created" << std::endl;
@@ -76,7 +76,7 @@ void ServersManager::run()
 		if (ready == -1)
 			throw ServerException("poll() error");
 
-		for (auto& pfd : _fds)
+		for (struct pollfd& pfd : _fds)
 		{
 			if (pfd.revents & POLLIN)
 			{
@@ -96,7 +96,7 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 {
 	bool fdFound = false;
 
-	for (auto& server : _servers)
+	for (Server*& server : _servers)
 	{
 		if (pfdReadyForRead.fd == server->getServerSockfd())
 		{
@@ -107,7 +107,7 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 			_fds.push_back({clientSockfd, POLLIN, 0});
 			break ;
 		}
-		for (auto& clientSockfd : server->getClientSockfds())
+		for (int& clientSockfd : server->getClientSockfds())
 		{
 			if (pfdReadyForRead.fd == clientSockfd)
 			{
@@ -126,9 +126,9 @@ void	ServersManager::handleWrite(int fdReadyForWrite)
 {
 	bool fdFound = false;
 
-	for (auto& server : _servers)
+	for (Server*& server : _servers)
 	{
-		for (auto& clientSockfd : server->getClientSockfds())
+		for (int& clientSockfd : server->getClientSockfds())
 		{
 			if (fdReadyForWrite == clientSockfd)
 			{

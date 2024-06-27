@@ -79,9 +79,15 @@ void ServersManager::run()
 		for (auto& pfd : _fds)
 		{
 			if (pfd.revents & POLLIN)
+			{
 				handleRead(pfd);
+				break ;
+			}
 			if (pfd.revents & POLLOUT)
+			{
 				handleWrite(pfd.fd);
+				break ;
+			}
 		}
 	}
 }

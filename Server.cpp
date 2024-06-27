@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/26 18:21:14 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/06/27 15:21:06 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,6 +105,7 @@ int findContentLength(std::string request)
 
 Request Server::receiveRequest(int clientSockfd)
 {
+	DEBUG("Server::receiveRequest called");
 	const int bufferSize = 10;
 	char buffer[bufferSize] = {0};
 	int bytesRead;

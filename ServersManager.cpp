@@ -36,11 +36,8 @@ ServersManager::ServersManager()
 	}
 
 	// Add all server fds to pollfd vector
-	for (auto& server : _servers)
-	{
-		pollfd serverFd = {server->getServerSockfd(), POLLIN, 0};
-		_fds.push_back(serverFd);
-	}
+	for (Server*& server : _servers)
+		_fds.push_back({server->getServerSockfd(), POLLIN, 0});
 
 	std::cout << "ServersManager created" << std::endl;
 }
@@ -72,52 +69,56 @@ ServersManager* ServersManager::getInstance()
 
 void ServersManager::run()
 {
-
 	while (true)
 	{
+		DEBUG("poll() waiting for an fd to be ready...");
 		int ready = poll(_fds.data(), _fds.size(), -1);
 		if (ready == -1)
 			throw ServerException("poll() error");
 
-		for (auto& pfd : _fds)
+		for (struct pollfd& pfd : _fds)
 		{
 			if (pfd.revents & POLLIN)
-				handleRead(pfd.fd);
+			{
+				handleRead(pfd);
+				break ;
+			}
 			if (pfd.revents & POLLOUT)
+			{
 				handleWrite(pfd.fd);
+				break ;
+			}
 		}
 	}
 }
 
-void	ServersManager::handleRead(int fdReadyForRead)
+void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 {
 	bool fdFound = false;
 
-	for (auto& server : _servers)
+	for (Server*& server : _servers)
 	{
-		if (fdReadyForRead == server->getServerSockfd())
+		if (pfdReadyForRead.fd == server->getServerSockfd())
 		{
 			int clientSockfd = server->accepter();
 			if (clientSockfd == -1)
 				throw ServerException("Server failed to accept a connection");
 			// Add connected client fd to pollfd vector
-			_fds.push_back({clientSockfd, POLLIN | POLLOUT, 0});
+			_fds.push_back({clientSockfd, POLLIN, 0});
 			break ;
 		}
-		else
+		for (int& clientSockfd : server->getClientSockfds())
 		{
-			for (auto& clientSockfd : server->getClientSockfds())
+			if (pfdReadyForRead.fd == clientSockfd)
 			{
-				if (fdReadyForRead == clientSockfd)
-				{
-					server->receiveRequest(fdReadyForRead);
-					fdFound = true;
-					break ;
-				}
-			}
-			if (fdFound)
+				server->receiveRequest(pfdReadyForRead.fd);
+				pfdReadyForRead.events = POLLOUT;
+				fdFound = true;
 				break ;
+			}
 		}
+		if (fdFound)
+			break ;
 	}
 }
 
@@ -125,9 +126,9 @@ void	ServersManager::handleWrite(int fdReadyForWrite)
 {
 	bool fdFound = false;
 
-	for (auto& server : _servers)
+	for (Server*& server : _servers)
 	{
-		for (auto& clientSockfd : server->getClientSockfds())
+		for (int& clientSockfd : server->getClientSockfds())
 		{
 			if (fdReadyForWrite == clientSockfd)
 			{

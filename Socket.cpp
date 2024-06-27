@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:46 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/25 15:08:31 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/06/27 16:16:22 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,7 +112,7 @@ int	Socket::acceptConnection(struct sockaddr_in addr)
 	int acceptedSocketFd = accept(_sockfd, (struct sockaddr*)&addr, &addrlen);
 	if (acceptedSocketFd < 0)
 	{
-		printError("accept() error");
+		printError("accept() error: ");
 		return -1;
 	}
 	return acceptedSocketFd;

@@ -2,17 +2,17 @@
 
 Config::Config(std::string filePath)
 {
-	_filePath = filePath;
-	_configString = Utility::readFile(this->_filePath);
+	_configString = Utility::readFile(filePath);
+	// validate();
 
-	std::cout << TEXT_YELLOW;
-	std::cout << "=== Config file read === " << std::endl;
-	std::cout << _configString << std::endl;
-	std::cout << RESET;
+	// std::cout << TEXT_YELLOW;
+	// std::cout << "=== Config file read === " << std::endl;
+	// std::cout << _configString << std::endl;
+	// std::cout << RESET;
 
 	parse();
 
-	printConfig();
+	// printConfig();
 }
 
 void Config::printConfig()
@@ -63,6 +63,59 @@ void Config::parse()
 	std::cout << "=== Parsing done ===" << std::endl;
 }
 
+// void Config::validate()
+// {
+// 	std::istringstream stream(_configString);
+// 	std::string line;
+
+// 	while (std::getline(stream, line))
+// 	{
+// 		if (line.empty()) continue;
+// 		std::cout << "Validate line " << line << std::endl;
+// 	}
+// }
+
+void Config::validateGeneralConfig(std::string generalConfig)
+{
+	std::istringstream stream(generalConfig); 
+	std::string line;
+
+	// std::regex linePattern(R"([a-zA-Z0-9]+\s+[a-zA-Z0-9,.]+\s*[a-zA-Z0-9,.]*\s*)");
+	std::regex linePattern(R"((ipAddress|port|serverName|clientMaxBodySize|error|cgis)\s+[a-zA-Z0-9,.]+\s*[a-zA-Z0-9,.]*\s*)");
+	std::regex portPattern(R"(\s*port\s*[0-9]+\s*)");
+	std::regex ipAddressPattern(R"(\s*ipAddress\s*[0-9]+\s*)");
+
+	// std::string line2 = "port: 80";
+
+	// if (std::regex_match(line2, portPattern))
+	// 	std::cout << "Port line2 validated" << line << std::endl;
+
+
+	while (std::getline(stream, line))
+	{
+		if (line.empty()) continue;
+		// line = Utility::trim(line);
+		if (std::regex_match(line, linePattern))
+			std::cout << "Line validated: " << TEXT_GREEN << line << RESET<< std::endl;
+		else
+			std::cout << "Line not valid:  " << TEXT_RED << line << RESET << std::endl;
+
+
+		if (std::regex_match(line, portPattern))
+		{
+			int port = std::stoi(Utility::trim(Utility::splitString(line, " ")[1]));
+			if (port < 1023 || port > 65535)
+			{
+				std::cout << "Invalid port number: " + std::to_string(port) << std::endl;
+				// throw ServerException("Invalid port number: " + std::to_string(port));
+			}
+			std::cout << "Port line validated: " << line << std::endl;
+		}
+		else
+			std::cout << "Validate line " << line << std::endl;
+	}
+}
+
 void Config::parseServers(std::vector<std::string> serverStrings)
 {
 	int i = 0;
@@ -79,12 +132,16 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 
 		// Reading line by line
 		std::istringstream stream(generalConfig);
+		
+		// Validate general config
+		validateGeneralConfig(generalConfig);
+		
 		std::string line;
 		while (std::getline(stream, line))
 		{	
 			if (line.empty()) continue;
 
-			std::cout << "Line: " << line << std::endl;
+			// std::cout << "Line: " << line << std::endl;
 
 			// Split line into keys and values
 			std::vector<std::string> keyValue = Utility::splitString(line, " ");
@@ -94,7 +151,8 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 			{
 				str = Utility::trim(str);
 			}
-
+			if (keyValue.size() < 2)
+				throw ServerException("Invalid config file format, missing value for key: " + keyValue[0]);
 			std::string key = Utility::trim(keyValue[0]);
 			std::string value = Utility::trim(keyValue[1]);
 			
@@ -103,12 +161,14 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 			else if (key == "serverName")
 				_servers[i].serverName = value;
 			else if (key == "port")
+			{
 				_servers[i].port = std::stoi(value);
+			}
 			else if (key == "clientMaxBodySize")
 				_servers[i].clientMaxBodySize = value;
 			else if (key == "error")
 			{
-				std::cout << "error: " << value << std::endl;
+				// std::cout << "error: " << value << std::endl;
 				std::vector<std::string> errorCodesString = Utility::splitString(value, ",");
 				for (std::string code : errorCodesString)
 				{
@@ -138,7 +198,7 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 		int j = 0;
 		for (std::string location : locationStrings)
 		{
-			std::cout << "location: " << location << std::endl;
+			// std::cout << "location: " << location << std::endl;
 			
 			std::istringstream stream(location);
 			std::string line;
@@ -146,7 +206,7 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 			{	
 				if (line.empty()) continue;
 
-				std::cout << "Line: " << line << std::endl;
+				// std::cout << "Line: " << line << std::endl;
 
 				// Split line into keys and values
 				std::vector<std::string> keyValue = Utility::splitString(line, " ");
@@ -155,7 +215,7 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 
 				if (key == "path")
 				{
-					std::cout << "path: " << value << std::endl;
+					// std::cout << "path: " << value << std::endl;
 					serverConfig.locations[j].path = value;
 				}
 				else if (key == "redirect")

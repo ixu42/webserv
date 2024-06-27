@@ -10,12 +10,13 @@
 #include <vector>
 #include <string>
 
-#include <fcntl.h>
-#include <unistd.h>
-// #include <string.h>
+// #include <fcntl.h>
+// #include <unistd.h>
 #include <cstring>
 
 #include <sstream>
+
+#include <regex>
 
 struct Location
 {
@@ -45,14 +46,16 @@ struct ServerConfig
 class Config
 {
 	private:
-		std::string					_filePath;
 		std::string					_configString;
 		std::vector<ServerConfig>	_servers;
-		// Config() = delete;
+		Config() = delete;
+		// void						validate();
+
+		void						validateGeneralConfig(std::string generalConfig);
+		void						parse();
 
 	public:
 		Config(std::string filePath);
-		void						parse();
 		void						parseServers(std::vector<std::string> serverStrings);
 		void						parseLocations(ServerConfig& serverConfig, std::vector<std::string> locations);
 		void 						printConfig();

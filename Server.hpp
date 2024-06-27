@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/26 15:15:28 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/27 00:51:37 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,9 +45,9 @@ class Server
 		Request						receiveRequest(int clientSockfd);
 		void						responder(int clientSockfd);
 
+		void						removeFromClientSockfds(int clientSockfd);
 	private:
 		void						initServer(const char* ipAddr, int port);
-		void						removeFromClientSockfds(int clientSockfd);
 		const std::string			getResponse();
 		
 };

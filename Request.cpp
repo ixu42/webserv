@@ -22,7 +22,7 @@
 
 
 
-Request::Request(std::string request)
+Request::Request(std::string request) : _request(request)
 {
 	parse(request);
 }

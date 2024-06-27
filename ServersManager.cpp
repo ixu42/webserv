@@ -81,18 +81,67 @@ void ServersManager::run()
 
 		for (auto& pfd : _fds)
 		{
-			if (pfd.revents & POLLIN)
-				handleRead(pfd.fd);
-			if (pfd.revents & POLLOUT)
-				handleWrite(pfd.fd);
+/* 			if ((pfd.revents & POLLERR) || (pfd.revents & POLLHUP))
+			{
+				close(pfd.fd);
+				removeFromPollfd(pfd.fd);
+				for (auto& server : _servers)
+				{
+					server->removeFromClientSockfds(pfd.fd);
+				}
+			} */
+
+
+			// if (pfd.revents & POLLIN)
+			// {
+			// 	handleRead(pfd.fd);
+			// 	pfd.revents &= ~POLLIN;
+			// 	if (pfd.revents & POLLOUT)
+			// 		handleWrite(pfd.fd);
+			// }
+			if (pfd.revents & POLLIN) {
+				try 
+				{
+					Request req = handleRead(pfd.fd);
+					// Clear POLLIN flag
+					pfd.revents &= ~POLLIN;
+					if (req._request.size() != 0)
+					{
+						handleWrite(pfd.fd);
+						pfd.revents &= ~POLLOUT; }
+					else
+					{
+						close(pfd.fd);
+						removeFromPollfd(pfd.fd);
+						for (auto& server : _servers)
+						{
+							server->removeFromClientSockfds(pfd.fd);
+						}
+					}
+				}
+				catch (ServerException& e)
+				{
+
+					std::cerr << "Error: " << e.what() << std::endl;
+				}
+            }
+			// else if (pfd.revents & POLLOUT)
+			// {
+            //     // Clear POLLOUT flag
+            //     handleWrite(pfd.fd);
+            //     pfd.revents &= ~POLLOUT;
+            // }
 		}
 	}
 }
 
-void	ServersManager::handleRead(int fdReadyForRead)
+Request	ServersManager::handleRead(int fdReadyForRead)
 {
+	if (fdReadyForRead < 0)
+		throw ServerException("Invalid fd");
 	bool fdFound = false;
 
+	DEBUG(fdReadyForRead << " handleRead() called");
 	for (auto& server : _servers)
 	{
 		if (fdReadyForRead == server->getServerSockfd())
@@ -101,28 +150,39 @@ void	ServersManager::handleRead(int fdReadyForRead)
 			if (clientSockfd == -1)
 				throw ServerException("Server failed to accept a connection");
 			// Add connected client fd to pollfd vector
-			_fds.push_back({clientSockfd, POLLIN | POLLOUT, 0});
+			_fds.push_back({clientSockfd, POLLIN | POLLOUT | POLLERR | POLLHUP, 0});
+			// server->receiveRequest(fdReadyForRead);
+			// fdReadyForRead = clientSockfd;
 			break ;
 		}
-		else
-		{
+		// else
+		// {
 			for (auto& clientSockfd : server->getClientSockfds())
 			{
+				DEBUG("Finding clientSockfd in clientSockfds: " << clientSockfd << " == " << fdReadyForRead);
 				if (fdReadyForRead == clientSockfd)
 				{
-					server->receiveRequest(fdReadyForRead);
+					return server->receiveRequest(fdReadyForRead);
+					// if (req._request.size() == 0)
+					// 	removeFromPollfd(clientSockfd);
 					fdFound = true;
+					DEBUG("Found fd");
 					break ;
 				}
 			}
 			if (fdFound)
+			{
+				DEBUG("found fd - break");
 				break ;
-		}
+			}
+		// }
 	}
+	throw ServerException("no valid request");
 }
 
 void	ServersManager::handleWrite(int fdReadyForWrite)
 {
+	DEBUG(fdReadyForWrite << " handleWrite() called");
 	bool fdFound = false;
 
 	for (auto& server : _servers)

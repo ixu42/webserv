@@ -1,6 +1,7 @@
 #pragma once
 #include "Server.hpp"
 #include "Config.hpp"
+#include "Response.hpp"
 #include <vector>
 #include <poll.h>
 #include <csignal>
@@ -24,7 +25,7 @@ class ServersManager
 		
 
 		static void					signalHandler(int signal);
-		void						handleRead(int fdReadyForRead);
+		Request						handleRead(int fdReadyForRead);
 		void						handleWrite(int fdReadyForWrite);
 		void						removeFromPollfd(int fd);
 

@@ -19,6 +19,7 @@ class Request
 		Location* location;
 
 	public:
+		std::string _request;
 		Request();
 		Request(std::string request);
 

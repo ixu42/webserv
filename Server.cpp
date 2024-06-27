@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/26 18:21:14 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/06/27 01:16:33 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,6 +104,7 @@ int findContentLength(std::string request)
 }
 
 Request Server::receiveRequest(int clientSockfd)
+// int Server::receiveRequest(int clientSockfd)
 {
 	const int bufferSize = 10;
 	char buffer[bufferSize] = {0};
@@ -122,7 +123,11 @@ Request Server::receiveRequest(int clientSockfd)
 		if (count > 10000)
 			break;
 		if (bytesRead <= 0)
-			continue ;
+			break;
+		// if (bytesRead == -1)
+		// 	continue ;
+		// if (bytesRead == 0)
+		// 	break ;
 		request += std::string(buffer, bytesRead);
 		// std::cout << "Request at the moment read: " << request << std::endl;
 
@@ -146,6 +151,7 @@ Request Server::receiveRequest(int clientSockfd)
 	std::cout << TEXT_YELLOW << request << RESET << std::endl;
 
 	return Request(request);
+	// return bytesRead;
 }
 
 void	Server::responder(int clientSockfd)

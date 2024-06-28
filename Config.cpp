@@ -44,8 +44,11 @@ void Config::printConfig()
 			std::cout << "\tdirectoryListing: " << std::boolalpha << location.directoryListing << std::endl;
 			for (std::string ind : location.index)
 				std::cout << "\tind: " << ind << std::endl;
-			for (std::string method : location.methods)
-				std::cout << "\tmethod: " << method << std::endl;
+			for (auto& method : location.methods)
+			{
+				if (method.second)
+					std::cout << "\tmethod: " << method.first << std::endl;
+			}
 		}
 		i++;
 	}
@@ -62,18 +65,6 @@ void Config::parse()
 
 	std::cout << "=== Parsing done ===" << std::endl;
 }
-
-// void Config::validate()
-// {
-// 	std::istringstream stream(_configString);
-// 	std::string line;
-
-// 	while (std::getline(stream, line))
-// 	{
-// 		if (line.empty()) continue;
-// 		std::cout << "Validate line " << line << std::endl;
-// 	}
-// }
 
 /**
  * pattern1 matches the line and pattern2
@@ -98,9 +89,6 @@ int Config::validateGeneralConfig(std::string generalConfig)
 {
 	int generalConfigErrorsCount = 0;
 
-	std::istringstream stream(generalConfig); 
-	std::string line;
-
 	// Cgi pattern is constructed from cgis map default keys
 	std::string cgisString;
 	size_t i = 0;
@@ -113,8 +101,7 @@ int Config::validateGeneralConfig(std::string generalConfig)
 	}
 	std::string patternStr = "\\s*cgis\\s+\\b(" + cgisString + ")(?:,(" + cgisString + "))?\\b\\s*";
 
-
-	std::regex linePattern(R"((ipAddress|port|serverName|clientMaxBodySize|error|cgis)\s+[a-zA-Z0-9,.]+\s*[a-zA-Z0-9,.]*\s*)");
+	std::regex linePattern(R"((ipAddress|port|serverName|clientMaxBodySize|error|cgis)\s+[a-zA-Z0-9~\-_.]+\s*[a-zA-Z0-9~\-_.]*\s*)");
 	std::map<std::string, std::regex> patterns = {
 		{"ipAddress", std::regex(R"(\s*ipAddress\s+((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}\s*)")},
 		{"port", std::regex(R"(\s*port\s+[0-9]+\s*)")},
@@ -124,17 +111,18 @@ int Config::validateGeneralConfig(std::string generalConfig)
 		{"cgis",std::regex(patternStr)},
 	};
 
+	std::istringstream stream(generalConfig); 
+	std::string line;
 	while (std::getline(stream, line))
 	{
-		int processed = 0;
+		int errorCaught = 0;
 		if (line.empty()) continue;
 
 		if (std::regex_match(line, linePattern))
 		{
-			// Validate address
 			for (auto& pattern : patterns)
 			{
-				if ((processed = matchLinePattern(line, pattern.first, pattern.second)) == 1)
+				if ((errorCaught = matchLinePattern(line, pattern.first, pattern.second)) == 1)
 				{
 					generalConfigErrorsCount++;
 					break;
@@ -146,14 +134,13 @@ int Config::validateGeneralConfig(std::string generalConfig)
 					{
 						std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
 						generalConfigErrorsCount++;
-						processed = 1;
+						errorCaught = 1;
 						break;
 					}
 				}
 			}
-			if (processed == 1)
-				continue;
-			std::cout << "Line validated: " << TEXT_GREEN << line << RESET<< std::endl;
+			if (errorCaught != 1)
+				std::cout << "Line validated: " << TEXT_GREEN << line << RESET<< std::endl;
 		}
 		else
 		{
@@ -162,6 +149,35 @@ int Config::validateGeneralConfig(std::string generalConfig)
 		}
 	}
 	return generalConfigErrorsCount;
+}
+
+
+/**
+ * Validates: path, redirect index, root, methods, uploadPath, directoryListing
+*/
+
+
+int Config::validateLocationConfig(std::string locationString)
+{
+	(void)locationString;
+
+	std::map<std::string, std::regex> patterns = {
+		{"path", std::regex(R"(\s*path\s+\/([a-zA-Z0-9_\-~.]+\/?)*([a-zA-Z0-9_\-~.]+\.[a-zA-Z0-9_\-~.]+)?\s*)")},
+		{"redirect", std::regex(R"(\s*redirect\s+\w+:(\/\/[^\/\s]+)?[^\s]*\s*)")},
+		{"uploadPath", std::regex(R"(\s*uploadPath\s+\/([a-zA-Z0-9-_~.]*\/)*(?=\s|$))")}
+	};
+
+	int locationStringErrorsCount = 0;
+
+	std::istringstream stream(locationString); 
+	std::string line;
+	while (std::getline(stream, line))
+	{
+		// int errorCaught = 0;
+		// if (line.empty()) continue;
+	}
+
+	return locationStringErrorsCount;
 }
 
 void Config::parseServers(std::vector<std::string> serverStrings)
@@ -184,6 +200,10 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 
 		// Validate general config
 		int configErrorsFound = validateGeneralConfig(generalConfig);
+		for (std::string& locationString : locationStrings)
+		{
+			configErrorsFound += validateLocationConfig(locationString);
+		}
 
 		if (configErrorsFound != 0)
 		{
@@ -293,7 +313,8 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 				{
 					std::vector<std::string> methods = Utility::splitString(value, ",");
 					for (std::string method : methods)
-						serverConfig.locations[j].methods.push_back(method);
+						serverConfig.locations[j].methods[method] = true;
+						// serverConfig.locations[j].methods.push_back(method);
 				}
 			}
 			j++;

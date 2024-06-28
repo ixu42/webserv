@@ -20,13 +20,14 @@
 
 struct Location
 {
-	std::string					path;
-	std::string					redirect;
-	std::string					root;
-	std::string					uploadPath;
-	bool						directoryListing = false;
-	std::vector<std::string>	index = {"index.html"};
-	std::vector<std::string>	methods;
+	std::string							path;
+	std::string							redirect;
+	std::string							root;
+	std::string							uploadPath;
+	bool								directoryListing = false;
+	std::vector<std::string>			index = {"index.html"};
+	// std::vector<std::string>	methods;
+	std::map<std::string, bool>	methods;
 };
 
 struct ServerConfig
@@ -52,6 +53,7 @@ class Config
 		// void						validate();
 
 		int							validateGeneralConfig(std::string generalConfig);
+		int							validateLocationConfig(std::string locationString);
 		void						parse();
 		int							matchLinePattern(std::string& line, std::string field, std::regex pattern2);
 		void						parseServers(std::vector<std::string> serverStrings);

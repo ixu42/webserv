@@ -1,13 +1,20 @@
-#!/usr/bin/env python3
+# Import modules for CGI handling
+import cgi, cgitb
 
-import os
+# Create instance of FieldStorage
+form = cgi.FieldStorage()
 
-print("Content-Type: text/html")
+# Get data from fields
+first_name = form.getvalue('first_name')
+last_name = form.getvalue('last_name')
+
+print ("Content-type:text/html")
 print()
-
-print("<html><head><title>CGI Script</title></head><body>")
-print("<h1>Hello from Python CGI script!</h1>")
-print("<p>REQUEST_METHOD: {}</p>".format(os.environ.get("REQUEST_METHOD", "")))
-print("<p>QUERY_STRING: {}</p>".format(os.environ.get("QUERY_STRING", "")))
-print("<p>PATH_INFO: {}</p>".format(os.environ.get("PATH_INFO", "")))
-print("</body></html>")
+print ("<html>")
+print ('<head>')
+print ("<title>Hello - Second CGI Program</title>")
+print ('</head>')
+print ('<body>')
+print ("<h2>Hello %s %s</h2>" % (first_name, last_name))
+print ('</body>')
+print ('</html>')

@@ -51,7 +51,7 @@ class Config
 		Config() = delete;
 		// void						validate();
 
-		void						validateGeneralConfig(std::string generalConfig);
+		int						validateGeneralConfig(std::string generalConfig);
 		void						parse();
 
 	public:

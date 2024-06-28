@@ -8,8 +8,9 @@ static const std::map<std::string, std::string> statusMessages = {
 	{"400", "Bad Request"},
 	{"403", "Fodbidden"},
 	{"404", "Not Found"},
-	{"405", "Method Not Allowed"}, // if the locaiton does not allowes method in request. THen put "Allowed: GET, POST" in response header
-	{"500", "Internal Server Error"},
+	{"405", "Method Not Allowed"}, // if the location does not allowes method in request. THen put "Allowed: GET, POST" in response header
+	{"413,", "Request Entity Too Large"}, // if the request body size exceeds the clientMaxBodySize
+	{"500", "Internal Server Error"}, // can be used when the server runs into unexpected issues processing the request, including memory allocation failures
 	{"307",	"Temporary Redirect"}
 };
 

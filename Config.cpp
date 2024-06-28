@@ -75,45 +75,113 @@ void Config::parse()
 // 	}
 // }
 
-void Config::validateGeneralConfig(std::string generalConfig)
+/**
+ * Returns number of invalid lines
+ */
+int Config::validateGeneralConfig(std::string generalConfig)
 {
+	int generalConfigErrorsCount = 0;
+
 	std::istringstream stream(generalConfig); 
 	std::string line;
 
 	// std::regex linePattern(R"([a-zA-Z0-9]+\s+[a-zA-Z0-9,.]+\s*[a-zA-Z0-9,.]*\s*)");
 	std::regex linePattern(R"((ipAddress|port|serverName|clientMaxBodySize|error|cgis)\s+[a-zA-Z0-9,.]+\s*[a-zA-Z0-9,.]*\s*)");
-	std::regex portPattern(R"(\s*port\s*[0-9]+\s*)");
-	std::regex ipAddressPattern(R"(\s*ipAddress\s*[0-9]+\s*)");
+	std::regex portPattern(R"(\s*port\s+[0-9]+\s*)");
+	std::regex ipAddressPattern(R"(\s*ipAddress\s+((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4})");
+	// RFCC 1123 Standard
+	std::regex serverNamePattern(R"(\s*serverName\s+(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]))");
+	std::regex clientMaxBodySizePattern(R"(\s*clientMaxBodySize\s+[1-9]+[0-9]*(T|G||M|K|B))");
+	std::regex errorPattern(R"(\s*error\s+[1-5][0-9]{2}(?:,[1-5][0-9]{2})*\s+([^,\s]+(?:\.html|\.htm))\s*)");
 
-	// std::string line2 = "port: 80";
+	// Cgi pattern is constructed from cgis map default keys
+	std::string cgisString;
+	size_t i = 0;
+	for (auto& cgi : getServers()[0].cgis)
+	{
+		cgisString += cgi.first;
+		if (i != getServers()[0].cgis.size() - 1)
+			cgisString += "|";
+		i++;
+	}
+    std::string patternStr = "\\s*cgis\\s+\\b(" + cgisString + ")(?:,(" + cgisString + "))?\\b";
+    std::regex cgisPattern(patternStr);
 
-	// if (std::regex_match(line2, portPattern))
-	// 	std::cout << "Port line2 validated" << line << std::endl;
-
+	// std::regex cgisPattern(R"(\s*cgis\s+\b(" + cgisString + ")(?:,(" + cgisString + "))?\b)");
+	// std::regex cgisPattern(R"(\s*cgis\s+\b(php|py)(?:,(php|py))?\b)");
 
 	while (std::getline(stream, line))
 	{
 		if (line.empty()) continue;
+
 		// line = Utility::trim(line);
+		// std::cout << "Validating the line... " << line << std::endl;
 		if (std::regex_match(line, linePattern))
-			std::cout << "Line validated: " << TEXT_GREEN << line << RESET<< std::endl;
-		else
-			std::cout << "Line not valid:  " << TEXT_RED << line << RESET << std::endl;
-
-
-		if (std::regex_match(line, portPattern))
 		{
-			int port = std::stoi(Utility::trim(Utility::splitString(line, " ")[1]));
-			if (port < 1023 || port > 65535)
+			// Validate address
+			if (std::regex_match(line, std::regex(R"(^\s*ipAddress\b.*)")) && !std::regex_match(line, ipAddressPattern))
 			{
-				std::cout << "Invalid port number: " + std::to_string(port) << std::endl;
-				// throw ServerException("Invalid port number: " + std::to_string(port));
+				std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
+				generalConfigErrorsCount++;
+				continue;
 			}
-			std::cout << "Port line validated: " << line << std::endl;
+			// Validate port
+			if (std::regex_match(line, std::regex(R"(^\s*port\b.*)")) && !std::regex_match(line, portPattern))
+			{
+				std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
+				generalConfigErrorsCount++;
+				continue;
+			}
+			else if (std::regex_match(line, portPattern))
+			{
+				int port = std::stoi(Utility::trim(Utility::splitString(line, " ")[1]));
+				if (port < 1023 || port > 65535)
+				{
+					std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
+					// std::cout << "Invalid port number: " + std::to_string(port) << std::endl;
+					// throw ServerException("Invalid port number: " + std::to_string(port));
+					generalConfigErrorsCount++;
+					continue;
+				}
+			}
+			// Validate server name
+			if (std::regex_match(line, std::regex(R"(^\s*serverName\b.*)")) && !std::regex_match(line, serverNamePattern))
+			{
+				std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
+				generalConfigErrorsCount++;
+				continue;
+			}
+			// Validate client max body size
+			if (std::regex_match(line, std::regex(R"(^\s*clientMaxBodySize\b.*)")) && !std::regex_match(line, clientMaxBodySizePattern))
+			{
+				std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
+				generalConfigErrorsCount++;
+				continue;
+			}
+			// Validate error
+			if (std::regex_match(line, std::regex(R"(^\s*error\b.*)")) && !std::regex_match(line, errorPattern))
+			{
+				std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
+				generalConfigErrorsCount++;
+				continue;
+			}
+			// Validate cgis
+			if (std::regex_match(line, std::regex(R"(^\s*cgis\b.*)")) && !std::regex_match(line, cgisPattern))
+			{
+				std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
+				generalConfigErrorsCount++;
+				continue;
+			}
+			// Validate 
+			std::cout << "Line validated: " << TEXT_GREEN << line << RESET<< std::endl;
 		}
 		else
-			std::cout << "Validate line " << line << std::endl;
+		{
+			std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
+			generalConfigErrorsCount++;
+		}
 	}
+	return generalConfigErrorsCount;
 }
 
 void Config::parseServers(std::vector<std::string> serverStrings)
@@ -121,21 +189,32 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 	int i = 0;
 	for (std::string server : serverStrings)
 	{
+		std::cout << "Parsing server #" << i << std::endl;
 		ServerConfig serverConfig;
 		std::string generalConfig;
 		
 		std::vector<std::string> split = Utility::splitString(server, "[location]");
 
-		// Parsing server general config
+		// Get server general config string
 		generalConfig = split[0];
-		std::cout << "generalConfig: " << generalConfig << std::endl;
+		// std::cout << "generalConfig: " << generalConfig << std::endl;
 
+		// Get  server locations string
+		std::vector<std::string> locationStrings(split.begin() + 1, split.end());
+
+		// Validate general config
+		int configErrorsFound = validateGeneralConfig(generalConfig);
+
+		if (configErrorsFound != 0)
+		{
+			// decrease servers vector because config is faulty
+			std::cout << "This server config has " << configErrorsFound << " invalid lines and will be ignored" << std::endl;
+			_servers.resize(_servers.size() - 1);
+			continue;
+		}
+		
 		// Reading line by line
 		std::istringstream stream(generalConfig);
-		
-		// Validate general config
-		validateGeneralConfig(generalConfig);
-		
 		std::string line;
 		while (std::getline(stream, line))
 		{	
@@ -183,9 +262,7 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 			}
 		}
 
-		// Parsing server locations
-		std::vector<std::string> locationStrings(split.begin() + 1, split.end());
-		_servers[i].locations.resize(locationStrings.size());
+		// _servers[i].locations.resize(locationStrings.size());
 		parseLocations(_servers[i], locationStrings);
 
 		i++;

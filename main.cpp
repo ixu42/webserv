@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/26 16:32:48 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/27 21:54:08 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,12 @@ int main(int argc, char *argv[])
 		{
 			std::cerr << BG_RED << TEXT_WHITE;
 			std::cerr << "Server close with error: " << e.what() << '\n';
+			std::cerr << RESET;
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << BG_RED << TEXT_WHITE;
+			std::cerr << "Server close with exception: " << e.what() << '\n';
 			std::cerr << RESET;
 		}
 	}

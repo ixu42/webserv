@@ -72,7 +72,7 @@ Response::Response(std::string statusCode, std::string body, std::string fileFor
 
 	_headers["date"] = Utility::getDate();
 	_headers["server"] = "webserv";
-	_headers["content-length"] = std::to_string(body.length());
+	_headers["content-length"] = body.length();
 	_headers["connection"] = "close";
 	_headers["content-type"] = mimeTypes.at(fileFormat);
 

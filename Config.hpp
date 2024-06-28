@@ -51,14 +51,15 @@ class Config
 		Config() = delete;
 		// void						validate();
 
-		int						validateGeneralConfig(std::string generalConfig);
+		int							validateGeneralConfig(std::string generalConfig);
 		void						parse();
-
-	public:
-		Config(std::string filePath);
+		int							matchLinePattern(std::string& line, std::string field, std::regex pattern2);
 		void						parseServers(std::vector<std::string> serverStrings);
 		void						parseLocations(ServerConfig& serverConfig, std::vector<std::string> locations);
 		void 						printConfig();
+
+	public:
+		Config(std::string filePath);
 
 		std::vector<ServerConfig>&	getServers();
 };

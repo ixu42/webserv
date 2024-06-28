@@ -76,6 +76,22 @@ void Config::parse()
 // }
 
 /**
+ * pattern1 matches the line and pattern2
+ * Returns 1 if line is not valid
+*/
+int Config::matchLinePattern(std::string& line, std::string field, std::regex pattern2)
+{
+	field = "^\\s*" + field + "\\b.*";
+	std::regex pattern1(field);
+	if (std::regex_match(line, pattern1) && !std::regex_match(line, pattern2))
+	{
+		std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
+		return 1;
+	}
+	return 0;
+}
+
+/**
  * Returns number of invalid lines
  */
 int Config::validateGeneralConfig(std::string generalConfig)
@@ -84,15 +100,6 @@ int Config::validateGeneralConfig(std::string generalConfig)
 
 	std::istringstream stream(generalConfig); 
 	std::string line;
-
-	// std::regex linePattern(R"([a-zA-Z0-9]+\s+[a-zA-Z0-9,.]+\s*[a-zA-Z0-9,.]*\s*)");
-	std::regex linePattern(R"((ipAddress|port|serverName|clientMaxBodySize|error|cgis)\s+[a-zA-Z0-9,.]+\s*[a-zA-Z0-9,.]*\s*)");
-	std::regex portPattern(R"(\s*port\s+[0-9]+\s*)");
-	std::regex ipAddressPattern(R"(\s*ipAddress\s+((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4})");
-	// RFCC 1123 Standard
-	std::regex serverNamePattern(R"(\s*serverName\s+(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]))");
-	std::regex clientMaxBodySizePattern(R"(\s*clientMaxBodySize\s+[1-9]+[0-9]*(T|G||M|K|B))");
-	std::regex errorPattern(R"(\s*error\s+[1-5][0-9]{2}(?:,[1-5][0-9]{2})*\s+([^,\s]+(?:\.html|\.htm))\s*)");
 
 	// Cgi pattern is constructed from cgis map default keys
 	std::string cgisString;
@@ -104,75 +111,48 @@ int Config::validateGeneralConfig(std::string generalConfig)
 			cgisString += "|";
 		i++;
 	}
-    std::string patternStr = "\\s*cgis\\s+\\b(" + cgisString + ")(?:,(" + cgisString + "))?\\b";
-    std::regex cgisPattern(patternStr);
+	std::string patternStr = "\\s*cgis\\s+\\b(" + cgisString + ")(?:,(" + cgisString + "))?\\b\\s*";
 
-	// std::regex cgisPattern(R"(\s*cgis\s+\b(" + cgisString + ")(?:,(" + cgisString + "))?\b)");
-	// std::regex cgisPattern(R"(\s*cgis\s+\b(php|py)(?:,(php|py))?\b)");
+
+	std::regex linePattern(R"((ipAddress|port|serverName|clientMaxBodySize|error|cgis)\s+[a-zA-Z0-9,.]+\s*[a-zA-Z0-9,.]*\s*)");
+	std::map<std::string, std::regex> patterns = {
+		{"ipAddress", std::regex(R"(\s*ipAddress\s+((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}\s*)")},
+		{"port", std::regex(R"(\s*port\s+[0-9]+\s*)")},
+		{"serverName", std::regex(R"(\s*serverName\s+(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\s*)")},
+		{"clientMaxBodySize", std::regex(R"(\s*clientMaxBodySize\s+[1-9]+[0-9]*(T|G||M|K|B))")},
+		{"error", std::regex(R"(\s*error\s+[1-5][0-9]{2}(?:,[1-5][0-9]{2})*\s+([^,\s]+(?:\.html|\.htm))\s*)")},
+		{"cgis",std::regex(patternStr)},
+	};
 
 	while (std::getline(stream, line))
 	{
+		int processed = 0;
 		if (line.empty()) continue;
 
-		// line = Utility::trim(line);
-		// std::cout << "Validating the line... " << line << std::endl;
 		if (std::regex_match(line, linePattern))
 		{
 			// Validate address
-			if (std::regex_match(line, std::regex(R"(^\s*ipAddress\b.*)")) && !std::regex_match(line, ipAddressPattern))
+			for (auto& pattern : patterns)
 			{
-				std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
-				generalConfigErrorsCount++;
-				continue;
-			}
-			// Validate port
-			if (std::regex_match(line, std::regex(R"(^\s*port\b.*)")) && !std::regex_match(line, portPattern))
-			{
-				std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
-				generalConfigErrorsCount++;
-				continue;
-			}
-			else if (std::regex_match(line, portPattern))
-			{
-				int port = std::stoi(Utility::trim(Utility::splitString(line, " ")[1]));
-				if (port < 1023 || port > 65535)
+				if ((processed = matchLinePattern(line, pattern.first, pattern.second)) == 1)
 				{
-					std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
-					// std::cout << "Invalid port number: " + std::to_string(port) << std::endl;
-					// throw ServerException("Invalid port number: " + std::to_string(port));
 					generalConfigErrorsCount++;
-					continue;
+					break;
+				}
+				else if (pattern.first == "port" && std::regex_match(line, pattern.second))
+				{
+					int port = std::stoi(Utility::trim(Utility::splitString(line, " ")[1]));
+					if (port < 1023 || port > 65535)
+					{
+						std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
+						generalConfigErrorsCount++;
+						processed = 1;
+						break;
+					}
 				}
 			}
-			// Validate server name
-			if (std::regex_match(line, std::regex(R"(^\s*serverName\b.*)")) && !std::regex_match(line, serverNamePattern))
-			{
-				std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
-				generalConfigErrorsCount++;
+			if (processed == 1)
 				continue;
-			}
-			// Validate client max body size
-			if (std::regex_match(line, std::regex(R"(^\s*clientMaxBodySize\b.*)")) && !std::regex_match(line, clientMaxBodySizePattern))
-			{
-				std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
-				generalConfigErrorsCount++;
-				continue;
-			}
-			// Validate error
-			if (std::regex_match(line, std::regex(R"(^\s*error\b.*)")) && !std::regex_match(line, errorPattern))
-			{
-				std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
-				generalConfigErrorsCount++;
-				continue;
-			}
-			// Validate cgis
-			if (std::regex_match(line, std::regex(R"(^\s*cgis\b.*)")) && !std::regex_match(line, cgisPattern))
-			{
-				std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
-				generalConfigErrorsCount++;
-				continue;
-			}
-			// Validate 
 			std::cout << "Line validated: " << TEXT_GREEN << line << RESET<< std::endl;
 		}
 		else

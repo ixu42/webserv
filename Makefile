@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+         #
+#    By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/08 17:44:55 by ixu               #+#    #+#              #
-#    Updated: 2024/06/25 15:13:30 by vshchuki         ###   ########.fr        #
+#    Updated: 2024/06/29 14:50:23 by dnikifor         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,7 +17,7 @@ NAME := webserv
 OBJS_DIR := objs/
 
 # Source files
-SRCS = $(addsuffix .cpp, main Socket Server Request Utility ServersManager Config)
+SRCS = $(addsuffix .cpp, main Socket Server Request Utility ServersManager Config CGIHandler)
 
 # Object files derived from sources
 OBJS = $(addprefix $(OBJS_DIR), $(SRCS:.cpp=.o))

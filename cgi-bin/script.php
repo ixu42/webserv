@@ -1,3 +1,5 @@
+#!/usr/bin/php
+
 <?php
 echo "Content-type: text/html\n\n";
 echo "<html><body>";

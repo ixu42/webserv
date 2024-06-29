@@ -53,7 +53,7 @@ static const std::map<std::string, std::string> mimeTypes = {
 	{"gzip", "application/gzip"},
 
 	// https://stackoverflow.com/questions/20508788/do-i-need-content-type-application-octet-stream-for-file-download
-	{"dafult", "application/octet-stream"}
+	{"default", "application/octet-stream"}
 };
 
 

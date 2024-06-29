@@ -99,9 +99,18 @@ int Config::validateGeneralConfig(std::string generalConfig)
 			cgisString += "|";
 		i++;
 	}
-	std::string patternStr = "\\s*cgis\\s+\\b(" + cgisString + ")(?:,(" + cgisString + "))?\\b\\s*";
+	int cgisCount = getServers()[0].cgis.size();
+	std::cout << "cgisString: " << cgisString << std::endl;
 
-	std::regex linePattern(R"((ipAddress|port|serverName|clientMaxBodySize|error|cgis)\s+[a-zA-Z0-9~\-_.]+\s*[a-zA-Z0-9~\-_.]*\s*)");
+
+	std::string patternStr = "\\s*cgis\\s+\\b(" + cgisString + ")(?:,(" + cgisString + ")){0," + std::to_string(cgisCount - 1) +"}\\b\\s*";
+	// std::string patternStr = "\\s*cgis\\s+\\b(" + cgisString + ")(?:,(" + cgisString + ")){0,2}\\b\\s*";
+	// std::string patternStr = "\\s*cgis\\s+(" + cgisString +")(,(" + cgisString + "))?\\s*";	
+
+
+
+	// std::regex linePattern(R"((ipAddress|port|serverName|clientMaxBodySize|error|cgis)\s+[a-zA-Z0-9~\-_.]+\s*[a-zA-Z0-9~\-_.]*\s*)");
+	std::regex linePattern(R"((ipAddress|port|serverName|clientMaxBodySize|error|cgis)\s+[a-zA-Z0-9~\-_.,]+\s*[a-zA-Z0-9~\-_.,]*\s*)");
 	std::map<std::string, std::regex> patterns = {
 		{"ipAddress", std::regex(R"(\s*ipAddress\s+((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}\s*)")},
 		{"port", std::regex(R"(\s*port\s+[0-9]+\s*)")},
@@ -138,6 +147,7 @@ int Config::validateGeneralConfig(std::string generalConfig)
 						break;
 					}
 				}
+				// else if (pattern.first == "error")
 			}
 			if (errorCaught != 1)
 				std::cout << "Line validated: " << TEXT_GREEN << line << RESET<< std::endl;
@@ -218,10 +228,10 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 
 		// Validate general config
 		int configErrorsFound = validateGeneralConfig(generalConfig);
-		for (std::string& locationString : locationStrings)
-		{
-			configErrorsFound += validateLocationConfig(locationString);
-		}
+		// for (std::string& locationString : locationStrings)
+		// {
+		// 	configErrorsFound += validateLocationConfig(locationString);
+		// }
 
 		if (configErrorsFound != 0)
 		{

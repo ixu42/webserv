@@ -159,8 +159,7 @@ int Config::validateGeneralConfig(std::string generalConfig)
 
 int Config::validateLocationConfig(std::string locationString)
 {
-	(void)locationString;
-
+	std::regex linePattern(R"((path|redirect index|root|methods|uploadPath|directoryListing)\s+[a-zA-Z0-9~\-_.]+\s*[a-zA-Z0-9~\-_.]*\s*)");
 	std::map<std::string, std::regex> patterns = {
 		{"path", std::regex(R"(\s*path\s+\/([a-zA-Z0-9_\-~.]+\/?)*([a-zA-Z0-9_\-~.]+\.[a-zA-Z0-9_\-~.]+)?\s*)")},
 		{"redirect", std::regex(R"(\s*redirect\s+\w+:(\/\/[^\/\s]+)?[^\s]*\s*)")},
@@ -171,12 +170,31 @@ int Config::validateLocationConfig(std::string locationString)
 
 	std::istringstream stream(locationString); 
 	std::string line;
+	std::cout << "Let's validate location..." << std::endl;
 	while (std::getline(stream, line))
 	{
-		// int errorCaught = 0;
-		// if (line.empty()) continue;
-	}
+		int errorCaught = 0;
+		if (line.empty()) continue;
 
+		if (std::regex_match(line, linePattern))
+		{
+			for (auto& pattern : patterns)
+			{
+				if ((errorCaught = matchLinePattern(line, pattern.first, pattern.second)) == 1)
+				{
+					locationStringErrorsCount++;
+					break;
+				}
+			}
+			if (errorCaught != 1)
+				std::cout << "Line validated: " << TEXT_GREEN << line << RESET<< std::endl;
+		}
+		else
+		{
+			std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
+			locationStringErrorsCount++;
+		}
+	}
 	return locationStringErrorsCount;
 }
 

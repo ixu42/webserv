@@ -1,5 +1,16 @@
 #include "Utility.hpp"
 
+std::string Utility::replaceWhiteSpaces(std::string str)
+{
+	for (char& c: str)
+	{
+		if (std::isspace(c))
+			c = ' ';
+	}
+	return str;
+}
+
+
 // Function to trim whitespace from both ends of a string
 std::string Utility::trim(std::string str)
 {

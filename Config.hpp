@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <set>
 #include <vector>
 #include <string>
 
@@ -59,6 +60,7 @@ class Config
 		void						parseServers(std::vector<std::string> serverStrings);
 		void						parseLocations(ServerConfig& serverConfig, std::vector<std::string> locations);
 		void 						printConfig();
+		int							checkUnique(std::string line);
 
 	public:
 		Config(std::string filePath);

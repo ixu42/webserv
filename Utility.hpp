@@ -17,6 +17,7 @@
 class Utility
 {
 	public:
+		static std::string				replaceWhiteSpaces(std::string str);
 		static std::string				trim(std::string str);
 		static std::vector<std::string>	splitString(const std::string &request, const std::string &delimiter);
 		static std::string				strToLower(std::string str);

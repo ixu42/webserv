@@ -12,7 +12,7 @@ Config::Config(std::string filePath)
 
 	parse();
 
-	// printConfig();
+	printConfig();
 }
 
 void Config::printConfig()
@@ -66,6 +66,23 @@ void Config::parse()
 	std::cout << "=== Parsing done ===" << std::endl;
 }
 
+
+/**
+ * Checks second parameter for unique values
+ */
+int Config::checkUnique(std::string line)
+{
+	std::vector<std::string> lineSplit = Utility::splitString(Utility::replaceWhiteSpaces(line), " ");
+	std::vector<std::string> errorCodesStrings = Utility::splitString(lineSplit[1], ",");
+	std::set<std::string> uniqueErrorCodesStrings(errorCodesStrings.begin(), errorCodesStrings.end());
+	if (errorCodesStrings.size() != uniqueErrorCodesStrings.size())
+	{
+		std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
+		return 1;
+	}
+	return 0;
+}
+
 /**
  * pattern1 matches the line and pattern2
  * Returns 1 if line is not valid
@@ -107,16 +124,14 @@ int Config::validateGeneralConfig(std::string generalConfig)
 	// std::string patternStr = "\\s*cgis\\s+\\b(" + cgisString + ")(?:,(" + cgisString + ")){0,2}\\b\\s*";
 	// std::string patternStr = "\\s*cgis\\s+(" + cgisString +")(,(" + cgisString + "))?\\s*";	
 
-
-
-	// std::regex linePattern(R"((ipAddress|port|serverName|clientMaxBodySize|error|cgis)\s+[a-zA-Z0-9~\-_.]+\s*[a-zA-Z0-9~\-_.]*\s*)");
-	std::regex linePattern(R"((ipAddress|port|serverName|clientMaxBodySize|error|cgis)\s+[a-zA-Z0-9~\-_.,]+\s*[a-zA-Z0-9~\-_.,]*\s*)");
+	std::regex linePattern(R"((ipAddress|port|serverName|clientMaxBodySize|error|cgis)\s+[a-zA-Z0-9~\-_.,]+\s*[a-zA-Z0-9~\-_.,\/]*\s*)");
 	std::map<std::string, std::regex> patterns = {
 		{"ipAddress", std::regex(R"(\s*ipAddress\s+((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}\s*)")},
 		{"port", std::regex(R"(\s*port\s+[0-9]+\s*)")},
 		{"serverName", std::regex(R"(\s*serverName\s+(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\s*)")},
 		{"clientMaxBodySize", std::regex(R"(\s*clientMaxBodySize\s+[1-9]+[0-9]*(T|G||M|K|B))")},
-		{"error", std::regex(R"(\s*error\s+[1-5][0-9]{2}(?:,[1-5][0-9]{2})*\s+([^,\s]+(?:\.html|\.htm))\s*)")},
+		{"error", std::regex(R"(\s*error\s+[4-5][0-9]{2}(?:,[4-5][0-9]{2})*\s+([^,\s]+(?:\.html|\.htm))\s*)")},
+		// {"error", std::regex(R"(\s*error\s+[4-5][0-9]{2}(?:,[4-5][0-9]{2})*\s+(.+(\.html|\.htm))\s*)")},
 		{"cgis",std::regex(patternStr)},
 	};
 
@@ -147,7 +162,11 @@ int Config::validateGeneralConfig(std::string generalConfig)
 						break;
 					}
 				}
-				// else if (pattern.first == "error")
+				else if ((pattern.first == "error" || pattern.first == "cgis") && (errorCaught = checkUnique(line)) == 1)
+				{
+					generalConfigErrorsCount++;
+					break;
+				}
 			}
 			if (errorCaught != 1)
 				std::cout << "Line validated: " << TEXT_GREEN << line << RESET<< std::endl;
@@ -256,12 +275,12 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 			// Trime whitespace from both ends of a string
 			for (std::string str : keyValue)
 			{
-				str = Utility::trim(str);
+				str = Utility::replaceWhiteSpaces(str);
 			}
 			if (keyValue.size() < 2)
 				throw ServerException("Invalid config file format, missing value for key: " + keyValue[0]);
-			std::string key = Utility::trim(keyValue[0]);
-			std::string value = Utility::trim(keyValue[1]);
+			std::string key = keyValue[0];
+			std::string value = keyValue[1];
 			
 			if (key == "ipAddress")
 				_servers[i].ipAddress = value;
@@ -279,7 +298,7 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 				std::vector<std::string> errorCodesString = Utility::splitString(value, ",");
 				for (std::string code : errorCodesString)
 				{
-					_servers[i].errorPages[std::stoi(code)] = Utility::trim(keyValue[2]);
+					_servers[i].errorPages[std::stoi(code)] = keyValue[2];
 				}
 			}
 			else if (key == "cgis")
@@ -290,9 +309,7 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 			}
 		}
 
-		// _servers[i].locations.resize(locationStrings.size());
 		parseLocations(_servers[i], locationStrings);
-
 		i++;
 	}
 }

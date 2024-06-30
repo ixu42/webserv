@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/27 15:21:06 by ixu              ###   ########.fr       */
+/*   Updated: 2024/06/29 22:33:52 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,23 +114,23 @@ Request Server::receiveRequest(int clientSockfd)
 
 	bool isHeadersRead = false;
 	std::size_t contentLengthNum = std::string::npos;
-	int count = 0;
 	while (1)
 	{
-		count++;
 		bytesRead = read(clientSockfd, buffer, bufferSize);
 		std::cout << "=== Reading in chunks bytes: " << bytesRead << std::endl;
-		if (count > 10000)
-			break;
-		if (bytesRead <= 0)
-			continue ;
+		for (int i = 0; i < bytesRead; i++)
+			std::cout << buffer[i]<< "(" << int(buffer[i]) << ")," ;
+		std::cout << std::endl;
+
+		if (bytesRead < 0)
+			continue;
 		request += std::string(buffer, bytesRead);
 		// std::cout << "Request at the moment read: " << request << std::endl;
 
 		// Check if the request is complete (ends with "\r\n\r\n")
-		if (!isHeadersRead && request.find("\r\n\r\n") != std::string::npos)
+		if (!isHeadersRead && (request.find("\r\n\r\n") != std::string::npos || request.find("\n\n") != std::string::npos))
 		{
-			emptyLinePos = request.find("\r\n\r\n");
+			emptyLinePos = request.find("\r\n\r\n") ? request.find("\r\n\r\n") : request.find("\n\n");
 			isHeadersRead = true;
 			contentLengthNum = findContentLength(request);
 			if (contentLengthNum == std::string::npos)

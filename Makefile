@@ -6,7 +6,7 @@
 #    By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/08 17:44:55 by ixu               #+#    #+#              #
-#    Updated: 2024/06/25 15:13:30 by vshchuki         ###   ########.fr        #
+#    Updated: 2024/07/01 16:23:48 by vshchuki         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,7 +17,7 @@ NAME := webserv
 OBJS_DIR := objs/
 
 # Source files
-SRCS = $(addsuffix .cpp, main Socket Server Request Utility ServersManager Config)
+SRCS = $(addsuffix .cpp, main Socket Server Request Utility ServersManager Config ConfigValidator)
 
 # Object files derived from sources
 OBJS = $(addprefix $(OBJS_DIR), $(SRCS:.cpp=.o))

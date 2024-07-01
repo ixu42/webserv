@@ -3,6 +3,7 @@
 #include "ServerException.hpp"
 #include "Colors.hpp"
 #include "Utility.hpp"
+#include "ConfigValidator.hpp"
 
 #include <iostream>
 #include <string>
@@ -17,7 +18,7 @@
 
 #include <sstream>
 
-#include <regex>
+// #include <regex>
 
 struct Location
 {
@@ -53,14 +54,10 @@ class Config
 		Config() = delete;
 		// void						validate();
 
-		int							validateGeneralConfig(std::string generalConfig);
-		int							validateLocationConfig(std::string locationString);
 		void						parse();
-		int							matchLinePattern(std::string& line, std::string field, std::regex pattern2);
 		void						parseServers(std::vector<std::string> serverStrings);
 		void						parseLocations(ServerConfig& serverConfig, std::vector<std::string> locations);
 		void 						printConfig();
-		int							checkUnique(std::string line);
 
 	public:
 		Config(std::string filePath);

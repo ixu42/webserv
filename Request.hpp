@@ -26,6 +26,7 @@ class Request
 		
 		QueryStringParameters	getStartLine();
 		QueryStringParameters	getHeaders();
+		std::string				getBody();
 
 		void					setLocation(Location* location);
 };

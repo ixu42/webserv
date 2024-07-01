@@ -42,10 +42,15 @@ void Request::parse(std::string request)
 
 		// Parse the start line
 		std::vector<std::string> startLineSplit = Utility::splitString(headerLines[0], " ");
+		std::vector<std::string> querySplit = Utility::splitString(startLineSplit[1], "?");
 
  		_startLine["method"] = Utility::trim(startLineSplit[0]);
-		_startLine["path"] = Utility::trim(startLineSplit[1]);
+		_startLine["path"] = Utility::trim(querySplit[0]);
 		_startLine["version"] = Utility::trim(startLineSplit[2]);
+		if (querySplit.size() == 2)
+			_startLine["query"] = Utility::trim(querySplit[1]);
+		else
+			_startLine["query"] = "";
 
 		// Parse the headers and convert to lower case
 		for (unsigned int i = 1; i < headerLines.size(); i++)
@@ -68,11 +73,16 @@ Request::QueryStringParameters Request::getStartLine()
 {
 	return _startLine;
 }
+
 Request::QueryStringParameters Request::getHeaders()
 {
 	return _headers;
 }
 
+std::string Request::getBody()
+{
+	return _body;
+}
 
 // Request should be at least start line, Host, Connection
 

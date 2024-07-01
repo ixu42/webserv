@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Request.hpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/01 19:08:40 by vshchuki          #+#    #+#             */
+/*   Updated: 2024/07/01 19:08:40 by vshchuki         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 
 #include <map>
@@ -26,6 +38,7 @@ class Request
 		
 		QueryStringParameters	getStartLine();
 		QueryStringParameters	getHeaders();
+		std::string				getBody();
 
 		void					setLocation(Location* location);
 };

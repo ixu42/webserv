@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ServersManager.hpp                                 :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
+/*   Updated: 2024/07/01 19:10:54 by vshchuki         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 #include "Server.hpp"
 #include "Config.hpp"
@@ -24,7 +36,7 @@ class ServersManager
 		
 
 		static void					signalHandler(int signal);
-		void						handleRead(int fdReadyForRead);
+		void						handleRead(struct pollfd& pfdReadyForRead);
 		void						handleWrite(int fdReadyForWrite);
 		void						removeFromPollfd(int fd);
 

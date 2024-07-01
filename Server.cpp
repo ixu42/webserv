@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/30 16:34:44 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/01 19:09:40 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,6 +105,7 @@ int findContentLength(std::string request)
 
 Request Server::receiveRequest(int clientSockfd)
 {
+	DEBUG("Server::receiveRequest called");
 	const int bufferSize = 10;
 	char buffer[bufferSize] = {0};
 	int bytesRead;
@@ -113,24 +114,25 @@ Request Server::receiveRequest(int clientSockfd)
 
 	bool isHeadersRead = false;
 	std::size_t contentLengthNum = std::string::npos;
-	int count = 0;
 	while (1)
 	{
-		count++;
 		bytesRead = read(clientSockfd, buffer, bufferSize);
-		// if (count == 0)
-		// 	std::cout << "=== Reading in chunks bytes: " << bytesRead << std::endl;
-		if (count > 10000)
+		std::cout << "=== Reading in chunks bytes: " << bytesRead << std::endl;
+		for (int i = 0; i < bytesRead; i++)
+			std::cout << buffer[i]<< "(" << int(buffer[i]) << ")," ;
+		std::cout << std::endl;
+
+		if (bytesRead < 0)
+			continue;
+		else if (bytesRead == 0)
 			break;
-		if (bytesRead <= 0)
-			break ;
 		request += std::string(buffer, bytesRead);
 		// std::cout << "Request at the moment read: " << request << std::endl;
 
 		// Check if the request is complete (ends with "\r\n\r\n")
-		if (!isHeadersRead && request.find("\r\n\r\n") != std::string::npos)
+		if (!isHeadersRead && (request.find("\r\n\r\n") != std::string::npos || request.find("\n\n") != std::string::npos))
 		{
-			emptyLinePos = request.find("\r\n\r\n");
+			emptyLinePos = request.find("\r\n\r\n") ? request.find("\r\n\r\n") : request.find("\n\n");
 			isHeadersRead = true;
 			contentLengthNum = findContentLength(request);
 			if (contentLengthNum == std::string::npos)
@@ -185,7 +187,7 @@ const std::string	Server::getResponse()
 	std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world " + std::to_string(time(NULL)) + " " + whoAmI() + "\r\n\t</h1>\r\n</body>\r\n</html>";
 	std::string contentLength = "Content-Length: " + std::to_string(body.length()) + "\r\n";
 	// std::cout << contentLength << std::endl;
-	response = response + contentLength + "\r\n" + body;
+	response = response + contentLength + "\r\n" + body + "\r\n";
 	// /* Dummy response end */
 
 

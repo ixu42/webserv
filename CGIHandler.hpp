@@ -2,12 +2,13 @@
 
 #include "Request.hpp"
 
-#include <iostream>
 #include <unistd.h>
-#include <cstring>
-#include <string>
 #include <sys/types.h>
 #include <sys/wait.h>
+
+#include <iostream>
+#include <cstring>
+#include <string>
 #include <vector>
 
 #define IN 0
@@ -28,6 +29,6 @@ class CGIServer {
 		static void				handleParentProcess(const std::string& method, const std::string& body);
 
 	public:
-		CGIServer() = delete;
+		CGIServer()				= delete;
 		static std::string		handleCGI(Request& request);
 };

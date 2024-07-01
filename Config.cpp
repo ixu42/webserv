@@ -42,8 +42,7 @@ void Config::printConfig()
 			std::cout << "\troot: " << location.root << std::endl;
 			std::cout << "\tuploadPath: " << location.uploadPath << std::endl;
 			std::cout << "\tdirectoryListing: " << std::boolalpha << location.directoryListing << std::endl;
-			for (std::string ind : location.index)
-				std::cout << "\tind: " << ind << std::endl;
+			std::cout << "\tindex: " << location.index << std::endl;
 			for (auto& method : location.methods)
 			{
 				if (method.second)
@@ -188,11 +187,15 @@ int Config::validateGeneralConfig(std::string generalConfig)
 
 int Config::validateLocationConfig(std::string locationString)
 {
-	std::regex linePattern(R"((path|redirect index|root|methods|uploadPath|directoryListing)\s+[a-zA-Z0-9~\-_.]+\s*[a-zA-Z0-9~\-_.]*\s*)");
+	std::regex linePattern(R"((path|redirect|index|root|methods|uploadPath|directoryListing)\s+[a-zA-Z0-9~\-_./,:$]+\s*)");
 	std::map<std::string, std::regex> patterns = {
 		{"path", std::regex(R"(\s*path\s+\/([a-zA-Z0-9_\-~.]+\/?)*([a-zA-Z0-9_\-~.]+\.[a-zA-Z0-9_\-~.]+)?\s*)")},
+		{"index", std::regex(R"(\s*index\s+([^,\s]+(?:\.html|\.htm))\s*)")},
 		{"redirect", std::regex(R"(\s*redirect\s+\w+:(\/\/[^\/\s]+)?[^\s]*\s*)")},
-		{"uploadPath", std::regex(R"(\s*uploadPath\s+\/([a-zA-Z0-9-_~.]*\/)*(?=\s|$))")}
+		{"root", std::regex(R"(\s*root\s+\/([a-zA-Z0-9-_~.]*\/)*\s*)")},
+		{"uploadPath", std::regex(R"(\s*uploadPath\s+\/([a-zA-Z0-9-_~.]*\/)*(?=\s|$))")},
+		{"methods", std::regex(R"(\s*methods\s+(get|post|delete)(,(get|post|delete)){0,2}\s*)")},
+		{"directoryListing", std::regex(R"(\s*directoryListing\s+(on|off)\s*)")},
 	};
 
 	int locationStringErrorsCount = 0;
@@ -247,10 +250,11 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 
 		// Validate general config
 		int configErrorsFound = validateGeneralConfig(generalConfig);
-		// for (std::string& locationString : locationStrings)
-		// {
-		// 	configErrorsFound += validateLocationConfig(locationString);
-		// }
+		// Validate locations
+		for (std::string& locationString : locationStrings)
+		{
+			configErrorsFound += validateLocationConfig(locationString);
+		}
 
 		if (configErrorsFound != 0)
 		{
@@ -349,11 +353,7 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 				else if (key == "directoryListing" && value == "on")
 						serverConfig.locations[j].directoryListing = true;
 				else if (key == "index")
-				{
-					std::vector<std::string> indexes = Utility::splitString(value, ",");
-					for (std::string index : indexes)
-						serverConfig.locations[j].index.push_back(index);
-				}
+						serverConfig.locations[j].index = value;
 				else if (key == "methods")
 				{
 					std::vector<std::string> methods = Utility::splitString(value, ",");

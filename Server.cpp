@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/27 20:38:25 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/06/30 16:34:44 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,11 +118,12 @@ Request Server::receiveRequest(int clientSockfd)
 	{
 		count++;
 		bytesRead = read(clientSockfd, buffer, bufferSize);
-		std::cout << "=== Reading in chunks bytes: " << bytesRead << std::endl;
+		// if (count == 0)
+		// 	std::cout << "=== Reading in chunks bytes: " << bytesRead << std::endl;
 		if (count > 10000)
 			break;
 		if (bytesRead <= 0)
-			continue ;
+			break ;
 		request += std::string(buffer, bytesRead);
 		// std::cout << "Request at the moment read: " << request << std::endl;
 

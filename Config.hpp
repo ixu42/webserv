@@ -26,7 +26,7 @@ struct Location
 	std::string							root;
 	std::string							uploadPath;
 	bool								directoryListing = false;
-	std::vector<std::string>			index = {"index.html"};
+	std::string							index = "index.html";
 	// std::vector<std::string>	methods;
 	std::map<std::string, bool>	methods;
 };

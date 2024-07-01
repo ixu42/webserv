@@ -3,7 +3,6 @@
 Config::Config(std::string filePath)
 {
 	_configString = Utility::readFile(filePath);
-	// validate();
 
 	// std::cout << TEXT_YELLOW;
 	// std::cout << "=== Config file read === " << std::endl;
@@ -195,7 +194,6 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 					std::vector<std::string> methods = Utility::splitString(value, ",");
 					for (std::string method : methods)
 						serverConfig.locations[j].methods[method] = true;
-						// serverConfig.locations[j].methods.push_back(method);
 				}
 			}
 			j++;

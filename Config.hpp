@@ -7,18 +7,9 @@
 
 #include <iostream>
 #include <string>
-#include <map>
-#include <set>
 #include <vector>
-#include <string>
-
-// #include <fcntl.h>
-// #include <unistd.h>
-#include <cstring>
 
 #include <sstream>
-
-// #include <regex>
 
 struct Location
 {
@@ -28,7 +19,6 @@ struct Location
 	std::string							uploadPath;
 	bool								directoryListing = false;
 	std::string							index = "index.html";
-	// std::vector<std::string>	methods;
 	std::map<std::string, bool>	methods;
 };
 
@@ -52,7 +42,6 @@ class Config
 		std::string					_configString;
 		std::vector<ServerConfig>	_servers;
 		Config() = delete;
-		// void						validate();
 
 		void						parse();
 		void						parseServers(std::vector<std::string> serverStrings);

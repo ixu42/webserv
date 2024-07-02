@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/01 19:09:40 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/02 19:59:59 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,19 +151,28 @@ Request* Server::receiveRequest(int clientSockfd)
 	return new Request(request);
 }
 
-void	Server::responder(int clientSockfd)
+void	Server::responder(t_client& client)
 {
 	DEBUG("Server::responder() called");
 
+	// uncomment the following line for checking content of request
+	// client.request->printRequest();
+
+	// replace writing a dummy response by the actual response
+	// request obj can be accessed by e.g. client.request->
 	const std::string& response = getResponse();
-	write(clientSockfd, response.c_str(), response.length());
+	write(client.fd, response.c_str(), response.length());
+
+	delete client.request;
+	client.request = nullptr;
 
 	// after writing, close the connection
-	close(clientSockfd);
-	removeFromClients(clientSockfd);
-	std::cout << "\n=== RESPONSE SENT AND CONNECTION CLOSED (SOCKET FD: "
-				<< clientSockfd << ") ===\n";
+	close(client.fd);
+	removeFromClients(client.fd);
+
 	DEBUG("response: " << response);
+	std::cout << "\n=== RESPONSE SENT AND CONNECTION CLOSED (SOCKET FD: "
+				<< client.fd << ") ===\n";
 }
 
 void	Server::removeFromClients(int clientSockfd)
@@ -215,7 +224,7 @@ int Server::getServerSockfd()
 	return _serverSocket.getSockfd();
 }
 
-std::vector<t_client> Server::getClients()
+std::vector<t_client>& Server::getClients()
 {
 	return _clients;
 }

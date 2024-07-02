@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/27 20:38:48 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/02 19:44:29 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,12 +46,12 @@ class Server
 		void						setConfig(ServerConfig* serverConfig);
 		ServerConfig*				getConfig();
 		int							getServerSockfd();
-		std::vector<t_client>		getClients();
+		std::vector<t_client>&		getClients();
 		std::string					whoAmI() const;
 
 		int							accepter();
 		Request*					receiveRequest(int clientSockfd);
-		void						responder(int clientSockfd);
+		void						responder(t_client& client);
 
 	private:
 		void						initServer(const char* ipAddr, int port);

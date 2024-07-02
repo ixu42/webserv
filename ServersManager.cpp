@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/01 19:10:50 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/02 19:49:47 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -144,9 +144,7 @@ void	ServersManager::handleWrite(int fdReadyForWrite)
 		{
 			if (fdReadyForWrite == client.fd)
 			{
-				client.request->printRequest();
-				delete client.request;
-				server->responder(fdReadyForWrite);
+				server->responder(client);
 				removeFromPollfd(fdReadyForWrite);
 				fdFound = true;
 				break ;

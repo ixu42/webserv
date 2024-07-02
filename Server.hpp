@@ -6,32 +6,30 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/02 19:44:29 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/02 22:07:32 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef SERVER_HPP
-# define SERVER_HPP
+#pragma once
 
-# include "Socket.hpp"
-# include <vector>
-# include "Utility.hpp"
-# include "Request.hpp"
-
-# include "unistd.h"
-
-typedef struct s_client
-{
-	int			fd;
-	Request*	request;
-} t_client;
+#include "Socket.hpp"
+#include "Utility.hpp"
+#include "Request.hpp"
+#include "client.hpp"
+#include "debug.hpp"
+#include <vector>
+#include <string>
+#include <cstring> // memset()
+#include <arpa/inet.h> // htons(), inet_pton()
+#include <signal.h> // signal()
+#include <poll.h> // poll()
+#include <unistd.h> // read(), write(), close()
 
 class Server
 {
 	private:
 		Socket						_serverSocket;
 		struct sockaddr_in			_address;
-		// std::vector<int>			_clientSockfds;
 		std::vector<t_client>		_clients;
 		ServerConfig*				_config = nullptr;
 
@@ -55,15 +53,10 @@ class Server
 
 	private:
 		void						initServer(const char* ipAddr, int port);
-		void						removeFromClients(int clientSockfd);
+		void						removeFromClients(t_client& client);
 		const std::string			getResponse();
 		
 };
-
-#endif
-
-
-
 
 // #pragma once
 

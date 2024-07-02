@@ -6,17 +6,11 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/02 19:59:59 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/02 21:56:17 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
-#include "debug.hpp"
-#include <cstring> // memset()
-#include <arpa/inet.h> // htons(), inet_pton()
-#include <signal.h> // signal()
-#include <poll.h> // poll()
-#include <string>
 
 void	Server::initServer(const char* ipAddr, int port)
 {
@@ -168,19 +162,19 @@ void	Server::responder(t_client& client)
 
 	// after writing, close the connection
 	close(client.fd);
-	removeFromClients(client.fd);
+	removeFromClients(client);
 
 	DEBUG("response: " << response);
 	std::cout << "\n=== RESPONSE SENT AND CONNECTION CLOSED (SOCKET FD: "
-				<< client.fd << ") ===\n";
+				<< client.fd << ") ===\n\n";
 }
 
-void	Server::removeFromClients(int clientSockfd)
+void	Server::removeFromClients(t_client& client)
 {
 	// remove from _clients vector
 	for (auto it = _clients.begin(); it != _clients.end(); ++it)
 	{
-		if ((*it).fd == clientSockfd)
+		if (&(*it) == &client)
 		{
 			_clients.erase(it);
 			break ;

@@ -119,11 +119,11 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 			_fds.push_back({clientSockfd, POLLIN, 0});
 			break ;
 		}
-		for (int& clientSockfd : server->getClientSockfds())
+		for (t_client& client : server->getClients())
 		{
-			if (pfdReadyForRead.fd == clientSockfd)
+			if (pfdReadyForRead.fd == client.fd)
 			{
-				server->receiveRequest(pfdReadyForRead.fd);
+				client.request = server->receiveRequest(pfdReadyForRead.fd);
 				pfdReadyForRead.events = POLLOUT;
 				fdFound = true;
 				break ;
@@ -140,10 +140,12 @@ void	ServersManager::handleWrite(int fdReadyForWrite)
 
 	for (Server*& server : _servers)
 	{
-		for (int& clientSockfd : server->getClientSockfds())
+		for (t_client& client : server->getClients())
 		{
-			if (fdReadyForWrite == clientSockfd)
+			if (fdReadyForWrite == client.fd)
 			{
+				client.request->printRequest();
+				delete client.request;
 				server->responder(fdReadyForWrite);
 				removeFromPollfd(fdReadyForWrite);
 				fdFound = true;

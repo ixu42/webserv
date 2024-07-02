@@ -24,7 +24,7 @@ OBJS = $(addprefix $(OBJS_DIR), $(SRCS:.cpp=.o))
 
 # Compiler and flags
 COMPILER := c++
-FLAGS := -Wall -Wextra -Werror -Wshadow -std=c++11
+FLAGS := -Wall -Wextra -Werror -Wshadow -std=c++17
 DEBUG_FLAGS := -DDEBUG_MODE
 
 # Color scheme for terminal output

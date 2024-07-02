@@ -68,8 +68,8 @@ Server::~Server()
 
 	DEBUG("Server destructor called");
 
-	for (int client_socket : _clientSockfds)
-		close(client_socket);
+	for (t_client client : _clients)
+		close(client.fd);
 }
 
 int	Server::accepter()
@@ -83,7 +83,7 @@ int	Server::accepter()
 	std::cout << "\n=== CONNECTION ESTABLISHED WITH CLIENT (SOCKET FD: "
 				<< clientSockfd << ") ===\n";
 
-	_clientSockfds.push_back(clientSockfd);
+	_clients.push_back((t_client){clientSockfd, nullptr});
 	return clientSockfd;
 }
 
@@ -103,7 +103,7 @@ int findContentLength(std::string request)
 	return -1;
 }
 
-Request Server::receiveRequest(int clientSockfd)
+Request* Server::receiveRequest(int clientSockfd)
 {
 	DEBUG("Server::receiveRequest called");
 	const int bufferSize = 10;
@@ -148,7 +148,7 @@ Request Server::receiveRequest(int clientSockfd)
 	std::cout << "=== Request read ===" << std::endl;
 	std::cout << TEXT_YELLOW << request << RESET << std::endl;
 
-	return Request(request);
+	return new Request(request);
 }
 
 void	Server::responder(int clientSockfd)
@@ -160,20 +160,20 @@ void	Server::responder(int clientSockfd)
 
 	// after writing, close the connection
 	close(clientSockfd);
-	removeFromClientSockfds(clientSockfd);
+	removeFromClients(clientSockfd);
 	std::cout << "\n=== RESPONSE SENT AND CONNECTION CLOSED (SOCKET FD: "
 				<< clientSockfd << ") ===\n";
 	DEBUG("response: " << response);
 }
 
-void	Server::removeFromClientSockfds(int clientSockfd)
+void	Server::removeFromClients(int clientSockfd)
 {
-	// remove from _clientSockfd vector
-	for (auto it = _clientSockfds.begin(); it != _clientSockfds.end(); ++it)
+	// remove from _clients vector
+	for (auto it = _clients.begin(); it != _clients.end(); ++it)
 	{
-		if (*it == clientSockfd)
+		if ((*it).fd == clientSockfd)
 		{
-			_clientSockfds.erase(it);
+			_clients.erase(it);
 			break ;
 		}
 	}
@@ -215,9 +215,9 @@ int Server::getServerSockfd()
 	return _serverSocket.getSockfd();
 }
 
-std::vector<int> Server::getClientSockfds()
+std::vector<t_client> Server::getClients()
 {
-	return _clientSockfds;
+	return _clients;
 }
 
 /**

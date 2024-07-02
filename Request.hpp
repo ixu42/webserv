@@ -16,9 +16,11 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <vector>
 
 #include "Utility.hpp"
 #include "Config.hpp"
+#include "debug.hpp"
 
 class Request
 {
@@ -41,4 +43,6 @@ class Request
 		std::string				getBody();
 
 		void					setLocation(Location* location);
+
+		void					printRequest();
 };

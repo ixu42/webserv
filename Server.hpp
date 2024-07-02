@@ -20,13 +20,19 @@
 
 # include "unistd.h"
 
+typedef struct s_client
+{
+	int			fd;
+	Request*	request;
+} t_client;
 
 class Server
 {
 	private:
 		Socket						_serverSocket;
 		struct sockaddr_in			_address;
-		std::vector<int>			_clientSockfds;
+		// std::vector<int>			_clientSockfds;
+		std::vector<t_client>		_clients;
 		ServerConfig*				_config = nullptr;
 
 		int							_port;
@@ -40,16 +46,16 @@ class Server
 		void						setConfig(ServerConfig* serverConfig);
 		ServerConfig*				getConfig();
 		int							getServerSockfd();
-		std::vector<int>			getClientSockfds();
+		std::vector<t_client>		getClients();
 		std::string					whoAmI() const;
 
 		int							accepter();
-		Request						receiveRequest(int clientSockfd);
+		Request*					receiveRequest(int clientSockfd);
 		void						responder(int clientSockfd);
 
 	private:
 		void						initServer(const char* ipAddr, int port);
-		void						removeFromClientSockfds(int clientSockfd);
+		void						removeFromClients(int clientSockfd);
 		const std::string			getResponse();
 		
 };

@@ -14,8 +14,10 @@ class Response
 		std::map<std::string, std::string>				_startline;
 		std::map<std::string, std::string>				_headers;
 		std::string										_body;
-		Response() = delete;
 
 	public:
-		Response(std::string statusCode, std::string body, std::string fileFormat);
+		Response();
+		// Response(std::string statusCode, std::string body, std::string fileFormat);
+		std::string	getBody();
+		void appendToBody(char* data, std::size_t length);
 };

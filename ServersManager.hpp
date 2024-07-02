@@ -1,6 +1,8 @@
 #pragma once
 #include "Server.hpp"
 #include "Config.hpp"
+#include "Response.hpp"
+#include "CGIHandler.hpp"
 #include <vector>
 #include <poll.h>
 #include <csignal>

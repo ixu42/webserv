@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/26 15:15:28 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/02 13:04:33 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,12 @@
 # include "Utility.hpp"
 # include "Request.hpp"
 
+# define FDS 2
+
+struct Pipe {
+	int input[FDS];
+	int output[FDS];
+};
 
 class Server
 {
@@ -26,6 +32,7 @@ class Server
 		struct sockaddr_in			_address;
 		std::vector<int>			_clientSockfds;
 		ServerConfig*				_config = nullptr;
+		Pipe						_CGIpipes;
 
 		int							_port;
 		std::string					_ipAddr;
@@ -38,6 +45,7 @@ class Server
 		void						setConfig(ServerConfig* serverConfig);
 		ServerConfig*				getConfig();
 		int							getServerSockfd();
+		Pipe&						getPipe();
 		std::vector<int>			getClientSockfds();
 		std::string					whoAmI() const;
 

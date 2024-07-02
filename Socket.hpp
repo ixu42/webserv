@@ -6,15 +6,20 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:53 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/24 21:04:33 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/02 22:06:00 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef SOCKET_HPP
-# define SOCKET_HPP
+#pragma once
 
-# include <netinet/in.h> // struct sockaddr_in, struct in_addr
-# include <string>
+#include <netinet/in.h> // struct sockaddr_in, struct in_addr
+#include <string>
+#include "debug.hpp" // DEBUG()
+#include <sys/socket.h> // socket(), bind(), listen()
+#include <errno.h> // errno
+#include <cstring> // strerror()
+#include <unistd.h> // close()
+#include <fcntl.h> // fcntl()
 
 class Socket
 {
@@ -35,5 +40,3 @@ class Socket
 		bool	isValidSocketFd();
 		void	printError(const std::string& msg);
 };
-
-#endif

@@ -3,20 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/01 19:09:40 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/02 21:56:17 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
-#include "debug.hpp"
-#include <cstring> // memset()
-#include <arpa/inet.h> // htons(), inet_pton()
-#include <signal.h> // signal()
-#include <poll.h> // poll()
-#include <string>
 
 void	Server::initServer(const char* ipAddr, int port)
 {
@@ -68,8 +62,8 @@ Server::~Server()
 
 	DEBUG("Server destructor called");
 
-	for (int client_socket : _clientSockfds)
-		close(client_socket);
+	for (t_client client : _clients)
+		close(client.fd);
 }
 
 int	Server::accepter()
@@ -83,7 +77,7 @@ int	Server::accepter()
 	std::cout << "\n=== CONNECTION ESTABLISHED WITH CLIENT (SOCKET FD: "
 				<< clientSockfd << ") ===\n";
 
-	_clientSockfds.push_back(clientSockfd);
+	_clients.push_back((t_client){clientSockfd, nullptr});
 	return clientSockfd;
 }
 
@@ -103,7 +97,7 @@ int findContentLength(std::string request)
 	return -1;
 }
 
-Request Server::receiveRequest(int clientSockfd)
+Request* Server::receiveRequest(int clientSockfd)
 {
 	DEBUG("Server::receiveRequest called");
 	const int bufferSize = 10;
@@ -148,32 +142,41 @@ Request Server::receiveRequest(int clientSockfd)
 	std::cout << "=== Request read ===" << std::endl;
 	std::cout << TEXT_YELLOW << request << RESET << std::endl;
 
-	return Request(request);
+	return new Request(request);
 }
 
-void	Server::responder(int clientSockfd)
+void	Server::responder(t_client& client)
 {
 	DEBUG("Server::responder() called");
 
+	// uncomment the following line for checking content of request
+	// client.request->printRequest();
+
+	// replace writing a dummy response by the actual response
+	// request obj can be accessed by e.g. client.request->
 	const std::string& response = getResponse();
-	write(clientSockfd, response.c_str(), response.length());
+	write(client.fd, response.c_str(), response.length());
+
+	delete client.request;
+	client.request = nullptr;
 
 	// after writing, close the connection
-	close(clientSockfd);
-	removeFromClientSockfds(clientSockfd);
-	std::cout << "\n=== RESPONSE SENT AND CONNECTION CLOSED (SOCKET FD: "
-				<< clientSockfd << ") ===\n";
+	close(client.fd);
+	removeFromClients(client);
+
 	DEBUG("response: " << response);
+	std::cout << "\n=== RESPONSE SENT AND CONNECTION CLOSED (SOCKET FD: "
+				<< client.fd << ") ===\n\n";
 }
 
-void	Server::removeFromClientSockfds(int clientSockfd)
+void	Server::removeFromClients(t_client& client)
 {
-	// remove from _clientSockfd vector
-	for (auto it = _clientSockfds.begin(); it != _clientSockfds.end(); ++it)
+	// remove from _clients vector
+	for (auto it = _clients.begin(); it != _clients.end(); ++it)
 	{
-		if (*it == clientSockfd)
+		if (&(*it) == &client)
 		{
-			_clientSockfds.erase(it);
+			_clients.erase(it);
 			break ;
 		}
 	}
@@ -215,9 +218,9 @@ int Server::getServerSockfd()
 	return _serverSocket.getSockfd();
 }
 
-std::vector<int> Server::getClientSockfds()
+std::vector<t_client>& Server::getClients()
 {
-	return _clientSockfds;
+	return _clients;
 }
 
 /**

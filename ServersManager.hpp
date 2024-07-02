@@ -3,14 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.hpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/01 19:10:54 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/02 22:04:54 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
+
 #include "Server.hpp"
 #include "Config.hpp"
 #include <vector>

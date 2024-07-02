@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/01 19:10:50 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/02 15:08:41 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ ServersManager::~ServersManager()
 	delete _webservConfig;
 }
 
-void ServersManager::initConfig(char *fileNameString)
+void ServersManager::initConfig(const char *fileNameString)
 {
 	_webservConfig = new Config(fileNameString);
 }

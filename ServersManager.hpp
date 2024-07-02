@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/01 19:10:54 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/02 15:08:52 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 #include <csignal>
 #include "debug.hpp"
 
-#define DEFAULT_CONFIG "config/default.conf"
+#define DEFAULT_CONFIG "default/config.conf"
 
 /* Can be only instatiated once */
 class ServersManager
@@ -45,5 +45,5 @@ class ServersManager
 		static ServersManager*		getInstance();
 
 		void						run();
-		static void					initConfig(char *fileNameString);
+		static void					initConfig(const char *fileNameString);
 };

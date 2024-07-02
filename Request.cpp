@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/01 19:08:37 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/02 16:23:34 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,23 +16,13 @@
 #include <vector>
 #include <sstream>
 
-// std::string request = "GET / HTTP/1.1\nHost: localhost:8080\nConnection: keep-alive\nCache-Control: max-age=0";
-
-// std::vector<std::string> splitString(std::string request, std::string delimiter = "\n")
-// {
-// 	std::stringstream test(request);
-// 	std::string segment;
-// 	std::vector<std::string> seglist;
-
-// 	while(std::getline(test, segment, delimiter[0]))
-// 	{
-// 		seglist.push_back(segment);
-// 	}
-
-// 	return seglist;
-// }
-
-
+Request::Request()
+{
+	_startLine["method"] = "";
+	_startLine["path"] = "";
+	_startLine["version"] = "";
+	_startLine["query"] = "";
+}
 
 Request::Request(std::string request)
 {
@@ -56,7 +46,9 @@ void Request::parse(std::string request)
 		std::vector<std::string> startLineSplit = Utility::splitString(headerLines[0], " ");
 		std::vector<std::string> querySplit = Utility::splitString(startLineSplit[1], "?");
 
- 		_startLine["method"] = Utility::trim(startLineSplit[0]);
+		_startLine["method"];
+
+ 		// _startLine["method"] = Utility::trim(startLineSplit[0]);
 		_startLine["path"] = Utility::trim(querySplit[0]);
 		_startLine["version"] = Utility::trim(startLineSplit[2]);
 		if (querySplit.size() == 2)
@@ -78,8 +70,67 @@ void Request::parse(std::string request)
 
 		// Parse the body
 		_body = Utility::trim(body);
+		// Unchunk the body if necessary
+		if (_headers.find("transfer-encoding") != _headers.end() && Utility::strToLower(_headers["transfer-encoding"]) == "chunked")
+		{
+			std::istringstream chunkedStream(_body);
+			_body = unchunkBody(chunkedStream);
+		}
 	}
 }
+
+/*
+In HTTP/1.1, chunked transfer encoding strictly requires the use of \r\n
+(carriage return and line feed) to delimit the chunk size and the actual
+data. This specification is defined in the HTTP/1.1 standard (RFC 7230,
+Section 4.1). Using just \n (line feed) would not conform to the standard
+and could result in improper parsing by HTTP clients and servers.
+*/
+
+size_t Request::hexStringToSizeT(const std::string &hexStr)
+{
+	std::istringstream iss(hexStr);
+	size_t size;
+	iss >> std::hex >> size;
+	return size;
+}
+
+std::string Request::unchunkBody(std::istream &stream)
+{
+	std::string unchunkedData;
+
+	while (true) {
+		std::string chunkSizeStr = Utility::readLine(stream);
+		size_t chunkSize = hexStringToSizeT(chunkSizeStr);
+		if (chunkSize == 0) {
+			// End of chunks
+			break;
+		}
+		else if (chunkSize == -1) { // This should be tested ❗️❗️
+			// Invalid chunk size
+			throw ServerException("Invalid chunk size");
+		}
+
+		// Read the chunk data
+		std::string chunkData(chunkSize, '\0');
+		stream.read(&chunkData[0], chunkSize);
+		if (stream.eof())
+			std::cout << "End of file reached." << std::endl;
+		else if (stream.fail())
+			throw ServerException("Read chunk failed!");
+		unchunkedData += chunkData;
+
+		// Read the trailing \r\n after chunk data
+		Utility::readLine(stream);
+	}
+
+	return unchunkedData;
+}
+
+
+/**
+ * Getters
+ */
 
 Request::QueryStringParameters Request::getStartLine()
 {

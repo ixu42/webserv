@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/02 21:56:17 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/02 23:17:33 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,11 +59,14 @@ Server::Server(const char* ipAddr, int port) : _serverSocket(Socket())
 
 Server::~Server()
 {
-
 	DEBUG("Server destructor called");
 
-	for (t_client client : _clients)
+	for (t_client& client : _clients)
+	{
 		close(client.fd);
+		if (client.request)
+			delete client.request;
+	}
 }
 
 int	Server::accepter()

@@ -3,14 +3,21 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/02 22:07:32 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/02 13:04:33 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
+
+struct Pipe {
+	int input[FDS];
+	int output[FDS];
+};
+
+#define FDS 2
 
 #include "Socket.hpp"
 #include "Utility.hpp"
@@ -32,6 +39,7 @@ class Server
 		struct sockaddr_in			_address;
 		std::vector<t_client>		_clients;
 		ServerConfig*				_config = nullptr;
+		Pipe						_CGIpipes;
 
 		int							_port;
 		std::string					_ipAddr;
@@ -44,6 +52,7 @@ class Server
 		void						setConfig(ServerConfig* serverConfig);
 		ServerConfig*				getConfig();
 		int							getServerSockfd();
+		Pipe&						getPipe();
 		std::vector<t_client>&		getClients();
 		std::string					whoAmI() const;
 

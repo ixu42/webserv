@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/03 13:34:52 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/02 13:05:14 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -211,6 +211,11 @@ std::string Server::whoAmI() const
 ServerConfig* Server::getConfig()
 {
 	return _config;
+}
+
+Pipe& Server::getPipe()
+{
+	return _CGIpipes;
 }
 
 int Server::getServerSockfd()

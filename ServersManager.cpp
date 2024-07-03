@@ -129,6 +129,13 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 		{
 			if (pfdReadyForRead.fd == client.fd)
 			{
+				// Request req = server->receiveRequest(pfdReadyForRead.fd);
+				// if (req.getStartLine()["path"].find("cgi-bin") != std::string::npos)
+				// {
+				// 	Response resp;
+				// 	CGIServer::handleCGI(req, *server, resp);
+				// 	std::cout << resp.getBody() << std::endl;
+				// }
 				client.request = server->receiveRequest(pfdReadyForRead.fd);
 				pfdReadyForRead.events = POLLOUT;
 				fdFound = true;

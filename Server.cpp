@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/02 21:56:17 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/03 13:34:52 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ void	Server::initServer(const char* ipAddr, int port)
 	std::memset((char*)&_address, 0, sizeof(_address));
 	_address.sin_family = AF_INET;
 	_address.sin_port = htons(port);
-	if (ipAddr == nullptr)
+	if (ipAddr == nullptr || ipAddr[0] == '\0')
 		_address.sin_addr.s_addr = INADDR_ANY;
 	else
 	{

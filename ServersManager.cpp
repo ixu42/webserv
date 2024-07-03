@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/03 14:12:46 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/03 19:56:23 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ServersManager.hpp"
 
-std::vector<Server *> ServersManager::_servers;
+std::vector<Server*> ServersManager::_servers;
 ServersManager* ServersManager::_instance = nullptr;
 Config* ServersManager::_webservConfig;
 
@@ -36,13 +36,28 @@ ServersManager::ServersManager()
 
 	// Add servers
 	int i = 0;
-	for (ServerConfig& serverConfig : _webservConfig->getServers())
+	// for (std::pair<const std::string, ServerConfig>& serverConfigPair : _webservConfig->getServersConfigsMap())
+	for (auto& [ipPortKey, serverConfigs] : _webservConfig->getServersConfigsMap())
 	{
+		Server* foundServer = nullptr;
+		for (auto& server : _servers)
+		{
+			if (server->getIpAddress() == serverConfigs[0].ipAddress && server->getPort() == serverConfigs[0].port)
+			{
+				foundServer = server;
+				break ;
+			}
+		}
+		if (!foundServer)
+		{
+			_servers.push_back(new Server(serverConfigs[0].ipAddress.c_str(), serverConfigs[0].port));
+			foundServer = _servers.back();
+		}
 
-		DEBUG("serverConfig.port: " << serverConfig.port);
-		_servers.push_back(new Server(serverConfig.ipAddress.c_str(), serverConfig.port));
-		_servers[i]->setConfig(&serverConfig);
-		_servers[i]->getConfig();
+		foundServer->setConfig(serverConfigs);
+
+
+
 		// std::cout << "Server config and location: " << servers[i]->getConfig()->locations[0].path << std::endl;
 		i++;
 	}
@@ -78,7 +93,7 @@ void ServersManager::initConfig(char *fileNameString)
 ServersManager* ServersManager::getInstance()
 {
 	if (_webservConfig == nullptr)
-		_webservConfig = new Config(DEFAULT_CONFIG); // if config is not initialized with iniConfig, DEFAULT_CONFIG will be used
+		_webservConfig = new Config(DEFAULT_CONFIG); // if config is not initialized with initConfig, DEFAULT_CONFIG will be used
 	if (_instance == nullptr)
 		_instance = new ServersManager();
 		

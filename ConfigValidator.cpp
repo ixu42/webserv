@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:11 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/01 19:08:12 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/03 19:41:43 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
  */
 int ConfigValidator::checkUnique(std::string line)
 {
-	std::vector<std::string> lineSplit = Utility::splitString(Utility::replaceWhiteSpaces(line), " ");
+	std::vector<std::string> lineSplit = Utility::splitString(Utility::replaceWhiteSpaces(line, ' '), " ");
 	std::vector<std::string> errorCodesStrings = Utility::splitString(lineSplit[1], ",");
 	std::set<std::string> uniqueErrorCodesStrings(errorCodesStrings.begin(), errorCodesStrings.end());
 	if (errorCodesStrings.size() != uniqueErrorCodesStrings.size())
@@ -47,21 +47,23 @@ int ConfigValidator::matchLinePattern(std::string& line, std::string field, std:
 /**
  * Returns number of invalid lines
  */
-int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vector<ServerConfig>& servers)
+// int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vector<ServerConfig>& servers)
+int ConfigValidator::validateGeneralConfig(std::string generalConfig)
 {
+	ServerConfig config;
 	int generalConfigErrorsCount = 0;
 
 	// Cgi pattern is constructed from cgis map default keys
 	std::string cgisString;
 	size_t i = 0;
-	for (auto& cgi : servers[0].cgis)
+	for (auto& cgi : config.cgis)
 	{
 		cgisString += cgi.first;
-		if (i != servers[0].cgis.size() - 1)
+		if (i != config.cgis.size() - 1)
 			cgisString += "|";
 		i++;
 	}
-	int cgisCount = servers[0].cgis.size();
+	int cgisCount = config.cgis.size();
 	std::cout << "cgisString: " << cgisString << std::endl;
 
 

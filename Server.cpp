@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/02 13:05:14 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/03 19:41:19 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -208,10 +208,10 @@ std::string Server::whoAmI() const
  * Getters
 */
 
-ServerConfig* Server::getConfig()
-{
-	return _config;
-}
+// std::vector<ServerConfig> Server::getConfig()
+// {
+// 	return _configs;
+// }
 
 Pipe& Server::getPipe()
 {
@@ -228,15 +228,23 @@ std::vector<t_client>& Server::getClients()
 	return _clients;
 }
 
+std::string Server::getIpAddress()
+{
+	return _ipAddr;
+}
+
+int Server::getPort()
+{
+	return _port;
+}
+
 /**
  * Setters
  */
 
-void Server::setConfig(ServerConfig* serverConfig)
+void Server::setConfig(std::vector<ServerConfig> serverConfigs)
 {
-	if (serverConfig == nullptr)
-		return ;
-	_config = serverConfig;
+	_configs = serverConfigs;
 }
 
 

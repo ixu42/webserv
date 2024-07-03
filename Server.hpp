@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/03 16:03:34 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/03 19:41:24 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ class Server
 		Socket						_serverSocket;
 		struct sockaddr_in			_address;
 		std::vector<t_client>		_clients;
-		ServerConfig*				_config = nullptr;
+		std::vector<ServerConfig>	_configs;
 		Pipe						_CGIpipes;
 
 		int							_port;
@@ -49,11 +49,14 @@ class Server
 		Server(const char* ipAddr, int port);
 		~Server();
 
-		void						setConfig(ServerConfig* serverConfig);
-		ServerConfig*				getConfig();
+		// void						setConfig(ServerConfig* serverConfig);
+		void						setConfig(std::vector<ServerConfig> serverConfigs);
+		// std::vector<ServerConfig>	getConfig();
 		int							getServerSockfd();
 		Pipe&						getPipe();
 		std::vector<t_client>&		getClients();
+		std::string					getIpAddress();
+		int							getPort();
 		std::string					whoAmI() const;
 
 		int							accepter();

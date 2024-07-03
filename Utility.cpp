@@ -6,18 +6,18 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:11:23 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/01 19:11:23 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/03 18:34:34 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Utility.hpp"
 
-std::string Utility::replaceWhiteSpaces(std::string str)
+std::string Utility::replaceWhiteSpaces(std::string str, char newChar)
 {
 	for (char& c: str)
 	{
 		if (std::isspace(c))
-			c = ' ';
+			c = newChar;
 	}
 	return str;
 }

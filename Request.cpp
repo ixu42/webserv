@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/02 16:23:34 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/03 15:47:12 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,8 +73,7 @@ void Request::parse(std::string request)
 		// Unchunk the body if necessary
 		if (_headers.find("transfer-encoding") != _headers.end() && Utility::strToLower(_headers["transfer-encoding"]) == "chunked")
 		{
-			std::istringstream chunkedStream(_body);
-			_body = unchunkBody(chunkedStream);
+			_body = unchunkBody(body);
 		}
 	}
 }
@@ -95,33 +94,34 @@ size_t Request::hexStringToSizeT(const std::string &hexStr)
 	return size;
 }
 
-std::string Request::unchunkBody(std::istream &stream)
+std::string Request::unchunkBody(std::string& string)
 {
 	std::string unchunkedData;
+	std::istringstream stream(string);
 
-	while (true) {
+	while (true)
+	{
 		std::string chunkSizeStr = Utility::readLine(stream);
 		size_t chunkSize = hexStringToSizeT(chunkSizeStr);
 		if (chunkSize == 0) {
-			// End of chunks
 			break;
 		}
-		else if (chunkSize == -1) { // This should be tested ❗️❗️
-			// Invalid chunk size
-			throw ServerException("Invalid chunk size");
+
+		// Read the chunk data using substr
+		std::string chunkData;
+		chunkData.reserve(chunkSize);
+
+		for (size_t i = 0; i < chunkSize; ++i) {
+			char c;
+			stream.get(c);
+			chunkData += c;
 		}
 
-		// Read the chunk data
-		std::string chunkData(chunkSize, '\0');
-		stream.read(&chunkData[0], chunkSize);
-		if (stream.eof())
-			std::cout << "End of file reached." << std::endl;
-		else if (stream.fail())
-			throw ServerException("Read chunk failed!");
 		unchunkedData += chunkData;
 
 		// Read the trailing \r\n after chunk data
-		Utility::readLine(stream);
+		std::string crlf;
+		std::getline(stream, crlf);
 	}
 
 	return unchunkedData;

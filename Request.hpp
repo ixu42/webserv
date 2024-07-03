@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:40 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/02 15:39:55 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/03 12:03:46 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ class Request
 
 		/* Unchunk request */
 		size_t					hexStringToSizeT(const std::string &hexStr);
-		std::string				unchunkBody(std::istream& stream);
+		std::string				unchunkBody(std::string& body);
 
 		/* Getters and setters */
 		QueryStringParameters	getStartLine();

@@ -10,27 +10,34 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef SERVER_HPP
-# define SERVER_HPP
-
-# include "Socket.hpp"
-# include <vector>
-# include "Utility.hpp"
-# include "Request.hpp"
-
-# define FDS 2
+#pragma once
 
 struct Pipe {
 	int input[FDS];
 	int output[FDS];
 };
 
+#define FDS 2
+
+#include "Socket.hpp"
+#include "Utility.hpp"
+#include "Request.hpp"
+#include "client.hpp"
+#include "debug.hpp"
+#include <vector>
+#include <string>
+#include <cstring> // memset()
+#include <arpa/inet.h> // htons(), inet_pton()
+#include <signal.h> // signal()
+#include <poll.h> // poll()
+#include <unistd.h> // read(), write(), close()
+
 class Server
 {
 	private:
 		Socket						_serverSocket;
 		struct sockaddr_in			_address;
-		std::vector<int>			_clientSockfds;
+		std::vector<t_client>		_clients;
 		ServerConfig*				_config = nullptr;
 		Pipe						_CGIpipes;
 
@@ -46,24 +53,19 @@ class Server
 		ServerConfig*				getConfig();
 		int							getServerSockfd();
 		Pipe&						getPipe();
-		std::vector<int>			getClientSockfds();
+		std::vector<t_client>&		getClients();
 		std::string					whoAmI() const;
 
 		int							accepter();
-		Request						receiveRequest(int clientSockfd);
-		void						responder(int clientSockfd);
+		Request*					receiveRequest(int clientSockfd);
+		void						responder(t_client& client);
 
 	private:
 		void						initServer(const char* ipAddr, int port);
-		void						removeFromClientSockfds(int clientSockfd);
+		void						removeFromClients(t_client& client);
 		const std::string			getResponse();
 		
 };
-
-#endif
-
-
-
 
 // #pragma once
 

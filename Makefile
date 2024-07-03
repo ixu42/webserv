@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+         #
+#    By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/08 17:44:55 by ixu               #+#    #+#              #
-#    Updated: 2024/07/02 14:01:36 by dnikifor         ###   ########.fr        #
+#    Updated: 2024/07/01 19:08:02 by vshchuki         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,14 +17,14 @@ NAME := webserv
 OBJS_DIR := objs/
 
 # Source files
-SRCS = $(addsuffix .cpp, main Socket Server Request Response Utility ServersManager Config CGIHandler)
+SRCS = $(addsuffix .cpp, main Socket Server Request Utility ServersManager Config ConfigValidator CGIHandler)
 
 # Object files derived from sources
 OBJS = $(addprefix $(OBJS_DIR), $(SRCS:.cpp=.o))
 
 # Compiler and flags
 COMPILER := c++
-FLAGS := -Wall -Wextra -Werror -Wshadow -std=c++11
+FLAGS := -Wall -Wextra -Werror -Wshadow -std=c++17
 DEBUG_FLAGS := -DDEBUG_MODE
 
 # Color scheme for terminal output

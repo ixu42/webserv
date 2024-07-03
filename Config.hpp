@@ -1,31 +1,37 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Config.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/01 19:08:20 by vshchuki          #+#    #+#             */
+/*   Updated: 2024/07/01 19:08:21 by vshchuki         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 
 #include "ServerException.hpp"
 #include "Colors.hpp"
 #include "Utility.hpp"
+#include "ConfigValidator.hpp"
 
 #include <iostream>
 #include <string>
-#include <map>
 #include <vector>
-#include <string>
-
-#include <fcntl.h>
-#include <unistd.h>
-// #include <string.h>
-#include <cstring>
 
 #include <sstream>
 
 struct Location
 {
-	std::string					path;
-	std::string					redirect;
-	std::string					root;
-	std::string					uploadPath;
-	bool						directoryListing = false;
-	std::vector<std::string>	index = {"index.html"};
-	std::vector<std::string>	methods;
+	std::string							path;
+	std::string							redirect;
+	std::string							root;
+	std::string							uploadPath;
+	bool								directoryListing = false;
+	std::string							index = "index.html";
+	std::map<std::string, bool>	methods;
 };
 
 struct ServerConfig
@@ -45,17 +51,17 @@ struct ServerConfig
 class Config
 {
 	private:
-		std::string					_filePath;
 		std::string					_configString;
 		std::vector<ServerConfig>	_servers;
-		// Config() = delete;
+		Config() = delete;
 
-	public:
-		Config(std::string filePath);
 		void						parse();
 		void						parseServers(std::vector<std::string> serverStrings);
 		void						parseLocations(ServerConfig& serverConfig, std::vector<std::string> locations);
 		void 						printConfig();
+
+	public:
+		Config(std::string filePath);
 
 		std::vector<ServerConfig>&	getServers();
 };

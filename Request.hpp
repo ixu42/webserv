@@ -1,12 +1,26 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Request.hpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/01 19:08:40 by vshchuki          #+#    #+#             */
+/*   Updated: 2024/07/01 19:08:40 by vshchuki         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 
 #include <map>
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <vector>
 
 #include "Utility.hpp"
 #include "Config.hpp"
+#include "debug.hpp"
 
 class Request
 {
@@ -29,4 +43,6 @@ class Request
 		std::string				getBody();
 
 		void					setLocation(Location* location);
+
+		void					printRequest();
 };

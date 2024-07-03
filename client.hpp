@@ -1,22 +1,21 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ServerException.hpp                                :+:      :+:    :+:   */
+/*   client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/01 19:10:43 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/01 19:10:44 by vshchuki         ###   ########.fr       */
+/*   Created: 2024/07/02 21:59:14 by ixu               #+#    #+#             */
+/*   Updated: 2024/07/02 21:59:16 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
-#include <stdexcept>
-#include <exception>
 
-class ServerException : public std::runtime_error
+# include "Request.hpp"
+
+typedef struct s_client
 {
-	public:
-		explicit ServerException(const std::string &message)
-		: std::runtime_error(message) {}
-};
+	int			fd;
+	Request*	request;
+}	t_client;

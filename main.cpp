@@ -51,6 +51,12 @@ int main(int argc, char *argv[])
 			std::cerr << "Server close with error: " << e.what() << '\n';
 			std::cerr << RESET;
 		}
+		catch(const std::exception& e)
+		{
+			std::cerr << BG_RED << TEXT_WHITE;
+			std::cerr << "Server close with exception: " << e.what() << '\n';
+			std::cerr << RESET;
+		}
 	}
 }
 

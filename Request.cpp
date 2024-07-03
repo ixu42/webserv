@@ -1,8 +1,16 @@
-#include "Request.hpp"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Request.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
+/*   Updated: 2024/07/01 19:08:37 by vshchuki         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
-#include <string>
-#include <vector>
-#include <sstream>
+#include "Request.hpp"
 
 // std::string request = "GET / HTTP/1.1\nHost: localhost:8080\nConnection: keep-alive\nCache-Control: max-age=0";
 
@@ -20,7 +28,10 @@
 // 	return seglist;
 // }
 
-
+Request::Request()
+{
+	DEBUG("Request default constructor called");
+} 
 
 Request::Request(std::string request)
 {
@@ -82,6 +93,17 @@ Request::QueryStringParameters Request::getHeaders()
 std::string Request::getBody()
 {
 	return _body;
+}
+
+void	Request::printRequest()
+{
+	DEBUG("Request::printRequest() called");
+	for (auto& [key, value] : getStartLine())
+		std::cout << value << " ";
+	std::cout << std::endl;
+	for (auto& [key, value] : getHeaders())
+		std::cout << key << ": " << value << std::endl;
+	std::cout << getBody() << std::endl;
 }
 
 // Request should be at least start line, Host, Connection

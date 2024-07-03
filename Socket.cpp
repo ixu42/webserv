@@ -6,17 +6,11 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:46 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/27 16:16:22 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/02 22:05:14 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Socket.hpp"
-#include "debug.hpp" // DEBUG()
-# include <sys/socket.h> // socket(), bind(), listen()
-#include <errno.h> // errno
-#include <cstring> // strerror()
-#include <unistd.h> // close()
-#include <fcntl.h> // fcntl()
 
 Socket::Socket() : _sockfd(-1)
 {

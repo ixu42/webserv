@@ -1,14 +1,25 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Config.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
+/*   Updated: 2024/07/01 19:08:24 by vshchuki         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "Config.hpp"
 
 Config::Config(std::string filePath)
 {
-	_filePath = filePath;
-	_configString = Utility::readFile(this->_filePath);
+	_configString = Utility::readFile(filePath);
 
-	std::cout << TEXT_YELLOW;
-	std::cout << "=== Config file read === " << std::endl;
-	std::cout << _configString << std::endl;
-	std::cout << RESET;
+	// std::cout << TEXT_YELLOW;
+	// std::cout << "=== Config file read === " << std::endl;
+	// std::cout << _configString << std::endl;
+	// std::cout << RESET;
 
 	parse();
 
@@ -42,15 +53,18 @@ void Config::printConfig()
 			std::cout << "\troot: " << location.root << std::endl;
 			std::cout << "\tuploadPath: " << location.uploadPath << std::endl;
 			std::cout << "\tdirectoryListing: " << std::boolalpha << location.directoryListing << std::endl;
-			for (std::string ind : location.index)
-				std::cout << "\tind: " << ind << std::endl;
-			for (std::string method : location.methods)
-				std::cout << "\tmethod: " << method << std::endl;
+			std::cout << "\tindex: " << location.index << std::endl;
+			for (auto& method : location.methods)
+			{
+				if (method.second)
+					std::cout << "\tmethod: " << method.first << std::endl;
+			}
 		}
 		i++;
 	}
 	std::cout << RESET;
 }
+
 
 void Config::parse()
 {
@@ -68,15 +82,35 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 	int i = 0;
 	for (std::string server : serverStrings)
 	{
+		std::cout << "Parsing server #" << i << std::endl;
 		ServerConfig serverConfig;
 		std::string generalConfig;
 		
 		std::vector<std::string> split = Utility::splitString(server, "[location]");
 
-		// Parsing server general config
+		// Get server general config string
 		generalConfig = split[0];
-		std::cout << "generalConfig: " << generalConfig << std::endl;
+		// std::cout << "generalConfig: " << generalConfig << std::endl;
 
+		// Get  server locations string
+		std::vector<std::string> locationStrings(split.begin() + 1, split.end());
+
+		// Validate general config
+		int configErrorsFound = ConfigValidator::validateGeneralConfig(generalConfig, getServers());
+		// Validate locations
+		for (std::string& locationString : locationStrings)
+		{
+			configErrorsFound += ConfigValidator::validateLocationConfig(locationString);
+		}
+
+		if (configErrorsFound != 0)
+		{
+			// decrease servers vector because config is faulty
+			std::cout << "This server config has " << configErrorsFound << " invalid lines and will be ignored" << std::endl;
+			_servers.resize(_servers.size() - 1);
+			continue;
+		}
+		
 		// Reading line by line
 		std::istringstream stream(generalConfig);
 		std::string line;
@@ -84,7 +118,7 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 		{	
 			if (line.empty()) continue;
 
-			std::cout << "Line: " << line << std::endl;
+			// std::cout << "Line: " << line << std::endl;
 
 			// Split line into keys and values
 			std::vector<std::string> keyValue = Utility::splitString(line, " ");
@@ -92,27 +126,30 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 			// Trime whitespace from both ends of a string
 			for (std::string str : keyValue)
 			{
-				str = Utility::trim(str);
+				str = Utility::replaceWhiteSpaces(str);
 			}
-
-			std::string key = Utility::trim(keyValue[0]);
-			std::string value = Utility::trim(keyValue[1]);
+			if (keyValue.size() < 2)
+				throw ServerException("Invalid config file format, missing value for key: " + keyValue[0]);
+			std::string key = keyValue[0];
+			std::string value = keyValue[1];
 			
 			if (key == "ipAddress")
 				_servers[i].ipAddress = value;
 			else if (key == "serverName")
 				_servers[i].serverName = value;
 			else if (key == "port")
+			{
 				_servers[i].port = std::stoi(value);
+			}
 			else if (key == "clientMaxBodySize")
 				_servers[i].clientMaxBodySize = value;
 			else if (key == "error")
 			{
-				std::cout << "error: " << value << std::endl;
+				// std::cout << "error: " << value << std::endl;
 				std::vector<std::string> errorCodesString = Utility::splitString(value, ",");
 				for (std::string code : errorCodesString)
 				{
-					_servers[i].errorPages[std::stoi(code)] = Utility::trim(keyValue[2]);
+					_servers[i].errorPages[std::stoi(code)] = keyValue[2];
 				}
 			}
 			else if (key == "cgis")
@@ -123,11 +160,7 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 			}
 		}
 
-		// Parsing server locations
-		std::vector<std::string> locationStrings(split.begin() + 1, split.end());
-		_servers[i].locations.resize(locationStrings.size());
 		parseLocations(_servers[i], locationStrings);
-
 		i++;
 	}
 }
@@ -138,7 +171,7 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 		int j = 0;
 		for (std::string location : locationStrings)
 		{
-			std::cout << "location: " << location << std::endl;
+			// std::cout << "location: " << location << std::endl;
 			
 			std::istringstream stream(location);
 			std::string line;
@@ -146,7 +179,7 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 			{	
 				if (line.empty()) continue;
 
-				std::cout << "Line: " << line << std::endl;
+				// std::cout << "Line: " << line << std::endl;
 
 				// Split line into keys and values
 				std::vector<std::string> keyValue = Utility::splitString(line, " ");
@@ -155,7 +188,7 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 
 				if (key == "path")
 				{
-					std::cout << "path: " << value << std::endl;
+					// std::cout << "path: " << value << std::endl;
 					serverConfig.locations[j].path = value;
 				}
 				else if (key == "redirect")
@@ -167,16 +200,12 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 				else if (key == "directoryListing" && value == "on")
 						serverConfig.locations[j].directoryListing = true;
 				else if (key == "index")
-				{
-					std::vector<std::string> indexes = Utility::splitString(value, ",");
-					for (std::string index : indexes)
-						serverConfig.locations[j].index.push_back(index);
-				}
+						serverConfig.locations[j].index = value;
 				else if (key == "methods")
 				{
 					std::vector<std::string> methods = Utility::splitString(value, ",");
 					for (std::string method : methods)
-						serverConfig.locations[j].methods.push_back(method);
+						serverConfig.locations[j].methods[method] = true;
 				}
 			}
 			j++;

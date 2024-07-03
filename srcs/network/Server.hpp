@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/03 16:03:34 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/03 17:05:24 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,10 +20,10 @@ struct Pipe {
 };
 
 #include "Socket.hpp"
-#include "Utility.hpp"
-#include "Request.hpp"
+#include "../utils/Utility.hpp"
+#include "../utils/debug.hpp"
+#include "../request/Request.hpp"
 #include "client.hpp"
-#include "debug.hpp"
 #include <vector>
 #include <string>
 #include <cstring> // memset()

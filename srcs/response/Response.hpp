@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   Response.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:51 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/01 19:08:51 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/03 16:13:14 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include "Utility.hpp"
+#include "../utils/Utility.hpp"
 #include <map>
 #include <string>
 

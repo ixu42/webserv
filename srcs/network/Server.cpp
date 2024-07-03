@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/02 13:05:14 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/03 17:05:20 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,11 +59,14 @@ Server::Server(const char* ipAddr, int port) : _serverSocket(Socket())
 
 Server::~Server()
 {
-
 	DEBUG("Server destructor called");
 
-	for (t_client client : _clients)
+	for (t_client& client : _clients)
+	{
 		close(client.fd);
+		if (client.request)
+			delete client.request;
+	}
 }
 
 int	Server::accepter()

@@ -6,20 +6,20 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/02 22:04:54 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/03 17:06:06 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 #include "Server.hpp"
-#include "Config.hpp"
-#include "Response.hpp"
+#include "../config/Config.hpp"
+#include "../response/Response.hpp"
 #include "CGIHandler.hpp"
 #include <vector>
 #include <poll.h>
 #include <csignal>
-#include "debug.hpp"
+#include "../utils/debug.hpp"
 
 #define DEFAULT_CONFIG "config/default.conf"
 

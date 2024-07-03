@@ -6,13 +6,13 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 21:59:14 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/02 21:59:16 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/03 15:33:13 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-# include "Request.hpp"
+# include "../request/Request.hpp"
 
 typedef struct s_client
 {

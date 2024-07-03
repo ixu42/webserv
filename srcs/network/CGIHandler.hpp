@@ -3,19 +3,19 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/02 15:53:38 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/03 17:05:06 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include "Request.hpp"
+#include "../request/Request.hpp"
 #include "Server.hpp"
-#include "Response.hpp"
-#include "debug.hpp"
+#include "../response/Response.hpp"
+#include "../utils/debug.hpp"
 
 #include <unistd.h>
 #include <sys/types.h>

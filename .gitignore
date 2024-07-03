@@ -1,1 +1,6 @@
 .vscode
+objs/
+webserv
+.debug
+.flags
+.flags_current

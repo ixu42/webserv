@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 01:18:32 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 02:39:20 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,10 +30,11 @@ void Config::printConfig()
 {
 	std::cout << TEXT_YELLOW;
 	std::cout << "=== Printing parsed config ===" << std::endl;
+	int i = 0;
 	for (auto& serversConfigs : _serversConfigsMap) // also should go through the map of configs
 	{
-		int i = 0;
-		std::cout << BG_YELLOW << TEXT_BLACK << TEXT_BOLD << "Server " << serversConfigs.first << RESET << std::endl;
+		int j = 0;
+		std::cout << BG_YELLOW << TEXT_BLACK << TEXT_BOLD << "Server #" << i << " " << serversConfigs.first << RESET << std::endl;
 		for (ServerConfig server : serversConfigs.second)
 		{
 			std::cout << TEXT_BOLD << TEXT_UNDERLINE << TEXT_YELLOW;;
@@ -63,8 +64,9 @@ void Config::printConfig()
 						std::cout << "\tmethod: " << method.first << std::endl;
 				}
 			}
-			i++;
+			j++;
 		}
+		i++;
 	}
 	std::cout << RESET;
 }

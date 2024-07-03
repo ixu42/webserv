@@ -76,18 +76,30 @@ static const std::map<std::string, std::string> mimeTypes = {
 // Connection: Closed
 // Content-Type: text/html; charset=iso-8859-1
 
-Response::Response(std::string statusCode, std::string body, std::string fileFormat)
+Response::Response() {}
+
+// Response::Response(std::string statusCode, std::string body, std::string fileFormat)
+// {
+// 	_startline["version"] = "HTTP/1.1";
+// 	_startline["status"] = statusCode;
+// 	_startline["message"] = statusMessages.at(statusCode);
+
+// 	_headers["date"] = Utility::getDate();
+// 	_headers["server"] = "webserv";
+// 	_headers["content-length"] = std::to_string(body.length());
+// 	_headers["connection"] = "close";
+// 	_headers["content-type"] = mimeTypes.at(fileFormat);
+
+// 	_body = body;
+
+// }
+
+std::string	Response::getBody()
 {
-	_startline["version"] = serverName;
-	_startline["status"] = statusCode;
-	_startline["message"] = statusMessages.at(statusCode);
+	return _body;
+}
 
-	_headers["date"] = Utility::getDate();
-	_headers["server"] = "webserv";
-	_headers["content-length"] = body.length();
-	_headers["connection"] = "close";
-	_headers["content-type"] = mimeTypes.at(fileFormat);
-
-	_body = body;
-
+void Response::appendToBody(char* data, std::size_t length)
+{
+    _body.append(data, length);
 }

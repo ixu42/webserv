@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/03 16:12:45 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/03 17:06:06 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 
 #include "Server.hpp"
 #include "../config/Config.hpp"
+#include "../response/Response.hpp"
+#include "CGIHandler.hpp"
 #include <vector>
 #include <poll.h>
 #include <csignal>

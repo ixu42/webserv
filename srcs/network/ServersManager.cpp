@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/02 19:49:47 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/03 14:12:46 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,13 @@ ServersManager::ServersManager()
 	for (Server*& server : _servers)
 		_fds.push_back({server->getServerSockfd(), POLLIN, 0});
 
-	std::cout << "ServersManager created" << std::endl;
+	if (_servers.empty())
+	{
+		delete _instance;
+		std::cout << "No valid servers" << std::endl;
+		std::exit(EXIT_FAILURE);
+	}
+	std::cout << "ServersManager created " << _servers.size() << " servers" << std::endl;
 }
 
 ServersManager::~ServersManager()
@@ -123,6 +129,13 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 		{
 			if (pfdReadyForRead.fd == client.fd)
 			{
+				// Request req = server->receiveRequest(pfdReadyForRead.fd);
+				// if (req.getStartLine()["path"].find("cgi-bin") != std::string::npos)
+				// {
+				// 	Response resp;
+				// 	CGIServer::handleCGI(req, *server, resp);
+				// 	std::cout << resp.getBody() << std::endl;
+				// }
 				client.request = server->receiveRequest(pfdReadyForRead.fd);
 				pfdReadyForRead.events = POLLOUT;
 				fdFound = true;

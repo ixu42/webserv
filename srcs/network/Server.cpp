@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/02 23:17:33 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/03 17:05:20 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ void	Server::initServer(const char* ipAddr, int port)
 	std::memset((char*)&_address, 0, sizeof(_address));
 	_address.sin_family = AF_INET;
 	_address.sin_port = htons(port);
-	if (ipAddr == nullptr)
+	if (ipAddr == nullptr || ipAddr[0] == '\0')
 		_address.sin_addr.s_addr = INADDR_ANY;
 	else
 	{
@@ -214,6 +214,11 @@ std::string Server::whoAmI() const
 ServerConfig* Server::getConfig()
 {
 	return _config;
+}
+
+Pipe& Server::getPipe()
+{
+	return _CGIpipes;
 }
 
 int Server::getServerSockfd()

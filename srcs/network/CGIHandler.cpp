@@ -1,27 +1,38 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   CGIHandler.cpp                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
+/*   Updated: 2024/07/02 15:50:01 by dnikifor         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "CGIHandler.hpp"
 
-int CGIServer::inputPipe[FDS];
-int CGIServer::outputPipe[FDS];
-std::string CGIServer::result;
-
-std::string CGIServer::handleCGI(Request& request)
+void CGIServer::handleCGI(Request& request, Server& server, Response& response)
 {
+	DEBUG("\n===handleCGI function started===");
 	std::string interpreter = determineInterpreter(request.getStartLine()["path"]);
 	std::vector<std::string> envVars = setEnvironmentVariables(request);
-	handleProcesses(request, interpreter, envVars);
-
-	return result;
+	DEBUG("===Enviroment has been set===");
+	handleProcesses(request, server, response, interpreter, envVars);
+	DEBUG("===handleCGI function ended===");
 }
 
 std::string CGIServer::determineInterpreter(const std::string& filePath)
 {
 	if (filePath.substr(filePath.find_last_of(".") + 1) == "py")
 	{
-		return "/usr/bin/python3";
+		DEBUG("===Python specificator found===");
+		return PYTHON_INTERPRETER;
 	}
 	else if (filePath.substr(filePath.find_last_of(".") + 1) == "php")
 	{
-		return "/usr/bin/php";
+		DEBUG("===PHP specificator found===");
+		return PHP_INTERPRETER;
 	}
 	else
 	{
@@ -35,7 +46,7 @@ std::vector<std::string> CGIServer::setEnvironmentVariables(Request& request)
 
 	env.push_back("REQUEST_METHOD=" + request.getStartLine()["method"]);
 	env.push_back("QUERY_STRING=" + request.getStartLine()["query"]);
-	env.push_back("SCRIPT_NAME=" + request.getStartLine()["path"]);
+	env.push_back("SCRIPT_NAME=" + request.getStartLine()["path"].erase(0, 1));
 	env.push_back("SERVER_PROTOCOL=" + request.getStartLine()["version"]);
 
 	if (request.getStartLine()["method"] == "POST")
@@ -43,23 +54,24 @@ std::vector<std::string> CGIServer::setEnvironmentVariables(Request& request)
 		env.push_back("CONTENT_TYPE=application/x-www-form-urlencoded");
 		env.push_back("CONTENT_LENGTH=" + std::to_string(request.getBody().size()));
 	}
-
 	return env;
 }
 
-void CGIServer::handleChildProcess(const std::string& interpreter, const std::string& filePath,
-	const std::vector<std::string>& envVars)
+void CGIServer::handleChildProcess(Server& server, const std::string& interpreter,
+	const std::string& filePath,const std::vector<std::string>& envVars)
 {
-	dup2(inputPipe[IN], STDIN_FILENO);
-	dup2(outputPipe[OUT], STDOUT_FILENO);
+	DEBUG("===Duplicating stdin and stdout===");
+	dup2(server.getPipe().input[IN], STDIN_FILENO);
+	dup2(server.getPipe().output[OUT], STDOUT_FILENO);
 
-	close(inputPipe[OUT]);
-	close(outputPipe[IN]);
+	close(server.getPipe().input[OUT]);
+	close(server.getPipe().output[IN]);
 
 	std::vector<char*> args;
 	args.push_back(const_cast<char*>(interpreter.c_str()));
 	args.push_back(const_cast<char*>(filePath.c_str()));
 	args.push_back(nullptr);
+	DEBUG("===Agruments set===");
 
 	std::vector<char*> envp;
 	for (const auto& var : envVars)
@@ -67,35 +79,42 @@ void CGIServer::handleChildProcess(const std::string& interpreter, const std::st
 		envp.push_back(const_cast<char*>(var.c_str()));
 	}
 	envp.push_back(nullptr);
+	DEBUG("===Environment casted===");
 
+	DEBUG("===About to start execve===");
 	execve(interpreter.c_str(), args.data(), envp.data());
 	throw ServerException("Error occured while execve() function was called");
 }
 
-void CGIServer::handleParentProcess(const std::string& method, const std::string& body)
+void CGIServer::handleParentProcess(Server& server, Response& response, const std::string& method,
+	const std::string& body)
 {
-	close(inputPipe[IN]);
-	close(outputPipe[OUT]);
+	close(server.getPipe().input[IN]);
+	close(server.getPipe().output[OUT]);
 
 	if (method == "POST")
 	{
-		write(inputPipe[1], body.c_str(), body.size());
+		DEBUG("===Writing body of the request inside the pipe===");
+		write(server.getPipe().input[OUT], body.c_str(), body.size());
 	}
-	close(inputPipe[OUT]);
+	close(server.getPipe().input[OUT]);
 
 	char buffer[10];
 	ssize_t bytesRead;
 
-	while ((bytesRead = read(outputPipe[IN], buffer, sizeof(buffer))) > 0)
+	while ((bytesRead = read(server.getPipe().output[IN], buffer, sizeof(buffer))) > 0)
 	{
-		result.append(buffer, bytesRead);
+		DEBUG("Populating response body");
+		response.appendToBody(buffer, bytesRead);
 	}
-	close(outputPipe[IN]);
+	std::cerr << response.getBody() << std::endl;
+	close(server.getPipe().output[IN]);
 }
 
-void CGIServer::handleProcesses(Request& request, const std::string& interpreter, const std::vector<std::string>& envVars)
+void CGIServer::handleProcesses(Request& request, Server& server, Response& response,
+	const std::string& interpreter, const std::vector<std::string>& envVars)
 {
-	if (pipe(inputPipe) == -1 || pipe(outputPipe) == -1)
+	if (pipe(server.getPipe().input) == -1 || pipe(server.getPipe().output) == -1)
 	{
 		throw ServerException("Error occured while pipe() function was called");
 	}
@@ -107,19 +126,13 @@ void CGIServer::handleProcesses(Request& request, const std::string& interpreter
 	}
 	else if (pid == 0)
 	{
-		handleChildProcess(interpreter, request.getStartLine()["path"], envVars);
+		DEBUG("===Child started===");
+		handleChildProcess(server, interpreter, request.getStartLine()["path"].erase(0, 1), envVars);
 	}
 	else
 	{
-		handleParentProcess(request.getStartLine()["method"], request.getBody());
+		DEBUG("===Parent started===");
+		handleParentProcess(server, response, request.getStartLine()["method"], request.getBody());
 		waitpid(pid, nullptr, 0);
 	}
 }
-
-// int main() {
-// 	Request request("POST cgi-bin/script.py?name=alex&surname=johnson HTTP/1.1\r\nHost: localhost:8080\r\nConnection: keep-alive\r\nCache-Control: max-age=0\r\nsec-ch-ua: \"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\"\r\nsec-ch-ua-mobile: ?0\r\nsec-ch-ua-platform: \"macOS\"\r\nUpgrade-Insecure-Requests: 1\r\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7\r\nSec-Fetch-Site: none\r\nSec-Fetch-Mode: navigate\r\nSec-Fetch-User: ?1\r\nSec-Fetch-Dest: document\r\nAccept-Encoding: gzip, deflate, br, zstd\r\nAccept-Language: en-GB,en-US;q=0.9,en;q=0.8,ru;q=0.7\r\nCookie: wp-settings-1=libraryContent%3Dbrowse%26posts_list_mode%3Dlist; wp-settings-time-1=1697667275; adminer_permanent=c2VydmVy--cm9vdA%3D%3D-bG9jYWw%3D%3AWdDaEmjuEAY%3D\r\n\r\n");
-// 	std::string response = CGIServer::handleCGI(request);
-// 	std::cout << "Response from CGI script:\n\n\n" << response << std::endl;
-
-// 	return 0;
-// }

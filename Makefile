@@ -6,7 +6,7 @@
 #    By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/08 17:44:55 by ixu               #+#    #+#              #
-#    Updated: 2024/07/03 16:28:28 by ixu              ###   ########.fr        #
+#    Updated: 2024/07/03 17:07:23 by ixu              ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,8 +23,8 @@ RESPONSE_DIR := $(SRCS_DIR)response/
 UTILS_DIR := $(SRCS_DIR)utils/
 
 # Source files
-SRCS = $(addsuffix .cpp, main Socket Server Request Utility ServersManager \
-			Config ConfigValidator CGIHandler)
+SRCS = $(addsuffix .cpp, main Socket Server ServersManager Request Response \
+			Utility Config ConfigValidator CGIHandler)
 
 # Object files
 OBJS = $(addprefix $(OBJS_DIR), $(SRCS:.cpp=.o))

@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/03 16:03:34 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/03 17:09:07 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,8 +20,10 @@ struct Pipe {
 };
 
 #include "Socket.hpp"
+#include "CGIHandler.hpp"
 #include "Utility.hpp"
 #include "Request.hpp"
+#include "Response.hpp"
 #include "client.hpp"
 #include "debug.hpp"
 #include <vector>
@@ -58,7 +60,7 @@ class Server
 
 		int							accepter();
 		Request*					receiveRequest(int clientSockfd);
-		void						responder(t_client& client);
+		void						responder(t_client& client, Server &server);
 
 	private:
 		void						initServer(const char* ipAddr, int port);

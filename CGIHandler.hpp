@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/02 15:53:38 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/03 19:15:09 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,9 +32,11 @@
 #define PYTHON_INTERPRETER "/usr/bin/python3"
 #define PHP_INTERPRETER "/usr/bin/php"
 
+class Server;
+
 class CGIServer {
 	private:
-		static			std::string determineInterpreter(const std::string& filePath);
+		static			std::string determineInterpreter(const std::string& filePath, Response& response);
 		static			std::vector<std::string> setEnvironmentVariables(Request& request);
 		static void		handleProcesses(Request& request, Server& server, Response& response,
 							const std::string& interpreter, const std::vector<std::string>& envVars);

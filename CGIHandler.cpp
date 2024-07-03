@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/02 15:50:01 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/03 20:59:27 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,14 +15,14 @@
 void CGIServer::handleCGI(Request& request, Server& server, Response& response)
 {
 	DEBUG("\n===handleCGI function started===");
-	std::string interpreter = determineInterpreter(request.getStartLine()["path"]);
+	std::string interpreter = determineInterpreter(request.getStartLine()["path"], response);
 	std::vector<std::string> envVars = setEnvironmentVariables(request);
 	DEBUG("===Enviroment has been set===");
 	handleProcesses(request, server, response, interpreter, envVars);
 	DEBUG("===handleCGI function ended===");
 }
 
-std::string CGIServer::determineInterpreter(const std::string& filePath)
+std::string CGIServer::determineInterpreter(const std::string& filePath, Response& response)
 {
 	if (filePath.substr(filePath.find_last_of(".") + 1) == "py")
 	{
@@ -36,6 +36,7 @@ std::string CGIServer::determineInterpreter(const std::string& filePath)
 	}
 	else
 	{
+		response.setStatus("404 Page Not Found");
 		throw ServerException("Unsupported type passed to CGIHandler");
 	}
 }
@@ -107,7 +108,6 @@ void CGIServer::handleParentProcess(Server& server, Response& response, const st
 		DEBUG("Populating response body");
 		response.appendToBody(buffer, bytesRead);
 	}
-	std::cerr << response.getBody() << std::endl;
 	close(server.getPipe().output[IN]);
 }
 

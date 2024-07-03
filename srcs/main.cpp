@@ -3,18 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/06/27 21:54:08 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/03 16:12:29 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Server.hpp"
-#include "ServersManager.hpp"
-#include "Config.hpp"
-#include "ServerException.hpp"
-#include "Colors.hpp"
+#include "network/Server.hpp"
+#include "network/ServersManager.hpp"
+#include "config/Config.hpp"
+#include "utils/ServerException.hpp"
+#include "utils/Colors.hpp"
 #include <iostream>
 
 int main(int argc, char *argv[])

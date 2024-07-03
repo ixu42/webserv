@@ -6,17 +6,17 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/02 22:07:32 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/03 16:12:58 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 #include "Socket.hpp"
-#include "Utility.hpp"
-#include "Request.hpp"
+#include "../utils/Utility.hpp"
+#include "../utils/debug.hpp"
+#include "../request/Request.hpp"
 #include "client.hpp"
-#include "debug.hpp"
 #include <vector>
 #include <string>
 #include <cstring> // memset()

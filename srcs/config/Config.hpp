@@ -3,18 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   Config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:20 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/01 19:08:21 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/03 16:12:36 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include "ServerException.hpp"
-#include "Colors.hpp"
-#include "Utility.hpp"
+#include "../utils/ServerException.hpp"
+#include "../utils/Colors.hpp"
+#include "../utils/Utility.hpp"
 #include "ConfigValidator.hpp"
 
 #include <iostream>

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/03 19:48:11 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 01:18:32 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,41 +30,41 @@ void Config::printConfig()
 {
 	std::cout << TEXT_YELLOW;
 	std::cout << "=== Printing parsed config ===" << std::endl;
-	int i = 0;
 	for (auto& serversConfigs : _serversConfigsMap) // also should go through the map of configs
 	{
-		std::cout << TEXT_BOLD << TEXT_UNDERLINE << "Server " << serversConfigs.first << RESET << std::endl;
+		int i = 0;
+		std::cout << BG_YELLOW << TEXT_BLACK << TEXT_BOLD << "Server " << serversConfigs.first << RESET << std::endl;
 		for (ServerConfig server : serversConfigs.second)
 		{
-			std::cout << BG_YELLOW << TEXT_BLACK << TEXT_BOLD;
+			std::cout << TEXT_BOLD << TEXT_UNDERLINE << TEXT_YELLOW;;
 			std::cout << "Named Server #" << i << RESET << std::endl;
 			std::cout << TEXT_YELLOW;
-			std::cout << "ipAddress: " << server.ipAddress << std::endl;
-			std::cout << "port: " << server.port << std::endl;
-			std::cout << "serverName: " << server.serverName << std::endl;
-			std::cout << "clientMaxBodySize: " << server.clientMaxBodySize << std::endl;
+			std::cout << "\tipAddress: " << server.ipAddress << std::endl;
+			std::cout << "\tport: " << server.port << std::endl;
+			std::cout << "\tserverName: " << server.serverName << std::endl;
+			std::cout << "\tclientMaxBodySize: " << server.clientMaxBodySize << std::endl;
 			for (auto error : server.errorPages)
-				std::cout << "error: " << error.first << " " << error.second << std::endl;
+				std::cout << "\terror: " << error.first << " " << error.second << std::endl;
 			for (auto cgi : server.cgis)
-				std::cout << "cgi: " << cgi.first << " " << std::boolalpha << cgi.second << std::endl;
+				std::cout << "\tcgi: " << cgi.first << " " << std::boolalpha << cgi.second << std::endl;
 			for (auto location : server.locations)
 			{
 				std::cout << TEXT_UNDERLINE;
 				std::cout << "\tLocation: " << location.path << std::endl;
 				std::cout << RESET_UNDERLINE;
-				std::cout << "\tredirect: " << location.redirect << std::endl;
-				std::cout << "\troot: " << location.root << std::endl;
-				std::cout << "\tuploadPath: " << location.uploadPath << std::endl;
-				std::cout << "\tdirectoryListing: " << std::boolalpha << location.directoryListing << std::endl;
-				std::cout << "\tindex: " << location.index << std::endl;
+				std::cout << "\t\tredirect: " << location.redirect << std::endl;
+				std::cout << "\t\troot: " << location.root << std::endl;
+				std::cout << "\t\tuploadPath: " << location.uploadPath << std::endl;
+				std::cout << "\t\tdirectoryListing: " << std::boolalpha << location.directoryListing << std::endl;
+				std::cout << "\t\tindex: " << location.index << std::endl;
 				for (auto& method : location.methods)
 				{
 					if (method.second)
 						std::cout << "\tmethod: " << method.first << std::endl;
 				}
 			}
+			i++;
 		}
-		i++;
 	}
 	std::cout << RESET;
 }

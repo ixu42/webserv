@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/03 19:56:23 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 00:23:07 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,8 @@ ServersManager::ServersManager()
 	// Add servers
 	int i = 0;
 	// for (std::pair<const std::string, ServerConfig>& serverConfigPair : _webservConfig->getServersConfigsMap())
+
+	std::cout << "ServersManager creating servers... Map size: " << _webservConfig->getServersConfigsMap().size() << std::endl;
 	for (auto& [ipPortKey, serverConfigs] : _webservConfig->getServersConfigsMap())
 	{
 		Server* foundServer = nullptr;

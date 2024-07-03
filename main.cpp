@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/02 15:45:56 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/04 00:59:40 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,15 +48,13 @@ int main(int argc, char *argv[])
 		catch(const ServerException& e)
 		{
 			std::cerr << BG_RED << TEXT_WHITE;
-			std::cerr << "Server close with error: " << e.what() << '\n';
-			std::cerr << RESET;
+			std::cerr << "Server close with error: " << e.what() << RESET << std::endl;
 		}
-		catch(const std::exception& e)
-		{
-			std::cerr << BG_RED << TEXT_WHITE;
-			std::cerr << "Server close with exception: " << e.what() << '\n';
-			std::cerr << RESET;
-		}
+		// catch(const std::exception& e)
+		// {
+		// 	std::cerr << BG_RED << TEXT_WHITE;
+		// 	std::cerr << "Server close with exception: " << e.what() << RESET << std::endl;
+		// }
 	}
 }
 

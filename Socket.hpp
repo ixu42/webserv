@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:53 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/02 22:06:00 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/04 00:37:27 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,9 @@
 #include <cstring> // strerror()
 #include <unistd.h> // close()
 #include <fcntl.h> // fcntl()
+#include <arpa/inet.h> // inet_ntoa()
+
+#include "ServerException.hpp"
 
 class Socket
 {

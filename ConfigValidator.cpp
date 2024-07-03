@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:11 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/03 19:41:43 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 01:20:09 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,12 +50,12 @@ int ConfigValidator::matchLinePattern(std::string& line, std::string field, std:
 // int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vector<ServerConfig>& servers)
 int ConfigValidator::validateGeneralConfig(std::string generalConfig)
 {
-	ServerConfig config;
 	int generalConfigErrorsCount = 0;
 
 	// Cgi pattern is constructed from cgis map default keys
 	std::string cgisString;
 	size_t i = 0;
+	ServerConfig config;
 	for (auto& cgi : config.cgis)
 	{
 		cgisString += cgi.first;

@@ -6,14 +6,14 @@
 #    By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/08 17:44:55 by ixu               #+#    #+#              #
-#    Updated: 2024/07/03 16:12:19 by ixu              ###   ########.fr        #
+#    Updated: 2024/07/03 16:28:28 by ixu              ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 # Program name
 NAME := webserv
 
-# Directory for object files
+# Directories
 OBJS_DIR := ./objs/
 SRCS_DIR := ./srcs/
 CONFIG_DIR := $(SRCS_DIR)config/
@@ -26,7 +26,7 @@ UTILS_DIR := $(SRCS_DIR)utils/
 SRCS = $(addsuffix .cpp, main Socket Server Request Utility ServersManager \
 			Config ConfigValidator CGIHandler)
 
-# Object files derived from sources
+# Object files
 OBJS = $(addprefix $(OBJS_DIR), $(SRCS:.cpp=.o))
 
 # Compiler and flags

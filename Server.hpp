@@ -3,21 +3,21 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/02 13:04:33 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/03 16:03:34 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
+#define FDS 2
+
 struct Pipe {
 	int input[FDS];
 	int output[FDS];
 };
-
-#define FDS 2
 
 #include "Socket.hpp"
 #include "Utility.hpp"

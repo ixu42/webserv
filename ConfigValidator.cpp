@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:11 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 18:57:03 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 19:15:44 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,14 +148,15 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 	std::vector<std::string> oneAllowed = {"ipAddress", "port", "serverName", "clientMaxBodySize"};
 	std::vector<std::string> mandatoryFields = {"port", "serverName"};
 
-	for (std::string& field : oneAllowed)
-	{
-		if (countMatchInRegex(generalConfig, patterns[field]) > 1)
-		{
-			std::cout << "Line not valid: " << TEXT_RED << "Config should have unique field: " << field << RESET << std::endl;
-			generalConfigErrorsCount++;
-		}
-	}
+	// for (std::string& field : oneAllowed)
+	// {
+	// 	std::cout << "count matches for " << field << ": " << countMatchInRegex(generalConfig, patterns[field]) << std::endl;
+	// 	if (countMatchInRegex(generalConfig, patterns[field]) > 1)
+	// 	{
+	// 		std::cout << "Line not valid: " << TEXT_RED << "Config should have unique field: " << field << RESET << std::endl;
+	// 		generalConfigErrorsCount++;
+	// 	}
+	// }
 
 	for (std::string& field : mandatoryFields)
 	{
@@ -179,6 +180,18 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 		{
 			for (auto& pattern : patterns)
 			{
+				// Check for repeating onlye one time allowed fields
+				auto it = std::find(oneAllowed.begin(), oneAllowed.end(), pattern.first);
+				// std::cout << "count matches for " << pattern.first << ": " << countMatchInRegex(generalConfig, patterns[pattern.first]) << std::endl;
+				if (it != oneAllowed.end() && countMatchInRegex(generalConfig, patterns[pattern.first]) > 1)
+				{
+					// std::cout << "Match found for repeating field" << std::endl;
+					std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
+					errorCaught = 1;
+					generalConfigErrorsCount++;
+					break;
+				}
+
 				if ((errorCaught = matchLinePattern(line, pattern.first, pattern.second)) == 1)
 				{
 					generalConfigErrorsCount++;

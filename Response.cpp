@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 17:38:15 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/04 18:41:24 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 // Content-Type: text/html; charset=iso-8859-1
 
 // body
+// 200, 400, 403, 404, 405, 413, 500, 307
 
 std::string& Response::getBody()
 {

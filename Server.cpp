@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/04 17:56:38 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/04 18:19:13 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -171,9 +171,17 @@ void	Server::responder(t_client& client, Server &server)
 	}
 	else
 	{
-		CGIServer::setResponse(resp, "200 OK", "text/html", "pages/index.html");
-		response = Response::buildResponse(resp);
-		write(client.fd, response.c_str(), response.length());
+		if (resp.getStatus().empty())
+		{
+			CGIServer::setResponse(resp, "200 OK", "text/html", "pages/index.html");
+			response = Response::buildResponse(resp);
+			write(client.fd, response.c_str(), response.length());
+		}
+		else
+		{
+			response = Response::buildResponse(resp);
+			write(client.fd, response.c_str(), response.length());
+		}
 	}
 
 	delete client.request;

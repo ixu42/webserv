@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:11 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 19:15:44 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 19:18:16 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,8 +59,6 @@ int ConfigValidator::validateSeverNamePerIpPort(std::vector<std::string> serverS
 	return 0;
 }
 
-// }
-
 /**
  * Checks second parameter with comma separation for unique values.
  * For example, cgis, error fields
@@ -103,9 +101,9 @@ int ConfigValidator::countMatchInRegex(std::string str, std::regex pattern)
 	return std::distance(words_begin, words_end);
 }
 
+// Cgi pattern is constructed from cgis map default keys
 std::pair<std::string, int> ConfigValidator::contructCgiString()
 {
-	// Cgi pattern is constructed from cgis map default keys
 	std::string cgisString = "";
 	size_t count = 0;
 	ServerConfig config;
@@ -125,15 +123,12 @@ std::pair<std::string, int> ConfigValidator::contructCgiString()
 /**
  * Returns number of invalid lines
  */
-// int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vector<ServerConfig>& servers)
 int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vector<std::string> serverStrings, size_t i)
 {
 	int generalConfigErrorsCount = 0;
 
 	auto [cgisString, cgisCount] = contructCgiString();
-	std::string patternStr = "\\s*cgis\\s+\\b(" + cgisString + ")(?:,(" + cgisString + ")){0," + std::to_string(cgisCount - 1) +"}\\b\\s*";
-	// std::string patternStr = "\\s*cgis\\s+\\b(" + cgisString + ")(?:,(" + cgisString + ")){0,2}\\b\\s*";
-	// std::string patternStr = "\\s*cgis\\s+(" + cgisString +")(,(" + cgisString + "))?\\s*";	
+	std::string cgiPatternStr = "\\s*cgis\\s+\\b(" + cgisString + ")(?:,(" + cgisString + ")){0," + std::to_string(cgisCount - 1) +"}\\b\\s*";
 
 	std::regex linePattern(R"((ipAddress|port|serverName|clientMaxBodySize|error|cgis)\s+[a-zA-Z0-9~\-_.,]+\s*[a-zA-Z0-9~\-_.,\/]*\s*)");
 	std::map<std::string, std::regex> patterns = {
@@ -142,27 +137,17 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 		{"serverName", std::regex(R"(\s*serverName\s+(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\s*)")},
 		{"clientMaxBodySize", std::regex(R"(\s*clientMaxBodySize\s+[1-9]+[0-9]*(T|G||M|K|B))")},
 		{"error", std::regex(R"(\s*error\s+[4-5][0-9]{2}(?:,[4-5][0-9]{2})*\s+([^,\s]+(?:\.html|\.htm))\s*)")},
-		{"cgis",std::regex(patternStr)},
+		{"cgis",std::regex(cgiPatternStr)},
 	};
 
 	std::vector<std::string> oneAllowed = {"ipAddress", "port", "serverName", "clientMaxBodySize"};
 	std::vector<std::string> mandatoryFields = {"port", "serverName"};
 
-	// for (std::string& field : oneAllowed)
-	// {
-	// 	std::cout << "count matches for " << field << ": " << countMatchInRegex(generalConfig, patterns[field]) << std::endl;
-	// 	if (countMatchInRegex(generalConfig, patterns[field]) > 1)
-	// 	{
-	// 		std::cout << "Line not valid: " << TEXT_RED << "Config should have unique field: " << field << RESET << std::endl;
-	// 		generalConfigErrorsCount++;
-	// 	}
-	// }
-
 	for (std::string& field : mandatoryFields)
 	{
 		if (countMatchInRegex(generalConfig, patterns[field]) == 0)
 		{
-			std::cout << "Line not valid: " << TEXT_RED << "Config should have at least " << field << RESET << std::endl;
+			std::cout << "Line not valid: " << TEXT_RED << "Config should have at least 1 " << field << RESET << std::endl;
 			generalConfigErrorsCount++;
 		}
 	}
@@ -180,7 +165,7 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 		{
 			for (auto& pattern : patterns)
 			{
-				// Check for repeating onlye one time allowed fields
+				// Check for repeating only one time allowed fields
 				auto it = std::find(oneAllowed.begin(), oneAllowed.end(), pattern.first);
 				// std::cout << "count matches for " << pattern.first << ": " << countMatchInRegex(generalConfig, patterns[pattern.first]) << std::endl;
 				if (it != oneAllowed.end() && countMatchInRegex(generalConfig, patterns[pattern.first]) > 1)

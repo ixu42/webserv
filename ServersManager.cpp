@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 00:23:07 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 13:59:54 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ ServersManager::ServersManager()
 	int i = 0;
 	// for (std::pair<const std::string, ServerConfig>& serverConfigPair : _webservConfig->getServersConfigsMap())
 
-	std::cout << "ServersManager creating servers... Map size: " << _webservConfig->getServersConfigsMap().size() << std::endl;
+	std::cout << "ServersManager creating servers... Servers in config: " << _webservConfig->getServersConfigsMap().size() << std::endl;
 	for (auto& [ipPortKey, serverConfigs] : _webservConfig->getServersConfigsMap())
 	{
 		Server* foundServer = nullptr;
@@ -52,11 +52,18 @@ ServersManager::ServersManager()
 		}
 		if (!foundServer)
 		{
-			_servers.push_back(new Server(serverConfigs[0].ipAddress.c_str(), serverConfigs[0].port));
-			foundServer = _servers.back();
+			try
+			{
+				_servers.push_back(new Server(serverConfigs[0].ipAddress.c_str(), serverConfigs[0].port));
+				foundServer = _servers.back();
+			}
+			catch (const std::exception& e){
+				std::cerr << BG_RED << TEXT_WHITE;
+				std::cerr << "Server close with error: " << e.what() << RESET << std::endl;
+			}
 		}
-
-		foundServer->setConfig(serverConfigs);
+		if (foundServer)
+			foundServer->setConfig(serverConfigs);
 
 
 

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/04 00:58:21 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 14:00:45 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,15 +42,10 @@ void	Server::initServer(const char* ipAddr, int port)
 	// 	exit(EXIT_FAILURE);
 	// }
 
-	try {
-		_serverSocket.create();
-		_serverSocket.bindAddress(_address);
-		_serverSocket.listenForConnections(10);
-	}
-	catch (const ServerException& e){
-		std::cerr << BG_RED << TEXT_WHITE;
-		std::cerr << "Server close with error: " << e.what() << RESET << std::endl;
-	}
+	_serverSocket.create();
+	_serverSocket.bindAddress(_address);
+	_serverSocket.listenForConnections(10);
+
 }
 
 Server::Server() : _serverSocket(Socket())

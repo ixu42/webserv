@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:40 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/03 16:13:28 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/04 19:40:57 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,12 @@ class Request
 		Request(std::string request);
 
 		void					parse(std::string request);
-		
+
+		/* Unchunk request */
+		size_t					hexStringToSizeT(const std::string &hexStr);
+		std::string				unchunkBody(std::string& body);
+
+		/* Getters and setters */
 		QueryStringParameters	getStartLine();
 		QueryStringParameters	getHeaders();
 		std::string				getBody();

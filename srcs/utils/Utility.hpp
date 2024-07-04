@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:11:26 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/03 18:36:38 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 19:40:56 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,4 +35,5 @@ class Utility
 		static std::string				strToLower(std::string str);
 		static std::string				readFile(std::string filePath);
 		static std::string				getDate();
+		static std::string				readLine(std::istream &stream);
 };

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 02:39:20 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 18:20:05 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ void Config::printConfig()
 		for (ServerConfig server : serversConfigs.second)
 		{
 			std::cout << TEXT_BOLD << TEXT_UNDERLINE << TEXT_YELLOW;;
-			std::cout << "Named Server #" << i << RESET << std::endl;
+			std::cout << "Named Server #" << j << RESET << std::endl;
 			std::cout << TEXT_YELLOW;
 			std::cout << "\tipAddress: " << server.ipAddress << std::endl;
 			std::cout << "\tport: " << server.port << std::endl;
@@ -91,7 +91,8 @@ std::vector<std::string> Config::filterOutInvalidServerStrings(std::vector<std::
 		// Validate general config
 		// Also pass serverStrings vector but only upto current server to validate if the serverName is in another string with the same ipAddress:port
 		// Like this 		int configErrorsFound = ConfigValidator::validateGeneralConfig(generalConfig, partialServerStrings); 
-		int configErrorsFound = ConfigValidator::validateGeneralConfig(generalConfig); 
+
+		int configErrorsFound = ConfigValidator::validateGeneralConfig(generalConfig, serverStrings, i);
 		// Validate locations
 		for (std::string& locationString : locationStrings)
 		{
@@ -101,7 +102,7 @@ std::vector<std::string> Config::filterOutInvalidServerStrings(std::vector<std::
 		if (configErrorsFound != 0)
 		{
 			// decrease servers vector because config is faulty
-			std::cout << "This server config has " << configErrorsFound << " invalid lines and will be ignored" << std::endl;
+			std::cout << "This server config has " << configErrorsFound << " config errors and will be ignored" << std::endl;
 			// _servers.resize(_servers.size() - 1);
 			serverStrings.erase(serverStrings.begin() + i);
 			continue;

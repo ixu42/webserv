@@ -6,14 +6,64 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:11 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 01:20:09 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 18:38:14 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ConfigValidator.hpp"
 
+// Check if the serverName per ip:port is unique
+int ConfigValidator::validateSeverNamePerIpPort(std::vector<std::string> serverStrings, size_t i, std::map<std::string, std::regex> patterns)
+{
+	std::string ipAddress = "";
+	std::string port = "";
+	std::string serverName = "";
+
+	std::istringstream stream1(serverStrings[i]); 
+	std::string line1;
+	while (std::getline(stream1, line1))
+	{
+		line1 = Utility::replaceWhiteSpaces(line1, ' ');
+		if (ipAddress.empty() && std::regex_match(line1, patterns["ipAddress"]))
+			ipAddress = Utility::splitString(line1, " ")[1];
+		else if (port.empty() && std::regex_match(line1, patterns["port"]))
+			port = Utility::splitString(line1, " ")[1];
+		else if (serverName.empty() && std::regex_match(line1, patterns["serverName"]))
+			serverName = Utility::splitString(line1, " ")[1];
+	}
+
+	for (size_t j = 0; j < i; j++)
+	{
+		std::string currIpAddress = "";
+		std::string currPort = "";
+		std::string currServerName = "";
+
+		stream1.clear();
+		stream1.str(serverStrings[j]);
+		while (std::getline(stream1, line1))
+		{
+			line1 = Utility::replaceWhiteSpaces(line1, ' ');
+			if (currIpAddress.empty() && std::regex_match(line1, patterns["ipAddress"]))
+				currIpAddress = Utility::splitString(line1, " ")[1];
+			else if (currPort.empty() && std::regex_match(line1, patterns["port"]))
+				currPort = Utility::splitString(line1, " ")[1];
+			else if (currServerName.empty() && std::regex_match(line1, patterns["serverName"]))
+				currServerName = Utility::splitString(line1, " ")[1];
+		}
+		if (serverName == currServerName && port == currPort && ipAddress == currIpAddress)
+		{
+			std::cout << "Config not valid: " << TEXT_RED << "Server name " << serverName << " is not unique for " << currIpAddress << ":" << currPort << RESET << std::endl;
+			return 1;
+		}
+	}
+	return 0;
+}
+
+// }
+
 /**
- * Checks second parameter for unique values
+ * Checks second parameter with comma separation for unique values.
+ * For example, cgis, error fields
  */
 int ConfigValidator::checkUnique(std::string line)
 {
@@ -44,29 +94,43 @@ int ConfigValidator::matchLinePattern(std::string& line, std::string field, std:
 	return 0;
 }
 
-/**
- * Returns number of invalid lines
- */
-// int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vector<ServerConfig>& servers)
-int ConfigValidator::validateGeneralConfig(std::string generalConfig)
+int countMatchInRegex(std::string str, std::regex pattern)
 {
-	int generalConfigErrorsCount = 0;
+	auto words_begin = std::sregex_iterator(
+		str.begin(), str.end(), pattern);
+	auto words_end = std::sregex_iterator();
 
+	return std::distance(words_begin, words_end);
+}
+
+std::pair<std::string, int> contructCgiString()
+{
 	// Cgi pattern is constructed from cgis map default keys
-	std::string cgisString;
-	size_t i = 0;
+	std::string cgisString = "";
+	size_t count = 0;
 	ServerConfig config;
 	for (auto& cgi : config.cgis)
 	{
 		cgisString += cgi.first;
-		if (i != config.cgis.size() - 1)
+		if (count != config.cgis.size() - 1)
 			cgisString += "|";
-		i++;
+		count++;
 	}
 	int cgisCount = config.cgis.size();
 	std::cout << "cgisString: " << cgisString << std::endl;
 
+	return {cgisString, cgisCount};
+}
 
+/**
+ * Returns number of invalid lines
+ */
+// int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vector<ServerConfig>& servers)
+int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vector<std::string> serverStrings, size_t i)
+{
+	int generalConfigErrorsCount = 0;
+
+	auto [cgisString, cgisCount] = contructCgiString();
 	std::string patternStr = "\\s*cgis\\s+\\b(" + cgisString + ")(?:,(" + cgisString + ")){0," + std::to_string(cgisCount - 1) +"}\\b\\s*";
 	// std::string patternStr = "\\s*cgis\\s+\\b(" + cgisString + ")(?:,(" + cgisString + ")){0,2}\\b\\s*";
 	// std::string patternStr = "\\s*cgis\\s+(" + cgisString +")(,(" + cgisString + "))?\\s*";	
@@ -80,6 +144,20 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig)
 		{"error", std::regex(R"(\s*error\s+[4-5][0-9]{2}(?:,[4-5][0-9]{2})*\s+([^,\s]+(?:\.html|\.htm))\s*)")},
 		{"cgis",std::regex(patternStr)},
 	};
+
+	std::vector<std::string> oneAllowed = {"ipAddress", "port", "serverName", "clientMaxBodySize"};
+	std::vector<std::string> mandatoryFields = {"port", "serverName"};
+
+	for (std::string& field : mandatoryFields)
+	{
+		if (countMatchInRegex(generalConfig, patterns[field]) == 0)
+		{
+			std::cout << "Line not valid: " << TEXT_RED << "Config should have at least " << field << RESET << std::endl;
+			generalConfigErrorsCount++;
+		}
+	}
+
+	generalConfigErrorsCount += validateSeverNamePerIpPort(serverStrings, i, patterns);
 
 	std::istringstream stream(generalConfig); 
 	std::string line;
@@ -100,7 +178,7 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig)
 				else if (pattern.first == "port" && std::regex_match(line, pattern.second))
 				{
 					int port = std::stoi(Utility::trim(Utility::splitString(line, " ")[1]));
-					if (port < 1023 || port > 65535)
+					if (port < 1 || port > 65535)
 					{
 						std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
 						generalConfigErrorsCount++;

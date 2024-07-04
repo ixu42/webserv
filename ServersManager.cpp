@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 13:59:54 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 14:20:22 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,7 @@ ServersManager::ServersManager()
 			}
 			catch (const std::exception& e){
 				std::cerr << BG_RED << TEXT_WHITE;
-				std::cerr << "Server close with error: " << e.what() << RESET << std::endl;
+				std::cerr << "Failed to launch server: " << e.what() << RESET << std::endl;
 			}
 		}
 		if (foundServer)

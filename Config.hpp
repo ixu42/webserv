@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:20 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/03 19:44:14 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 14:09:07 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ struct ServerConfig
 		std::string					serverName; // = "localhost";
 		std::string					clientMaxBodySize = "100M";
 
-		std::map<int, std::string>	errorPages = {{404, "default/404.html"}, {500, "default/500.html"}};
+		std::map<int, std::string>	errorPages = {{404, "error_pages/404.html"}, {500, "error_pages/500.html"}};
 		std::map<std::string, bool>	cgis = {{"php", false}, {"py", false}};
 
 		std::vector<Location>		locations;

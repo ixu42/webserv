@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/04 14:00:45 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 18:31:34 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -402,42 +402,42 @@ Server::Server(std::string ipAddress, int port)
 
 // 	Request req = receiveRequest();
 
-// 	// std::cout << "Locations vector size after request generated: " << this->config->locations.size() << std::endl;
-// 	// for (Location location : this->config->locations)
-// 	// {
-// 	// 	std::cout << "Server config and location from handleRequest: " << location.path << std::endl;
-// 	// }
-// 	Location* foundLocation = findLocation(&req);
-// 	if (foundLocation == nullptr)
-// 	{
-// 		// throw ServerException("Location not found");
-// 		std::cout << nullptr << std::endl;
-// 		response = "HTTP/1.1 404 Not Found\r\nServer: webserv\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
-// 		// response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
-// 	}
-// 	else
-// 	{
-// 		std::cout << "Great this is your location: " << foundLocation->path << std::endl;
-// 		// Handling redirect
-// 		if (foundLocation->redirect != "")
-// 		{
-// 			std::string redirectUrl = foundLocation->redirect;
+	// std::cout << "Locations vector size after request generated: " << this->config->locations.size() << std::endl;
+	// for (Location location : this->config->locations)
+	// {
+	// 	std::cout << "Server config and location from handleRequest: " << location.path << std::endl;
+	// }
+	// Location* foundLocation = findLocation(&req);
+	// if (foundLocation == nullptr)
+	// {
+	// 	// throw ServerException("Location not found");
+	// 	std::cout << nullptr << std::endl;
+	// 	response = "HTTP/1.1 404 Not Found\r\nServer: webserv\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
+	// 	// response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
+	// }
+	// else
+	// {
+	// 	std::cout << "Great this is your location: " << foundLocation->path << std::endl;
+	// 	// Handling redirect
+	// 	if (foundLocation->redirect != "")
+	// 	{
+	// 		std::string redirectUrl = foundLocation->redirect;
 
-// 			size_t requestUriPos = foundLocation->redirect.find("$request_uri");
+	// 		size_t requestUriPos = foundLocation->redirect.find("$request_uri");
 
-// 			std::string pagePath = req.getStartLine()["path"];
-// 			pagePath.replace(0, foundLocation->path.length(), "");
+	// 		std::string pagePath = req.getStartLine()["path"];
+	// 		pagePath.replace(0, foundLocation->path.length(), "");
 
-// 			redirectUrl = redirectUrl.substr(0, requestUriPos);
+	// 		redirectUrl = redirectUrl.substr(0, requestUriPos);
 
-// 			if (requestUriPos != std::string::npos)
-// 				redirectUrl.append(pagePath);
+	// 		if (requestUriPos != std::string::npos)
+	// 			redirectUrl.append(pagePath);
 
-// 			std::cout << "Redirect URL: " << redirectUrl << std::endl;
-// 			std::cout << "Page path: " << pagePath << std::endl;
-// 			response = "HTTP/1.1 307 Temporary Redirect\r\nServer: webserv\r\nLocation: " + redirectUrl + "\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
-// 		}
-// 	}
+	// 		std::cout << "Redirect URL: " << redirectUrl << std::endl;
+	// 		std::cout << "Page path: " << pagePath << std::endl;
+	// 		response = "HTTP/1.1 307 Temporary Redirect\r\nServer: webserv\r\nLocation: " + redirectUrl + "\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
+	// 	}
+	// }
 
 // 	// Testing request
 // 	std::cout << TEXT_CYAN;

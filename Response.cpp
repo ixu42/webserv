@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/03 19:23:00 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/04 17:38:15 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,6 +70,10 @@ std::string Response::buildResponse(Response& response)
 {
 	std::stringstream responseNew;
 
+	if (response.getStatus().empty())
+	{
+		response._status = "200 OK";
+	}
 	responseNew << "HTTP/1.1 " << response.getStatus() << "\r\n";
 	responseNew << Utility::getDate() << "\r\n";
 	responseNew << "Server: webserv" << "\r\n";

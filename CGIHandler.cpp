@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/03 20:59:27 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/04 17:54:09 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,27 @@ void CGIServer::handleCGI(Request& request, Server& server, Response& response)
 	DEBUG("===Enviroment has been set===");
 	handleProcesses(request, server, response, interpreter, envVars);
 	DEBUG("===handleCGI function ended===");
+}
+
+void CGIServer::setResponse(Response& response, std::string status,
+	std::string type, std::string page)
+{
+	response.setStatus(status);
+	response.setType(type);
+	response.setBody(readErrorPage(page));
+}
+
+std::string CGIServer::readErrorPage(const std::string& errorPagePath)
+{
+	std::ifstream file(errorPagePath);
+	
+	if (!file)
+	{
+		return "<html><body><h1>404 Not Found</h1></body></html>";
+	}
+	
+	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+	return content;
 }
 
 std::string CGIServer::determineInterpreter(const std::string& filePath, Response& response)
@@ -36,7 +57,7 @@ std::string CGIServer::determineInterpreter(const std::string& filePath, Respons
 	}
 	else
 	{
-		response.setStatus("404 Page Not Found");
+		setResponse(response, "404 Page Not Found", "text/html", "pages/404.html");
 		throw ServerException("Unsupported type passed to CGIHandler");
 	}
 }
@@ -58,12 +79,16 @@ std::vector<std::string> CGIServer::setEnvironmentVariables(Request& request)
 	return env;
 }
 
-void CGIServer::handleChildProcess(Server& server, const std::string& interpreter,
-	const std::string& filePath,const std::vector<std::string>& envVars)
+void CGIServer::handleChildProcess(Response& response, Server& server, const std::string& interpreter,
+	const std::string& filePath, const std::vector<std::string>& envVars)
 {
 	DEBUG("===Duplicating stdin and stdout===");
-	dup2(server.getPipe().input[IN], STDIN_FILENO);
-	dup2(server.getPipe().output[OUT], STDOUT_FILENO);
+	if (dup2(server.getPipe().input[IN], STDIN_FILENO) < 0 ||
+		dup2(server.getPipe().output[OUT], STDOUT_FILENO) < 0)
+	{
+		setResponse(response, "500 Internal Server error", "text/html", "pages/500.html");
+		throw ServerException("Duplication error occured in CGIHandler module");
+	}
 
 	close(server.getPipe().input[OUT]);
 	close(server.getPipe().output[IN]);
@@ -84,6 +109,7 @@ void CGIServer::handleChildProcess(Server& server, const std::string& interprete
 
 	DEBUG("===About to start execve===");
 	execve(interpreter.c_str(), args.data(), envp.data());
+	setResponse(response, "500 Internal Server error", "text/html", "pages/500.html");
 	throw ServerException("Error occured while execve() function was called");
 }
 
@@ -108,6 +134,11 @@ void CGIServer::handleParentProcess(Server& server, Response& response, const st
 		DEBUG("Populating response body");
 		response.appendToBody(buffer, bytesRead);
 	}
+	if (bytesRead < 0)
+	{
+		setResponse(response, "500 Internal Server error", "text/html", "pages/500.html");
+		throw ServerException("Error occured while read() from pipe to form the response body");
+	}
 	close(server.getPipe().output[IN]);
 }
 
@@ -127,7 +158,8 @@ void CGIServer::handleProcesses(Request& request, Server& server, Response& resp
 	else if (pid == 0)
 	{
 		DEBUG("===Child started===");
-		handleChildProcess(server, interpreter, request.getStartLine()["path"].erase(0, 1), envVars);
+		handleChildProcess(response, server, interpreter,
+			request.getStartLine()["path"].erase(0, 1), envVars);
 	}
 	else
 	{

@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/03 19:23:57 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/04 17:56:38 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -157,20 +157,23 @@ void	Server::responder(t_client& client, Server &server)
 	// replace writing a dummy response by the actual response
 	// request obj can be accessed by e.g. client.request->
 	
-	if (client.request->getStartLine()["path"].find("cgi-bin") != std::string::npos)
+	if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
 	{
 		resp.setCGIflag(true);
-		try
-		{
+		try {
 			CGIServer::handleCGI(*(client.request), server, resp);
+		} catch (const ServerException& e) {
+			std::cerr << BG_RED << e.what() << RESET_BG << std::endl;
 		}
-		catch (const ServerException& e)
-		{
-			std::cerr << e.what() << std::endl;
-		}
-		response = resp.buildResponse(resp);
+		response = Response::buildResponse(resp);
 		write(client.fd, response.c_str(), response.length());
 		DEBUG("response: " << response);
+	}
+	else
+	{
+		CGIServer::setResponse(resp, "200 OK", "text/html", "pages/index.html");
+		response = Response::buildResponse(resp);
+		write(client.fd, response.c_str(), response.length());
 	}
 
 	delete client.request;

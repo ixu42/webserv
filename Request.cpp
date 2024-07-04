@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/01 19:08:37 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 15:24:24 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,8 @@ Request::Request(std::string request)
 void Request::parse(std::string request)
 {
 	int emptyLinePosition = request.find("\r\n\r\n");
+	if (emptyLinePosition == -1)
+		emptyLinePosition = request.find("\n\n");
 	// std::cout << "Empty line position: " << emptyLinePosition << std::endl;
 
 	if (emptyLinePosition != -1)
@@ -97,7 +99,8 @@ std::string Request::getBody()
 
 void	Request::printRequest()
 {
-	DEBUG("Request::printRequest() called");
+	DEBUG("Request::printRequest() called")
+	std::cout << "printRequest() called\n";
 	for (auto& [key, value] : getStartLine())
 		std::cout << value << " ";
 	std::cout << std::endl;

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:11 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 18:38:14 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 18:57:03 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,7 +94,7 @@ int ConfigValidator::matchLinePattern(std::string& line, std::string field, std:
 	return 0;
 }
 
-int countMatchInRegex(std::string str, std::regex pattern)
+int ConfigValidator::countMatchInRegex(std::string str, std::regex pattern)
 {
 	auto words_begin = std::sregex_iterator(
 		str.begin(), str.end(), pattern);
@@ -103,7 +103,7 @@ int countMatchInRegex(std::string str, std::regex pattern)
 	return std::distance(words_begin, words_end);
 }
 
-std::pair<std::string, int> contructCgiString()
+std::pair<std::string, int> ConfigValidator::contructCgiString()
 {
 	// Cgi pattern is constructed from cgis map default keys
 	std::string cgisString = "";
@@ -147,6 +147,15 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 
 	std::vector<std::string> oneAllowed = {"ipAddress", "port", "serverName", "clientMaxBodySize"};
 	std::vector<std::string> mandatoryFields = {"port", "serverName"};
+
+	for (std::string& field : oneAllowed)
+	{
+		if (countMatchInRegex(generalConfig, patterns[field]) > 1)
+		{
+			std::cout << "Line not valid: " << TEXT_RED << "Config should have unique field: " << field << RESET << std::endl;
+			generalConfigErrorsCount++;
+		}
+	}
 
 	for (std::string& field : mandatoryFields)
 	{

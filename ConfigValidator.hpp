@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:16 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 18:15:07 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 18:55:09 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,10 +33,11 @@ class ConfigValidator
 		ConfigValidator& operator=(const ConfigValidator& other) = delete;
 
 	public:
-		static int	checkUnique(std::string line);
-		static int	matchLinePattern(std::string& line, std::string field, std::regex pattern2);
-		static int	validateGeneralConfig(std::string generalConfig, std::vector<std::string> serverStrings, size_t i);
-		static int	validateSeverNamePerIpPort(std::vector<std::string> serverStrings, size_t i, std::map<std::string, std::regex> patterns);
-		static int	validateLocationConfig(std::string locationString);
-		// static int	validateServernamePerIpPort(std::vector<std::string> serverStrings, size_t i);
+		static int							checkUnique(std::string line);
+		static int							matchLinePattern(std::string& line, std::string field, std::regex pattern2);
+		static int							validateGeneralConfig(std::string generalConfig, std::vector<std::string> serverStrings, size_t i);
+		static int							validateSeverNamePerIpPort(std::vector<std::string> serverStrings, size_t i, std::map<std::string, std::regex> patterns);
+		static int							validateLocationConfig(std::string locationString);
+		static int							countMatchInRegex(std::string str, std::regex pattern);
+		static std::pair<std::string, int>	contructCgiString();
 };

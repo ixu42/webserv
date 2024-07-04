@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:16 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 18:55:09 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 19:24:15 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,8 @@
 #include <regex>
 #include <iostream>
 
-#include "Colors.hpp"
-#include "Utility.hpp"
+#include "../utils/Colors.hpp"
+#include "../utils/Utility.hpp"
 #include "Config.hpp"
 
 struct ServerConfig;

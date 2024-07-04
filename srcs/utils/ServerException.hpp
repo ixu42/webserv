@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:43 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 00:56:56 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 19:32:16 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 // 		explicit ServerException(const std::string &message)
 // 		: std::runtime_error(message) {}
 // };
+
 class ServerException : public std::exception
 {
 	private:

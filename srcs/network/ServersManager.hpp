@@ -6,20 +6,20 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 13:55:17 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 19:24:27 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 #include "Server.hpp"
-#include "Config.hpp"
-#include "Response.hpp"
+#include "../config/Config.hpp"
+#include "../response/Response.hpp"
 #include "CGIHandler.hpp"
 #include <vector>
 #include <poll.h>
 #include <csignal>
-#include "debug.hpp"
+#include "../utils/debug.hpp"
 
 #include <exception>
 

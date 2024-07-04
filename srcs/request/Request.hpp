@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:40 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/01 19:08:40 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/03 16:13:28 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,9 +18,9 @@
 #include <iostream>
 #include <vector>
 
-#include "Utility.hpp"
-#include "Config.hpp"
-#include "debug.hpp"
+#include "../utils/Utility.hpp"
+#include "../utils/debug.hpp"
+#include "../config/Config.hpp"
 
 class Request
 {

@@ -6,15 +6,15 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:20 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 14:09:07 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 19:24:16 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include "ServerException.hpp"
-#include "Colors.hpp"
-#include "Utility.hpp"
+#include "../utils/ServerException.hpp"
+#include "../utils/Colors.hpp"
+#include "../utils/Utility.hpp"
 #include "ConfigValidator.hpp"
 
 #include <iostream>

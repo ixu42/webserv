@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/04 18:31:34 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 19:24:15 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,11 +64,14 @@ Server::Server(const char* ipAddr, int port) : _serverSocket(Socket())
 
 Server::~Server()
 {
-
 	DEBUG("Server destructor called");
 
-	for (t_client client : _clients)
+	for (t_client& client : _clients)
+	{
 		close(client.fd);
+		if (client.request)
+			delete client.request;
+	}
 }
 
 int	Server::accepter()

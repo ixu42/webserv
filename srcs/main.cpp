@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/03 17:01:59 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/04 18:20:11 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,15 +47,15 @@ int main(int argc, char *argv[])
 		}
 		catch(const ServerException& e)
 		{
-			std::cerr << BG_RED << TEXT_WHITE;
-			std::cerr << "Server close with error: " << e.what() << '\n';
-			std::cerr << RESET;
+			std::cout << TEXT_RED;
+			std::cout << "[ERROR] Server close with error: " << e.what();
+			std::cout << RESET << std::endl;
 		}
 		catch(const std::exception& e)
 		{
-			std::cerr << BG_RED << TEXT_WHITE;
-			std::cerr << "Server close with exception: " << e.what() << '\n';
-			std::cerr << RESET;
+			std::cout << TEXT_RED;
+			std::cout << "[ERROR] Server close with exception: " << e.what();
+			std::cout << RESET << std::endl;
 		}
 	}
 }

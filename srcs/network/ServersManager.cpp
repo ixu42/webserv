@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/03 14:12:46 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/04 18:07:34 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,8 @@ Config* ServersManager::_webservConfig;
 
 void ServersManager::signalHandler(int signal)
 {
-	std::cout << std::endl << "Signal " << signal << " received." << std::endl;
+	std::cout << TEXT_MAGENTA << "\n[INFO] Shutting down the server(s)..." << RESET << std::endl;
+	DEBUG("Signal " << signal << " received.");
 
 	// Handle cleanup tasks or other actions here
 	
@@ -54,15 +55,15 @@ ServersManager::ServersManager()
 	if (_servers.empty())
 	{
 		delete _instance;
-		std::cout << "No valid servers" << std::endl;
+		std::cout << TEXT_RED << "[ERROR] No valid servers" << RESET << std::endl;
 		std::exit(EXIT_FAILURE);
 	}
-	std::cout << "ServersManager created " << _servers.size() << " servers" << std::endl;
+	std::cout << TEXT_CYAN << "[INFO] ServersManager created " << _servers.size() << " servers" << RESET << std::endl;
 }
 
 ServersManager::~ServersManager()
 {
-	std::cout << _servers.size() << " servers will be deleted" << std::endl;
+	DEBUG(_servers.size() << " server(s) will be deleted");
 	for (Server *server : _servers)
 	{
 		delete server;

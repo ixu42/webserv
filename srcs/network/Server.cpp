@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/03 17:05:20 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/04 19:15:53 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,8 +77,8 @@ int	Server::accepter()
 	int clientSockfd = _serverSocket.acceptConnection(clientAddr);
 	if (clientSockfd == -1)
 		return -1;
-	std::cout << "\n=== CONNECTION ESTABLISHED WITH CLIENT (SOCKET FD: "
-				<< clientSockfd << ") ===\n";
+	std::cout << TEXT_CYAN << "[INFO] Connection established with client (socket fd: "
+				<< clientSockfd << ")" << RESET << std::endl;
 
 	_clients.push_back((t_client){clientSockfd, nullptr});
 	return clientSockfd;
@@ -114,7 +114,7 @@ Request* Server::receiveRequest(int clientSockfd)
 	while (1)
 	{
 		bytesRead = read(clientSockfd, buffer, bufferSize);
-		std::cout << "=== Reading in chunks bytes: " << bytesRead << std::endl;
+		DEBUG("=== Reading in chunks bytes: " << bytesRead);
 		for (int i = 0; i < bytesRead; i++)
 			std::cout << buffer[i]<< "(" << int(buffer[i]) << ")," ;
 		std::cout << std::endl;

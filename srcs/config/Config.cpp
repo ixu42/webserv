@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/01 19:08:24 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 18:28:04 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,53 +28,47 @@ Config::Config(std::string filePath)
 
 void Config::printConfig()
 {
-	std::cout << TEXT_YELLOW;
-	std::cout << "=== Printing parsed config ===" << std::endl;
+	DEBUG(TEXT_YELLOW << "=== Printing parsed config ===" << RESET);
 	int i = 0;
 	for (ServerConfig server : _servers)
 	{
-		std::cout << BG_YELLOW << TEXT_BLACK << TEXT_BOLD;
-		std::cout << "Server #" << i << RESET << std::endl;
-		std::cout << TEXT_YELLOW;
-		std::cout << "ipAddress: " << server.ipAddress << std::endl;
-		std::cout << "port: " << server.port << std::endl;
-		std::cout << "serverName: " << server.serverName << std::endl;
-		std::cout << "clientMaxBodySize: " << server.clientMaxBodySize << std::endl;
+		DEBUG(BG_YELLOW << TEXT_BLACK << TEXT_BOLD << "Server #" << i << RESET);
+		DEBUG(TEXT_YELLOW << "ipAddress: " << server.ipAddress << RESET);
+		DEBUG(TEXT_YELLOW << "port: " << server.port << RESET);
+		DEBUG(TEXT_YELLOW << "serverName: " << server.serverName << RESET);
+		DEBUG(TEXT_YELLOW << "clientMaxBodySize: " << server.clientMaxBodySize << RESET);
 		for (auto error : server.errorPages)
-			std::cout << "error: " << error.first << " " << error.second << std::endl;
+			DEBUG(TEXT_YELLOW << "error: " << error.first << " " << error.second << RESET);
 		for (auto cgi : server.cgis)
-			std::cout << "cgi: " << cgi.first << " " << std::boolalpha << cgi.second << std::endl;
+			DEBUG(TEXT_YELLOW << "cgi: " << cgi.first << " " << std::boolalpha << cgi.second << RESET);
 		for (auto location : server.locations)
 		{
-			std::cout << TEXT_UNDERLINE;
-			std::cout << "\tLocation: " << location.path << std::endl;
-			std::cout << RESET_UNDERLINE;
-			std::cout << "\tredirect: " << location.redirect << std::endl;
-			std::cout << "\troot: " << location.root << std::endl;
-			std::cout << "\tuploadPath: " << location.uploadPath << std::endl;
-			std::cout << "\tdirectoryListing: " << std::boolalpha << location.directoryListing << std::endl;
-			std::cout << "\tindex: " << location.index << std::endl;
+			DEBUG(TEXT_YELLOW << TEXT_UNDERLINE << "\tLocation: " << location.path << RESET_UNDERLINE << RESET);
+			DEBUG(TEXT_YELLOW << "\tredirect: " << location.redirect << RESET);
+			DEBUG(TEXT_YELLOW << "\troot: " << location.root << RESET);
+			DEBUG(TEXT_YELLOW << "\tuploadPath: " << location.uploadPath << RESET);
+			DEBUG(TEXT_YELLOW << "\tdirectoryListing: " << std::boolalpha << location.directoryListing << RESET);
+			DEBUG(TEXT_YELLOW << "\tindex: " << location.index << RESET);
 			for (auto& method : location.methods)
 			{
 				if (method.second)
-					std::cout << "\tmethod: " << method.first << std::endl;
+					DEBUG(TEXT_YELLOW << "\tmethod: " << method.first << RESET);
 			}
 		}
 		i++;
 	}
-	std::cout << RESET;
 }
 
 
 void Config::parse()
 {
-	std::cout << "=== Parsing the config ===" << std::endl;
+	DEBUG("=== Parsing the config ===");
 	std::vector<std::string> serverStrings = Utility::splitString(_configString, "[server]");
 	_servers.resize(serverStrings.size());
 
 	parseServers(serverStrings);
 
-	std::cout << "=== Parsing done ===" << std::endl;
+	std::cout << TEXT_CYAN << "[INFO] Config file parsed." << RESET << std::endl;
 }
 
 void Config::parseServers(std::vector<std::string> serverStrings)
@@ -82,7 +76,7 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 	int i = 0;
 	for (std::string server : serverStrings)
 	{
-		std::cout << "Parsing server #" << i << std::endl;
+		DEBUG("Parsing server #" << i);
 		ServerConfig serverConfig;
 		std::string generalConfig;
 		
@@ -106,7 +100,7 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 		if (configErrorsFound != 0)
 		{
 			// decrease servers vector because config is faulty
-			std::cout << "This server config has " << configErrorsFound << " invalid lines and will be ignored" << std::endl;
+			DEBUG("This server config has " << configErrorsFound << " invalid lines and will be ignored");
 			_servers.resize(_servers.size() - 1);
 			continue;
 		}

@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/03 17:05:06 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/05 11:52:40 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 #include "../request/Request.hpp"
 #include "Server.hpp"
 #include "../response/Response.hpp"
-#include "../utils/debug.hpp"
+#include "../utils/logUtils.hpp"
 
 #include <unistd.h>
 #include <sys/types.h>

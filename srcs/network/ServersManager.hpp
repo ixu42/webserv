@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/03 17:06:06 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/05 11:52:36 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 #include <vector>
 #include <poll.h>
 #include <csignal>
-#include "../utils/debug.hpp"
+#include "../utils/logUtils.hpp"
 
 #define DEFAULT_CONFIG "config/default.conf"
 

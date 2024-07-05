@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/04 19:15:53 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/05 13:03:28 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,21 +45,21 @@ void	Server::initServer(const char* ipAddr, int port)
 
 Server::Server() : _serverSocket(Socket())
 {
-	DEBUG("Server default constructor called");
+	LOG_DEBUG("Server default constructor called");
 
 	initServer(nullptr, 8080);
 }
 
 Server::Server(const char* ipAddr, int port) : _serverSocket(Socket())
 {
-	DEBUG("Server parameterized constructor called");
+	LOG_DEBUG("Server parameterized constructor called");
 
 	initServer(ipAddr, port);
 }
 
 Server::~Server()
 {
-	DEBUG("Server destructor called");
+	LOG_DEBUG("Server destructor called");
 
 	for (t_client& client : _clients)
 	{
@@ -71,14 +71,13 @@ Server::~Server()
 
 int	Server::accepter()
 {
-	DEBUG("Server::accepter() called");
+	LOG_DEBUG("Server::accepter() called");
 
 	struct sockaddr_in clientAddr;
 	int clientSockfd = _serverSocket.acceptConnection(clientAddr);
 	if (clientSockfd == -1)
 		return -1;
-	std::cout << TEXT_CYAN << "[INFO] Connection established with client (socket fd: "
-				<< clientSockfd << ")" << RESET << std::endl;
+	LOG_INFO("Connection established with client (socket fd: " << clientSockfd << ").");
 
 	_clients.push_back((t_client){clientSockfd, nullptr});
 	return clientSockfd;
@@ -102,7 +101,7 @@ int findContentLength(std::string request)
 
 Request* Server::receiveRequest(int clientSockfd)
 {
-	DEBUG("Server::receiveRequest called");
+	LOG_DEBUG("Server::receiveRequest called");
 	const int bufferSize = 10;
 	char buffer[bufferSize] = {0};
 	int bytesRead;
@@ -114,10 +113,11 @@ Request* Server::receiveRequest(int clientSockfd)
 	while (1)
 	{
 		bytesRead = read(clientSockfd, buffer, bufferSize);
-		DEBUG("=== Reading in chunks bytes: " << bytesRead);
+		LOG_DEBUG("=== Reading in chunks bytes: " << bytesRead);
+		LOG_DEBUG_RAW("[DEBUG] ");
 		for (int i = 0; i < bytesRead; i++)
-			std::cout << buffer[i]<< "(" << int(buffer[i]) << ")," ;
-		std::cout << std::endl;
+			LOG_DEBUG_RAW(buffer[i] << "(" << int(buffer[i]) << "),");
+		LOG_DEBUG_RAW(std::endl);
 
 		if (bytesRead < 0)
 			continue;
@@ -142,18 +142,18 @@ Request* Server::receiveRequest(int clientSockfd)
 		}
 	}
 
-	std::cout << "=== Request read ===" << std::endl;
-	std::cout << TEXT_YELLOW << request << RESET << std::endl;
+	LOG_INFO("Request read.");
+	LOG_DEBUG_MULTILINE(TEXT_YELLOW << request << RESET);
 
 	return new Request(request);
 }
 
 void	Server::responder(t_client& client)
 {
-	DEBUG("Server::responder() called");
+	LOG_DEBUG("Server::responder() called");
 
 	// uncomment the following line for checking content of request
-	// client.request->printRequest();
+	client.request->printRequest();
 
 	// replace writing a dummy response by the actual response
 	// request obj can be accessed by e.g. client.request->
@@ -167,9 +167,9 @@ void	Server::responder(t_client& client)
 	close(client.fd);
 	removeFromClients(client);
 
-	DEBUG("response: " << response);
-	std::cout << "\n=== RESPONSE SENT AND CONNECTION CLOSED (SOCKET FD: "
-				<< client.fd << ") ===\n\n";
+	LOG_DEBUG("response: " << response);
+	LOG_INFO("Response sent and connection closed (socket fd: "
+				<< client.fd << ").");
 }
 
 void	Server::removeFromClients(t_client& client)
@@ -245,7 +245,7 @@ void Server::setConfig(ServerConfig* serverConfig)
 
 // void	Server::handler(int clientSockfd)
 // {
-// 	DEBUG("Server::handler() called");
+// 	LOG_DEBUG("Server::handler() called");
 
 // 	char buffer[1024];
 // 	int bytesRead = read(clientSockfd, buffer, sizeof(buffer));

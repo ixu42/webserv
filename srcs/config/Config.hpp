@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:20 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 17:25:31 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/05 11:52:23 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 #include "../utils/ServerException.hpp"
 #include "../utils/Colors.hpp"
 #include "../utils/Utility.hpp"
-#include "../utils/debug.hpp"
+#include "../utils/logUtils.hpp"
 #include "ConfigValidator.hpp"
 
 #include <iostream>

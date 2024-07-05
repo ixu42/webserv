@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/04 18:20:11 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/05 12:36:42 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,23 +15,11 @@
 #include "config/Config.hpp"
 #include "utils/ServerException.hpp"
 #include "utils/Colors.hpp"
+#include "utils/logUtils.hpp"
 #include <iostream>
 
 int main(int argc, char *argv[])
 {
-	(void)argc;
-	(void)argv;
-	// Server server0;
-	// if (!server0.run())
-	// 	return 1;
-
-	// Server server1(nullptr, 8091);
-	// Server server1("0.0.0.0", 8091);
-	// if (!server1.run())
-	// 	return 1;
-
-	// return 0;
-
 	if (argc != 2)
 	{
 		std::cout << "Usage: ./webserv <config>" << std::endl;
@@ -47,15 +35,11 @@ int main(int argc, char *argv[])
 		}
 		catch(const ServerException& e)
 		{
-			std::cout << TEXT_RED;
-			std::cout << "[ERROR] Server close with error: " << e.what();
-			std::cout << RESET << std::endl;
+			LOG_ERROR("Server close with error: " << e.what());
 		}
 		catch(const std::exception& e)
 		{
-			std::cout << TEXT_RED;
-			std::cout << "[ERROR] Server close with exception: " << e.what();
-			std::cout << RESET << std::endl;
+			LOG_ERROR("Server close with exception: " << e.what());
 		}
 	}
 }

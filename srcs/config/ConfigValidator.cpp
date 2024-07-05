@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:11 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 17:50:34 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/05 12:00:33 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ int ConfigValidator::checkUnique(std::string line)
 	std::set<std::string> uniqueErrorCodesStrings(errorCodesStrings.begin(), errorCodesStrings.end());
 	if (errorCodesStrings.size() != uniqueErrorCodesStrings.size())
 	{
-		DEBUG("Line not valid: " << TEXT_RED << line << RESET);
+		LOG_DEBUG("Line not valid: " << TEXT_RED << line << RESET);
 		return 1;
 	}
 	return 0;
@@ -38,7 +38,7 @@ int ConfigValidator::matchLinePattern(std::string& line, std::string field, std:
 	std::regex pattern1(field);
 	if (std::regex_match(line, pattern1) && !std::regex_match(line, pattern2))
 	{
-		DEBUG("Line not valid: " << TEXT_RED << line << RESET);
+		LOG_DEBUG("Line not valid: " << TEXT_RED << line << RESET);
 		return 1;
 	}
 	return 0;
@@ -62,7 +62,7 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 		i++;
 	}
 	int cgisCount = servers[0].cgis.size();
-	DEBUG("cgisString: " << cgisString);
+	LOG_DEBUG("cgisString: " << cgisString);
 
 
 	std::string patternStr = "\\s*cgis\\s+\\b(" + cgisString + ")(?:,(" + cgisString + ")){0," + std::to_string(cgisCount - 1) +"}\\b\\s*";
@@ -100,7 +100,7 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 					int port = std::stoi(Utility::trim(Utility::splitString(line, " ")[1]));
 					if (port < 1023 || port > 65535)
 					{
-						DEBUG("Line not valid: " << TEXT_RED << line << RESET);
+						LOG_DEBUG("Line not valid: " << TEXT_RED << line << RESET);
 						generalConfigErrorsCount++;
 						errorCaught = 1;
 						break;
@@ -113,11 +113,11 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 				}
 			}
 			if (errorCaught != 1)
-				DEBUG("Line validated: " << TEXT_GREEN << line << RESET);
+				LOG_DEBUG("Line validated: " << TEXT_GREEN << line << RESET);
 		}
 		else
 		{
-			DEBUG("Line not valid: " << TEXT_RED << line << RESET);
+			LOG_DEBUG("Line not valid: " << TEXT_RED << line << RESET);
 			generalConfigErrorsCount++;
 		}
 	}
@@ -145,7 +145,7 @@ int ConfigValidator::validateLocationConfig(std::string locationString)
 
 	std::istringstream stream(locationString); 
 	std::string line;
-	DEBUG("Let's validate location...");
+	LOG_DEBUG("Let's validate location...");
 	while (std::getline(stream, line))
 	{
 		int errorCaught = 0;
@@ -162,11 +162,11 @@ int ConfigValidator::validateLocationConfig(std::string locationString)
 				}
 			}
 			if (errorCaught != 1)
-				DEBUG("Line validated: " << TEXT_GREEN << line << RESET);
+				LOG_DEBUG("Line validated: " << TEXT_GREEN << line << RESET);
 		}
 		else
 		{
-			DEBUG("Line not valid: " << TEXT_RED << line << RESET);
+			LOG_DEBUG("Line not valid: " << TEXT_RED << line << RESET);
 			locationStringErrorsCount++;
 		}
 	}

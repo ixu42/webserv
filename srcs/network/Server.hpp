@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/03 17:05:24 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/05 11:51:20 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ struct Pipe {
 
 #include "Socket.hpp"
 #include "../utils/Utility.hpp"
-#include "../utils/debug.hpp"
+#include "../utils/logUtils.hpp"
 #include "../request/Request.hpp"
 #include "client.hpp"
 #include <vector>

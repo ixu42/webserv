@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/01 19:08:37 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/05 14:12:21 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@
 
 Request::Request()
 {
-	DEBUG("Request default constructor called");
+	LOG_DEBUG("Request default constructor called");
 } 
 
 Request::Request(std::string request)
@@ -72,7 +72,7 @@ void Request::parse(std::string request)
 			std::string key = Utility::strToLower(Utility::trim(headerSplit[0]));
 			std::string value = Utility::trim(headerSplit[1]);
 			_headers[key] = value;
-			std::cout << "Header: " << key << " Value: " << value << std::endl;
+			LOG_DEBUG("Header: " << key << " Value: " << value);
 		}
 
 		// Parse the body
@@ -97,13 +97,13 @@ std::string Request::getBody()
 
 void	Request::printRequest()
 {
-	DEBUG("Request::printRequest() called");
-	for (auto& [key, value] : getStartLine())
-		std::cout << value << " ";
-	std::cout << std::endl;
-	for (auto& [key, value] : getHeaders())
-		std::cout << key << ": " << value << std::endl;
-	std::cout << getBody() << std::endl;
+	// LOG_DEBUG("Request::printRequest() called");
+	// for (auto& kv : getStartLine())
+	// 	LOG_DEBUG("Start Line: " << kv.first << " = " << kv.second);
+	// for (auto& [key, value] : getHeaders())
+	// 	LOG_DEBUG("Header: " << key << " = " << value);
+	// LOG_DEBUG_RAW("[DEBUG] Body: " << std::endl);
+	// LOG_DEBUG_RAW(getBody());
 }
 
 // Request should be at least start line, Host, Connection

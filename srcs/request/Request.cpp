@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/05 13:27:07 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/05 15:00:51 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,7 +153,7 @@ std::string Request::getBody()
 
 void	Request::printRequest()
 {
-	DEBUG("Request::printRequest() called")
+	DEBUG("Request::printRequest() called");
 	std::cout << "printRequest() called\n";
 	for (auto& [key, value] : getStartLine())
 		std::cout << value << " ";

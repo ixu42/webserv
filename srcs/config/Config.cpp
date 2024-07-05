@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 18:20:05 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/05 15:23:01 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,16 +151,20 @@ std::string findIpPortKey(std::string generalConfig)
 void Config::parse()
 {
 	std::cout << "=== Parsing the config ===" << std::endl;
+
+	/* Check if config has something above the first [server]*/
+	_configString = Utility::trim(_configString);
+	size_t pos = _configString.find("[server]");
+
+	if (pos == std::string::npos)
+		throw ServerException("Invalid config file format, missing [server] section");
+	if (pos != 0)
+		throw ServerException("Invalid config file format, [server] section should be at the beginning of the file");
+
 	std::vector<std::string> serverStrings = Utility::splitString(_configString, "[server]");
 
 	// Filter out invalid server configs
 	serverStrings = filterOutInvalidServerStrings(serverStrings);
-
-	// Calculate count of unique servers configs according to ip:port
-
-	// size_t serversCount;
-
-	// _servers.resize(serverStrings.size());
 
 	parseServers(serverStrings);
 

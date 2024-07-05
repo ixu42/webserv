@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/04 19:24:14 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/05 13:31:20 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@ struct Pipe {
 };
 
 #include "Socket.hpp"
+#include "CGIHandler.hpp"
+#include "../response/Response.hpp"
 #include "../utils/Utility.hpp"
 #include "../utils/debug.hpp"
 #include "../request/Request.hpp"
@@ -61,7 +63,7 @@ class Server
 
 		int							accepter();
 		Request*					receiveRequest(int clientSockfd);
-		void						responder(t_client& client);
+		void						responder(t_client& client, Server &server);
 
 	private:
 		void						initServer(const char* ipAddr, int port);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/04 19:24:15 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/05 13:30:04 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,17 +153,44 @@ Request* Server::receiveRequest(int clientSockfd)
 	return new Request(request);
 }
 
-void	Server::responder(t_client& client)
+void	Server::responder(t_client& client, Server &server)
 {
 	DEBUG("Server::responder() called");
-
+	Response resp;
+	std::string response;
+	
 	// uncomment the following line for checking content of request
 	// client.request->printRequest();
 
 	// replace writing a dummy response by the actual response
 	// request obj can be accessed by e.g. client.request->
-	const std::string& response = getResponse();
-	write(client.fd, response.c_str(), response.length());
+	
+	if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
+	{
+		resp.setCGIflag(true);
+		try {
+			CGIServer::handleCGI(*(client.request), server, resp);
+		} catch (const ServerException& e) {
+			std::cerr << BG_RED << e.what() << RESET_BG << std::endl;
+		}
+		response = Response::buildResponse(resp);
+		write(client.fd, response.c_str(), response.length());
+		DEBUG("response: " << response);
+	}
+	else
+	{
+		if (resp.getStatus().empty())
+		{
+			CGIServer::setResponse(resp, "200 OK", "text/html", "pages/index.html");
+			response = Response::buildResponse(resp);
+			write(client.fd, response.c_str(), response.length());
+		}
+		else
+		{
+			response = Response::buildResponse(resp);
+			write(client.fd, response.c_str(), response.length());
+		}
+	}
 
 	delete client.request;
 	client.request = nullptr;
@@ -172,7 +199,6 @@ void	Server::responder(t_client& client)
 	close(client.fd);
 	removeFromClients(client);
 
-	DEBUG("response: " << response);
 	std::cout << "\n=== RESPONSE SENT AND CONNECTION CLOSED (SOCKET FD: "
 				<< client.fd << ") ===\n\n";
 }

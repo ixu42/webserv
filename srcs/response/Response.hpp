@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:51 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/03 16:13:14 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/05 13:29:19 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,21 +15,27 @@
 #include "../utils/Utility.hpp"
 #include <map>
 #include <string>
+#include <sstream>
+#include <iostream>
 
 class Response
 {
 	private:
-		static const std::string						serverName;
-		static const std::map<std::string, std::string>	statusMessages;
-		static const std::map<std::string, std::string>	mimeTypes;
-
-		std::map<std::string, std::string>				_startline;
-		std::map<std::string, std::string>				_headers;
-		std::string										_body;
+		bool		_CGIflag = false;
+		std::string	_body;
+		std::string	_status;
+		std::string	_type;
 
 	public:
-		Response();
-		// Response(std::string statusCode, std::string body, std::string fileFormat);
-		std::string	getBody();
+		std::string& getBody();
+		std::string& getStatus();
+		std::string& getType();
+		bool& getCGIflag();
+		void setBody(std::string body);
+		void setStatus(std::string status);
+		void setType(std::string type);
+		void setCGIflag(bool CGIflag);
+		
 		void appendToBody(char* data, std::size_t length);
+		static std::string buildResponse(Response& response);
 };

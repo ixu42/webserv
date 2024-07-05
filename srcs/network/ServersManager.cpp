@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 19:41:00 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/05 13:31:29 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,13 +153,6 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 		{
 			if (pfdReadyForRead.fd == client.fd)
 			{
-				// Request req = server->receiveRequest(pfdReadyForRead.fd);
-				// if (req.getStartLine()["path"].find("cgi-bin") != std::string::npos)
-				// {
-				// 	Response resp;
-				// 	CGIServer::handleCGI(req, *server, resp);
-				// 	std::cout << resp.getBody() << std::endl;
-				// }
 				client.request = server->receiveRequest(pfdReadyForRead.fd);
 				pfdReadyForRead.events = POLLOUT;
 				fdFound = true;
@@ -181,7 +174,7 @@ void	ServersManager::handleWrite(int fdReadyForWrite)
 		{
 			if (fdReadyForWrite == client.fd)
 			{
-				server->responder(client);
+				server->responder(client, *server);
 				removeFromPollfd(fdReadyForWrite);
 				fdFound = true;
 				break ;

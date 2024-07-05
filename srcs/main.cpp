@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/05 12:36:42 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/05 19:15:59 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,11 +35,11 @@ int main(int argc, char *argv[])
 		}
 		catch(const ServerException& e)
 		{
-			LOG_ERROR("Server close with error: " << e.what());
+			LOG_ERROR("Server close with error: ", e.what());
 		}
 		catch(const std::exception& e)
 		{
-			LOG_ERROR("Server close with exception: " << e.what());
+			LOG_ERROR("Server close with exception: ", e.what());
 		}
 	}
 }

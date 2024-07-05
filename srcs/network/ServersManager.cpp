@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/05 12:57:11 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/05 19:25:10 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ Config* ServersManager::_webservConfig;
 void ServersManager::signalHandler(int signal)
 {
 	std::cout << TEXT_MAGENTA << "\n[INFO] Shutting down the server(s)..." << RESET << std::endl;
-	LOG_DEBUG("Signal " << signal << " received.");
+	LOG_DEBUG("Signal ", signal, " received.");
 
 	// Handle cleanup tasks or other actions here
 	
@@ -40,7 +40,7 @@ ServersManager::ServersManager()
 	for (ServerConfig& serverConfig : _webservConfig->getServers())
 	{
 
-		LOG_DEBUG("serverConfig.port: " << serverConfig.port);
+		LOG_DEBUG("serverConfig.port: ", serverConfig.port);
 		_servers.push_back(new Server(serverConfig.ipAddress.c_str(), serverConfig.port));
 		_servers[i]->setConfig(&serverConfig);
 		_servers[i]->getConfig();
@@ -58,12 +58,12 @@ ServersManager::ServersManager()
 		LOG_ERROR("No valid servers");
 		std::exit(EXIT_FAILURE);
 	}
-	LOG_INFO("ServersManager created " << _servers.size() << " servers.");
+	LOG_INFO("ServersManager created ", _servers.size(), " servers.");
 }
 
 ServersManager::~ServersManager()
 {
-	LOG_DEBUG(_servers.size() << " server(s) will be deleted");
+	LOG_DEBUG(_servers.size(), " server(s) will be deleted");
 	for (Server *server : _servers)
 	{
 		delete server;
@@ -138,6 +138,7 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 				// 	std::cout << resp.getBody() << std::endl;
 				// }
 				client.request = server->receiveRequest(pfdReadyForRead.fd);
+				// server->handler();
 				pfdReadyForRead.events = POLLOUT;
 				fdFound = true;
 				break ;

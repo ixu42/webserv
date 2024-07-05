@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/05 13:03:28 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/05 19:24:49 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ int	Server::accepter()
 	int clientSockfd = _serverSocket.acceptConnection(clientAddr);
 	if (clientSockfd == -1)
 		return -1;
-	LOG_INFO("Connection established with client (socket fd: " << clientSockfd << ").");
+	LOG_INFO("Connection established with client (socket fd: ", clientSockfd, ").");
 
 	_clients.push_back((t_client){clientSockfd, nullptr});
 	return clientSockfd;
@@ -113,11 +113,11 @@ Request* Server::receiveRequest(int clientSockfd)
 	while (1)
 	{
 		bytesRead = read(clientSockfd, buffer, bufferSize);
-		LOG_DEBUG("=== Reading in chunks bytes: " << bytesRead);
+		LOG_DEBUG("=== Reading in chunks bytes: ", bytesRead);
 		LOG_DEBUG_RAW("[DEBUG] ");
 		for (int i = 0; i < bytesRead; i++)
-			LOG_DEBUG_RAW(buffer[i] << "(" << int(buffer[i]) << "),");
-		LOG_DEBUG_RAW(std::endl);
+			LOG_DEBUG_RAW(buffer[i], "(", int(buffer[i]), "),");
+		LOG_DEBUG_RAW("\n");
 
 		if (bytesRead < 0)
 			continue;
@@ -143,7 +143,7 @@ Request* Server::receiveRequest(int clientSockfd)
 	}
 
 	LOG_INFO("Request read.");
-	LOG_DEBUG_MULTILINE(TEXT_YELLOW << request << RESET);
+	LOG_DEBUG_MULTILINE(TEXT_YELLOW, request, RESET);
 
 	return new Request(request);
 }
@@ -167,9 +167,8 @@ void	Server::responder(t_client& client)
 	close(client.fd);
 	removeFromClients(client);
 
-	LOG_DEBUG("response: " << response);
-	LOG_INFO("Response sent and connection closed (socket fd: "
-				<< client.fd << ").");
+	LOG_DEBUG("response: ", response);
+	LOG_INFO("Response sent and connection closed (socket fd: ", client.fd, ").");
 }
 
 void	Server::removeFromClients(t_client& client)

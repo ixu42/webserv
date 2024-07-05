@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/05 12:59:13 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/05 18:06:44 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,31 +28,31 @@ Config::Config(std::string filePath)
 
 void Config::printConfig()
 {
-	LOG_DEBUG(TEXT_YELLOW << "=== Printing parsed config ===" << RESET);
+	LOG_DEBUG(TEXT_YELLOW, "=== Printing parsed config ===", RESET);
 	int i = 0;
 	for (ServerConfig server : _servers)
 	{
-		LOG_DEBUG(BG_YELLOW << TEXT_BLACK << TEXT_BOLD << "Server #" << i << RESET);
-		LOG_DEBUG(TEXT_YELLOW << "ipAddress: " << server.ipAddress << RESET);
-		LOG_DEBUG(TEXT_YELLOW << "port: " << server.port << RESET);
-		LOG_DEBUG(TEXT_YELLOW << "serverName: " << server.serverName << RESET);
-		LOG_DEBUG(TEXT_YELLOW << "clientMaxBodySize: " << server.clientMaxBodySize << RESET);
+		LOG_DEBUG(BG_YELLOW, TEXT_BLACK, TEXT_BOLD, "Server #", i, RESET);
+		LOG_DEBUG(TEXT_YELLOW, "ipAddress: ", server.ipAddress, RESET);
+		LOG_DEBUG(TEXT_YELLOW, "port: ", server.port, RESET);
+		LOG_DEBUG(TEXT_YELLOW, "serverName: ", server.serverName, RESET);
+		LOG_DEBUG(TEXT_YELLOW, "clientMaxBodySize: ", server.clientMaxBodySize, RESET);
 		for (auto error : server.errorPages)
-			LOG_DEBUG(TEXT_YELLOW << "error: " << error.first << " " << error.second << RESET);
+			LOG_DEBUG(TEXT_YELLOW, "error: ", error.first, " ", error.second, RESET);
 		for (auto cgi : server.cgis)
-			LOG_DEBUG(TEXT_YELLOW << "cgi: " << cgi.first << " " << std::boolalpha << cgi.second << RESET);
+			LOG_DEBUG(TEXT_YELLOW, "cgi: ", cgi.first, " ", std::boolalpha, cgi.second, RESET);
 		for (auto location : server.locations)
 		{
-			LOG_DEBUG(TEXT_YELLOW << TEXT_UNDERLINE << "\tLocation: " << location.path << RESET_UNDERLINE << RESET);
-			LOG_DEBUG(TEXT_YELLOW << "\tredirect: " << location.redirect << RESET);
-			LOG_DEBUG(TEXT_YELLOW << "\troot: " << location.root << RESET);
-			LOG_DEBUG(TEXT_YELLOW << "\tuploadPath: " << location.uploadPath << RESET);
-			LOG_DEBUG(TEXT_YELLOW << "\tdirectoryListing: " << std::boolalpha << location.directoryListing << RESET);
-			LOG_DEBUG(TEXT_YELLOW << "\tindex: " << location.index << RESET);
+			LOG_DEBUG(TEXT_YELLOW, TEXT_UNDERLINE, "\tLocation: ", location.path, RESET_UNDERLINE, RESET);
+			LOG_DEBUG(TEXT_YELLOW, "\tredirect: ", location.redirect, RESET);
+			LOG_DEBUG(TEXT_YELLOW, "\troot: ", location.root, RESET);
+			LOG_DEBUG(TEXT_YELLOW, "\tuploadPath: ", location.uploadPath, RESET);
+			LOG_DEBUG(TEXT_YELLOW, "\tdirectoryListing: ", std::boolalpha, location.directoryListing, RESET);
+			LOG_DEBUG(TEXT_YELLOW, "\tindex: ", location.index, RESET);
 			for (auto& method : location.methods)
 			{
 				if (method.second)
-					LOG_DEBUG(TEXT_YELLOW << "\tmethod: " << method.first << RESET);
+					LOG_DEBUG(TEXT_YELLOW, "\tmethod: ", method.first, RESET);
 			}
 		}
 		i++;
@@ -76,7 +76,7 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 	int i = 0;
 	for (std::string server : serverStrings)
 	{
-		LOG_DEBUG("Parsing server #" << i);
+		LOG_DEBUG("Parsing server #", i);
 		ServerConfig serverConfig;
 		std::string generalConfig;
 		
@@ -100,7 +100,7 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 		if (configErrorsFound != 0)
 		{
 			// decrease servers vector because config is faulty
-			LOG_DEBUG("This server config has " << configErrorsFound << " invalid lines and will be ignored");
+			LOG_DEBUG("This server config has ", configErrorsFound, " invalid lines and will be ignored");
 			_servers.resize(_servers.size() - 1);
 			continue;
 		}

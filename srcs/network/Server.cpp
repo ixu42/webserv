@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/04 18:19:13 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/05 13:30:04 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,13 +34,18 @@ void	Server::initServer(const char* ipAddr, int port)
 		}
 	}
 
-	if (!_serverSocket.create() ||
-		!_serverSocket.bindAddress(_address) ||
-		!_serverSocket.listenForConnections(10))
-	{
-		std::cerr << "Failed to construct server\n";
-		exit(EXIT_FAILURE);
-	}
+	// if (!_serverSocket.create() ||
+	// 	!_serverSocket.bindAddress(_address) ||
+	// 	!_serverSocket.listenForConnections(10))
+	// {
+	// 	std::cerr << "Failed to construct server\n";
+	// 	exit(EXIT_FAILURE);
+	// }
+
+	_serverSocket.create();
+	_serverSocket.bindAddress(_address);
+	_serverSocket.listenForConnections(10);
+
 }
 
 Server::Server() : _serverSocket(Socket())
@@ -59,11 +64,14 @@ Server::Server(const char* ipAddr, int port) : _serverSocket(Socket())
 
 Server::~Server()
 {
-
 	DEBUG("Server destructor called");
 
-	for (t_client client : _clients)
+	for (t_client& client : _clients)
+	{
 		close(client.fd);
+		if (client.request)
+			delete client.request;
+	}
 }
 
 int	Server::accepter()
@@ -234,10 +242,10 @@ std::string Server::whoAmI() const
  * Getters
 */
 
-ServerConfig* Server::getConfig()
-{
-	return _config;
-}
+// std::vector<ServerConfig> Server::getConfig()
+// {
+// 	return _configs;
+// }
 
 Pipe& Server::getPipe()
 {
@@ -254,15 +262,23 @@ std::vector<t_client>& Server::getClients()
 	return _clients;
 }
 
+std::string Server::getIpAddress()
+{
+	return _ipAddr;
+}
+
+int Server::getPort()
+{
+	return _port;
+}
+
 /**
  * Setters
  */
 
-void Server::setConfig(ServerConfig* serverConfig)
+void Server::setConfig(std::vector<ServerConfig> serverConfigs)
 {
-	if (serverConfig == nullptr)
-		return ;
-	_config = serverConfig;
+	_configs = serverConfigs;
 }
 
 
@@ -415,42 +431,42 @@ Server::Server(std::string ipAddress, int port)
 
 // 	Request req = receiveRequest();
 
-// 	// std::cout << "Locations vector size after request generated: " << this->config->locations.size() << std::endl;
-// 	// for (Location location : this->config->locations)
-// 	// {
-// 	// 	std::cout << "Server config and location from handleRequest: " << location.path << std::endl;
-// 	// }
-// 	Location* foundLocation = findLocation(&req);
-// 	if (foundLocation == nullptr)
-// 	{
-// 		// throw ServerException("Location not found");
-// 		std::cout << nullptr << std::endl;
-// 		response = "HTTP/1.1 404 Not Found\r\nServer: webserv\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
-// 		// response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
-// 	}
-// 	else
-// 	{
-// 		std::cout << "Great this is your location: " << foundLocation->path << std::endl;
-// 		// Handling redirect
-// 		if (foundLocation->redirect != "")
-// 		{
-// 			std::string redirectUrl = foundLocation->redirect;
+	// std::cout << "Locations vector size after request generated: " << this->config->locations.size() << std::endl;
+	// for (Location location : this->config->locations)
+	// {
+	// 	std::cout << "Server config and location from handleRequest: " << location.path << std::endl;
+	// }
+	// Location* foundLocation = findLocation(&req);
+	// if (foundLocation == nullptr)
+	// {
+	// 	// throw ServerException("Location not found");
+	// 	std::cout << nullptr << std::endl;
+	// 	response = "HTTP/1.1 404 Not Found\r\nServer: webserv\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
+	// 	// response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
+	// }
+	// else
+	// {
+	// 	std::cout << "Great this is your location: " << foundLocation->path << std::endl;
+	// 	// Handling redirect
+	// 	if (foundLocation->redirect != "")
+	// 	{
+	// 		std::string redirectUrl = foundLocation->redirect;
 
-// 			size_t requestUriPos = foundLocation->redirect.find("$request_uri");
+	// 		size_t requestUriPos = foundLocation->redirect.find("$request_uri");
 
-// 			std::string pagePath = req.getStartLine()["path"];
-// 			pagePath.replace(0, foundLocation->path.length(), "");
+	// 		std::string pagePath = req.getStartLine()["path"];
+	// 		pagePath.replace(0, foundLocation->path.length(), "");
 
-// 			redirectUrl = redirectUrl.substr(0, requestUriPos);
+	// 		redirectUrl = redirectUrl.substr(0, requestUriPos);
 
-// 			if (requestUriPos != std::string::npos)
-// 				redirectUrl.append(pagePath);
+	// 		if (requestUriPos != std::string::npos)
+	// 			redirectUrl.append(pagePath);
 
-// 			std::cout << "Redirect URL: " << redirectUrl << std::endl;
-// 			std::cout << "Page path: " << pagePath << std::endl;
-// 			response = "HTTP/1.1 307 Temporary Redirect\r\nServer: webserv\r\nLocation: " + redirectUrl + "\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
-// 		}
-// 	}
+	// 		std::cout << "Redirect URL: " << redirectUrl << std::endl;
+	// 		std::cout << "Page path: " << pagePath << std::endl;
+	// 		response = "HTTP/1.1 307 Temporary Redirect\r\nServer: webserv\r\nLocation: " + redirectUrl + "\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
+	// 	}
+	// }
 
 // 	// Testing request
 // 	std::cout << TEXT_CYAN;

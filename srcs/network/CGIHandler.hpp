@@ -6,16 +6,16 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/04 17:53:49 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/05 13:28:39 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include "Request.hpp"
+#include "../request/Request.hpp"
 #include "Server.hpp"
-#include "Response.hpp"
-#include "debug.hpp"
+#include "../response/Response.hpp"
+#include "../utils/debug.hpp"
 
 #include <unistd.h>
 #include <sys/types.h>

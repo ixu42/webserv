@@ -3,23 +3,30 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+         #
+#    By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/08 17:44:55 by ixu               #+#    #+#              #
-#    Updated: 2024/07/03 16:04:15 by dnikifor         ###   ########.fr        #
+#    Updated: 2024/07/04 19:25:24 by vshchuki         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 # Program name
 NAME := webserv
 
-# Directory for object files
-OBJS_DIR := objs/
+# Directories
+OBJS_DIR := ./objs/
+SRCS_DIR := ./srcs/
+CONFIG_DIR := $(SRCS_DIR)config/
+NETWORK_DIR := $(SRCS_DIR)network/
+REQUEST_DIR := $(SRCS_DIR)request/
+RESPONSE_DIR := $(SRCS_DIR)response/
+UTILS_DIR := $(SRCS_DIR)utils/
 
 # Source files
-SRCS = $(addsuffix .cpp, main Socket Server Request Response Utility ServersManager Config ConfigValidator CGIHandler)
+SRCS = $(addsuffix .cpp, main Socket Server ServerException ServersManager Request Response \
+			Utility Config ConfigValidator CGIHandler)
 
-# Object files derived from sources
+# Object files
 OBJS = $(addprefix $(OBJS_DIR), $(SRCS:.cpp=.o))
 
 # Compiler and flags
@@ -52,7 +59,27 @@ $(OBJS_DIR):
 	@mkdir -p $(OBJS_DIR)
 	@echo "$(YELLOW)Built object directory$(COLOR_RESET)"
 
-$(OBJS_DIR)%.o: %.cpp .flags
+$(OBJS_DIR)%.o: $(SRCS_DIR)%.cpp .flags
+	@$(COMPILER) $(FLAGS) -c $< -o $@
+	@echo "$(YELLOW)Built $@$(COLOR_RESET)"
+
+$(OBJS_DIR)%.o: $(CONFIG_DIR)%.cpp .flags
+	@$(COMPILER) $(FLAGS) -c $< -o $@
+	@echo "$(YELLOW)Built $@$(COLOR_RESET)"
+
+$(OBJS_DIR)%.o: $(NETWORK_DIR)%.cpp .flags
+	@$(COMPILER) $(FLAGS) -c $< -o $@
+	@echo "$(YELLOW)Built $@$(COLOR_RESET)"
+
+$(OBJS_DIR)%.o: $(REQUEST_DIR)%.cpp .flags
+	@$(COMPILER) $(FLAGS) -c $< -o $@
+	@echo "$(YELLOW)Built $@$(COLOR_RESET)"
+
+$(OBJS_DIR)%.o: $(RESPONSE_DIR)%.cpp .flags
+	@$(COMPILER) $(FLAGS) -c $< -o $@
+	@echo "$(YELLOW)Built $@$(COLOR_RESET)"
+
+$(OBJS_DIR)%.o: $(UTILS_DIR)%.cpp .flags
 	@$(COMPILER) $(FLAGS) -c $< -o $@
 	@echo "$(YELLOW)Built $@$(COLOR_RESET)"
 

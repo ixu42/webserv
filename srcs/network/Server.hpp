@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/03 17:09:07 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/05 13:31:20 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,11 +21,11 @@ struct Pipe {
 
 #include "Socket.hpp"
 #include "CGIHandler.hpp"
-#include "Utility.hpp"
-#include "Request.hpp"
-#include "Response.hpp"
+#include "../response/Response.hpp"
+#include "../utils/Utility.hpp"
+#include "../utils/debug.hpp"
+#include "../request/Request.hpp"
 #include "client.hpp"
-#include "debug.hpp"
 #include <vector>
 #include <string>
 #include <cstring> // memset()
@@ -40,7 +40,7 @@ class Server
 		Socket						_serverSocket;
 		struct sockaddr_in			_address;
 		std::vector<t_client>		_clients;
-		ServerConfig*				_config = nullptr;
+		std::vector<ServerConfig>	_configs;
 		Pipe						_CGIpipes;
 
 		int							_port;
@@ -51,11 +51,14 @@ class Server
 		Server(const char* ipAddr, int port);
 		~Server();
 
-		void						setConfig(ServerConfig* serverConfig);
-		ServerConfig*				getConfig();
+		// void						setConfig(ServerConfig* serverConfig);
+		void						setConfig(std::vector<ServerConfig> serverConfigs);
+		// std::vector<ServerConfig>	getConfig();
 		int							getServerSockfd();
 		Pipe&						getPipe();
 		std::vector<t_client>&		getClients();
+		std::string					getIpAddress();
+		int							getPort();
 		std::string					whoAmI() const;
 
 		int							accepter();

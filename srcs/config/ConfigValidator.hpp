@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:16 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/01 19:08:16 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 19:24:15 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,17 +19,25 @@
 #include <regex>
 #include <iostream>
 
-#include "Colors.hpp"
-#include "Utility.hpp"
+#include "../utils/Colors.hpp"
+#include "../utils/Utility.hpp"
 #include "Config.hpp"
 
 struct ServerConfig;
 
 class ConfigValidator
 {
+	private:
+		ConfigValidator() = delete;
+		ConfigValidator(const ConfigValidator& other) = delete;
+		ConfigValidator& operator=(const ConfigValidator& other) = delete;
+
 	public:
-		static int	checkUnique(std::string line);
-		static int	matchLinePattern(std::string& line, std::string field, std::regex pattern2);
-		static int	validateGeneralConfig(std::string generalConfig, std::vector<ServerConfig>& servers);
-		static int	validateLocationConfig(std::string locationString);
+		static int							checkUnique(std::string line);
+		static int							matchLinePattern(std::string& line, std::string field, std::regex pattern2);
+		static int							validateGeneralConfig(std::string generalConfig, std::vector<std::string> serverStrings, size_t i);
+		static int							validateSeverNamePerIpPort(std::vector<std::string> serverStrings, size_t i, std::map<std::string, std::regex> patterns);
+		static int							validateLocationConfig(std::string locationString);
+		static int							countMatchInRegex(std::string str, std::regex pattern);
+		static std::pair<std::string, int>	contructCgiString();
 };

@@ -6,18 +6,18 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:11:23 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/01 19:11:23 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 19:40:56 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Utility.hpp"
 
-std::string Utility::replaceWhiteSpaces(std::string str)
+std::string Utility::replaceWhiteSpaces(std::string str, char newChar)
 {
 	for (char& c: str)
 	{
 		if (std::isspace(c))
-			c = ' ';
+			c = newChar;
 	}
 	return str;
 }
@@ -100,4 +100,15 @@ std::string Utility::getDate()
 	strftime(buffer, 80, "%a, %d %b %Y %H:%M:%S GMT", timeinfo);
 
 	return std::string(buffer);
+}
+
+std::string Utility::readLine(std::istream &stream)
+{
+	std::string line;
+	std::getline(stream, line);
+	if (!line.empty() && line.back() == '\r')
+	{
+		line.pop_back();
+	}
+	return line;
 }

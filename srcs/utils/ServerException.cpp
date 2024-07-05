@@ -1,22 +1,20 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ServerException.hpp                                :+:      :+:    :+:   */
+/*   ServerException.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/01 19:10:43 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/01 19:10:44 by vshchuki         ###   ########.fr       */
+/*   Created: 2024/07/04 00:51:19 by vshchuki          #+#    #+#             */
+/*   Updated: 2024/07/04 19:29:10 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
-#include <stdexcept>
-#include <exception>
+#include "ServerException.hpp"
 
-class ServerException : public std::runtime_error
+ServerException::ServerException(const std::string message) : _message(message) {}
+
+const char* ServerException::what() const noexcept
 {
-	public:
-		explicit ServerException(const std::string &message)
-		: std::runtime_error(message) {}
-};
+	return _message.c_str();
+}

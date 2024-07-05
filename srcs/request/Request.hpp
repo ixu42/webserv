@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:40 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/01 19:08:40 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/04 19:40:57 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,9 +18,9 @@
 #include <iostream>
 #include <vector>
 
-#include "Utility.hpp"
-#include "Config.hpp"
-#include "debug.hpp"
+#include "../utils/Utility.hpp"
+#include "../utils/debug.hpp"
+#include "../config/Config.hpp"
 
 class Request
 {
@@ -37,7 +37,12 @@ class Request
 		Request(std::string request);
 
 		void					parse(std::string request);
-		
+
+		/* Unchunk request */
+		size_t					hexStringToSizeT(const std::string &hexStr);
+		std::string				unchunkBody(std::string& body);
+
+		/* Getters and setters */
 		QueryStringParameters	getStartLine();
 		QueryStringParameters	getHeaders();
 		std::string				getBody();

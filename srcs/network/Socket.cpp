@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:46 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/04 00:41:04 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/05 14:50:36 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,7 +73,7 @@ bool	Socket::bindAddress(struct sockaddr_in addr)
 	ret = bind(_sockfd, (struct sockaddr*)&addr, addrlen);
 	if (ret < 0)
 	{
-		throw ServerException("could not bind socket to address: " + std::string(inet_ntoa(addr.sin_addr)) + ":" + std::to_string(ntohs(addr.sin_port)));
+		throw ServerException("could not bind socket to address: " + std::string(inet_ntoa(addr.sin_addr)) + ":" + std::to_string(ntohs(addr.sin_port))); // This line should be refactored not to use inet_ntoa
 		printError("bind() error: ");
 		return false;
 	}

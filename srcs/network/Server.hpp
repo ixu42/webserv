@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/05 13:31:20 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/05 17:31:11 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,14 +62,18 @@ class Server
 		std::string					whoAmI() const;
 
 		int							accepter();
-		Request*					receiveRequest(int clientSockfd);
+		void						handler(Server*& server, t_client& client);
 		void						responder(t_client& client, Server &server);
+
+		Request*					receiveRequest(int clientSockfd);
+		Location*					findLocation(Request* req);
 
 	private:
 		void						initServer(const char* ipAddr, int port);
 		void						removeFromClients(t_client& client);
 		const std::string			getResponse();
-		
+
+		ServerConfig*				findServerConfig(Request* req);
 };
 
 // #pragma once

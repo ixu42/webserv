@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/05 13:30:04 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/05 18:01:34 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ void	Server::initServer(const char* ipAddr, int port)
 		_address.sin_addr.s_addr = INADDR_ANY;
 	else
 	{
-		int ret = inet_pton(AF_INET, ipAddr, &_address.sin_addr);
+		int ret = inet_pton(AF_INET, ipAddr, &_address.sin_addr); // this should be refactored to use getaddrinfo
 		if (ret <= 0)
 		{
 			std::cerr << "inet_pton() error\n";
@@ -153,6 +153,19 @@ Request* Server::receiveRequest(int clientSockfd)
 	return new Request(request);
 }
 
+void	Server::handler(Server*& server, t_client& client)
+{
+	try 
+	{
+		Location* location = server->findLocation(client.request);
+		std::cout << TEXT_GREEN << "Location: " << location->path << RESET << std::endl;
+	}
+	catch (ResponseError& e)
+	{
+		std::cerr << BG_RED << TEXT_WHITE << "Location not found: " << e.what() << ": " << e.getCode() << RESET << std::endl;
+	}
+}
+
 void	Server::responder(t_client& client, Server &server)
 {
 	DEBUG("Server::responder() called");
@@ -237,6 +250,77 @@ std::string Server::whoAmI() const
 {
 	return _ipAddr + ":" + std::to_string(_port);
 }
+
+
+ServerConfig* Server::findServerConfig(Request* req)
+{
+	// If request host is an ip address:port or if the ip is not specified for current server, the first config for the server is used
+	std::vector<std::string> hostSplit = Utility::splitString(req->getHeaders()["host"], ":");
+	std::string reqHost = Utility::trim(hostSplit[0]);
+	std::string reqPort = Utility::trim(hostSplit[1]);
+
+	if (whoAmI() == req->getHeaders()["host"] ||
+		(_ipAddr.empty() && std::to_string(_port) == reqPort)) // Also additional check can be needed for the port 80. The port might be not specified in the request. Check with sudo ./webserv
+	{
+		if (!_configs.empty())
+			return &_configs[0];
+	}
+
+	// If request is a servername, find the correct servername
+	if (!reqHost.empty())
+	{
+		for (ServerConfig& config : _configs)
+		{
+			if (config.serverName == reqHost)
+				return &config;
+		}
+	}
+
+	return nullptr;
+}
+
+
+Location* Server::findLocation(Request* req)
+{
+	std::cout << "== Finding server for current location ==" << std::endl;
+
+	ServerConfig* namedServerConfig = findServerConfig(req);
+	if (!namedServerConfig)
+		throw ResponseError(404);
+	if (namedServerConfig->locations.empty())
+		throw ResponseError(404);
+
+	std::cout << "== Server found. Finding location... ==" << std::endl;
+	// Find the longest matching location
+	Location* foundLocation = nullptr;
+	size_t locationLength = 0;
+	std::string requestPath = req->getStartLine()["path"];
+
+	std::cout << "Let's find location for request path: " << requestPath << std::endl;
+	for (Location& location : namedServerConfig->locations)
+	{
+		std::cout << "Path: " << location.path << " RequestPath: " << requestPath << std::endl;
+		if (location.path == requestPath)
+		{
+			std::cout << "Location found, perfect match: " << location.path << std::endl;
+			foundLocation = &location;
+			break;
+		}
+		else if (requestPath.rfind(location.path, 0) == 0 && location.path[location.path.length() - 1] == '/')
+		{
+			std::cout << "Location found: " << location.path << std::endl;
+			if (location.path.length() > locationLength)
+			{
+				locationLength = location.path.length();
+				foundLocation = &location;
+			}
+		}
+
+		// std::cout << "Server config and location: " << location.path << std::endl;
+	}
+	return foundLocation;
+}
+
 
 /**
  * Getters
@@ -366,49 +450,6 @@ Server::Server(std::string ipAddress, int port)
 // 	write(this->clientSocket, response.c_str(), response.length());
 
 // }
-
-
-
-
-// Location* Server::findLocation(Request* req)
-// {
-// 	(void)req;
-// 	std::cout << "== Finding location for current request ==" << std::endl;
-// 	// int i = 0;
-// 	std::cout << "Locations vector size: " << this->config->locations.size() << std::endl;
-// 	if (this->config->locations.empty())
-// 		return nullptr;
-// 		// throw ServerException("No location specified in the server config");
-
-// 	Location* foundLocation = nullptr;
-// 	size_t locationLength = 0;
-// 	std::string requestPath = req->getStartLine()["path"];
-
-// 	std::cout << "Let's find location for request path: " << requestPath << std::endl;
-// 	for (Location& location : this->config->locations)
-// 	{
-// 		std::cout << "Path: " << location.path << " RequestPath: " << requestPath << std::endl;
-// 		if (location.path == requestPath)
-// 		{
-// 			std::cout << "Location found, perfect match: " << location.path << std::endl;
-// 			foundLocation = &location;
-// 			break;
-// 		}
-// 		else if (requestPath.rfind(location.path, 0) == 0 && location.path[location.path.length() - 1] == '/')
-// 		{
-// 			std::cout << "Location found: " << location.path << std::endl;
-// 			if (location.path.length() > locationLength)
-// 			{
-// 				locationLength = location.path.length();
-// 				foundLocation = &location;
-// 			}
-// 		}
-
-// 		// std::cout << "Server config and location: " << location.path << std::endl;
-// 	}
-// 	return foundLocation;
-// }
-
 
 
 // 	std::cout << "=== Request read ===" << std::endl;

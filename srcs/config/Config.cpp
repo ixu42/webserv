@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/05 15:23:01 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/05 17:27:50 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,8 @@ void Config::printConfig()
 			std::cout << "\tport: " << server.port << std::endl;
 			std::cout << "\tserverName: " << server.serverName << std::endl;
 			std::cout << "\tclientMaxBodySize: " << server.clientMaxBodySize << std::endl;
+			for (auto error : server.errorPages)
+				std::cout << "\tdefaultError: " << error.first << " " << error.second << std::endl;
 			for (auto error : server.errorPages)
 				std::cout << "\terror: " << error.first << " " << error.second << std::endl;
 			for (auto cgi : server.cgis)

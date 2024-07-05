@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/05 13:31:29 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/05 17:34:14 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -154,6 +154,7 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 			if (pfdReadyForRead.fd == client.fd)
 			{
 				client.request = server->receiveRequest(pfdReadyForRead.fd);
+				server->handler(server, client);
 				pfdReadyForRead.events = POLLOUT;
 				fdFound = true;
 				break ;

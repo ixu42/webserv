@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:43 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 19:32:16 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/05 17:55:16 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,4 +31,14 @@ class ServerException : public std::exception
 		explicit ServerException(const std::string message);
 
 		const char* what() const noexcept override;
+};
+
+class ResponseError: public ServerException
+{
+	private:
+		int _code;
+
+	public:
+		ResponseError(int code);
+		int getCode();
 };

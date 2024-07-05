@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/05 18:01:34 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/05 18:29:43 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,6 +113,7 @@ Request* Server::receiveRequest(int clientSockfd)
 	int bytesRead;
 	std::string request;
 	int emptyLinePos = -1;
+	int emptyLinesSize = 0;
 
 	bool isHeadersRead = false;
 	std::size_t contentLengthNum = std::string::npos;
@@ -135,6 +136,7 @@ Request* Server::receiveRequest(int clientSockfd)
 		if (!isHeadersRead && (request.find("\r\n\r\n") != std::string::npos || request.find("\n\n") != std::string::npos))
 		{
 			emptyLinePos = request.find("\r\n\r\n") ? request.find("\r\n\r\n") : request.find("\n\n");
+			emptyLinesSize = request.find("\r\n\r\n") ? 4 : 2;
 			isHeadersRead = true;
 			contentLengthNum = findContentLength(request);
 			if (contentLengthNum == std::string::npos)
@@ -142,7 +144,7 @@ Request* Server::receiveRequest(int clientSockfd)
 		}
 		if (isHeadersRead && contentLengthNum != -std::string::npos)
 		{
-			if (request.length() - emptyLinePos - 4 >= contentLengthNum)
+			if (request.length() - emptyLinePos - emptyLinesSize >= contentLengthNum)
 				break;
 		}
 	}

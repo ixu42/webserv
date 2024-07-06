@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/06 12:58:40 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 13:32:59 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -253,6 +253,8 @@ void	Server::responder(t_client& client, Server &server)
 			Location* foundLocation = server.findLocation(client.request);
 			std::cout << TEXT_GREEN << "Location: " << foundLocation->path << RESET << std::endl;
 
+			std::cout << TEXT_GREEN << "Redirect found: " << foundLocation->redirect << RESET << std::endl;
+
 			/* Handle redirect */
 			if (foundLocation->redirect != "")
 			{
@@ -276,7 +278,7 @@ void	Server::responder(t_client& client, Server &server)
 			else
 			{
 				/* Handle static files */
-				std::string filePath = foundLocation->root + client.request->getStartLine()["path"].substr(1);
+				std::string filePath = foundLocation->root + client.request->getStartLine()["path"].substr(foundLocation->path.length());
 				resp = Response(200, filePath);
 			}
 		}
@@ -389,10 +391,16 @@ Location* Server::findLocation(Request* req)
 	std::cout << "== Finding server for current location ==" << std::endl;
 
 	ServerConfig* namedServerConfig = findServerConfig(req);
+	// This block might be redundant as we always have a server config???
 	if (!namedServerConfig)
-		throw ResponseError(404);
+	{
+		throw ResponseError(500);
+	}
 	if (namedServerConfig->locations.empty())
+	{
+		std::cerr << "No locations found for server: " << whoAmI() << std::endl;
 		throw ResponseError(404);
+	}
 
 	std::cout << "== Server found. Finding location... ==" << std::endl;
 	// Find the longest matching location
@@ -401,6 +409,7 @@ Location* Server::findLocation(Request* req)
 	std::string requestPath = req->getStartLine()["path"];
 
 	std::cout << "Let's find location for request path: " << requestPath << std::endl;
+	std::cout << "We have locations to check	: " << namedServerConfig->locations.size() << std::endl;
 	for (Location& location : namedServerConfig->locations)
 	{
 		std::cout << "Path: " << location.path << " RequestPath: " << requestPath << std::endl;

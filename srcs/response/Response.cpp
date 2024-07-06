@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/06 13:02:40 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 13:40:43 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,8 +85,10 @@ Response::Response() {}
 */
 Response::Response(int code, std::map<std::string, std::string> optionalHeaders)
 {
+	setStatus(std::to_string(code) + " " + statusMessages.at(code));
 	if (optionalHeaders.size() > 0)
 		_headers.insert(optionalHeaders.begin(), optionalHeaders.end());
+
 	if (code >= 400 && code <= 599)
 	{
 		Response(code, "pages/" + std::to_string(code) + ".html");
@@ -186,7 +188,9 @@ std::string Response::buildResponse(Response& response)
 	// if (response.getContentLength() == 0)
 	// 	response.setContentLength(response.getBody().size());
 	responseNew << "Content-Length: " << response.getBody().size() << "\r\n";
-	responseNew << "Content-Type: " << response.getType() << "\r\n";
+
+	if (!response.getType().empty())
+		responseNew << "Content-Type: " << response.getType() << "\r\n";
 
 	/* Add optional headers*/
 	for (auto& [headerKey, headerValue] : response._headers)

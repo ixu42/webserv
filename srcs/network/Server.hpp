@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/07 00:21:17 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/07 02:28:08 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,8 @@ struct Pipe {
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+
+#include <fstream> //open file
 
 class Server
 {

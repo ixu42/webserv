@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/07 00:25:15 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/07 02:28:02 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -299,17 +299,25 @@ void	Server::responder(t_client& client, Server &server)
 			{
 				/* Handle static files */
 				std::string filePath = foundLocation->root + client.request->getStartLine()["path"].substr(foundLocation->path.length());
+
+				// If path ends with /, check for index file and directory listing, otherwise throw 403
 				if (client.request->getStartLine()["path"].back() == '/')
 				{
-					if (!foundLocation->index.empty())
+					std::ifstream indexFile;
+					indexFile.open(filePath + foundLocation->index);
+					if (indexFile.is_open())
 					{
 						filePath += foundLocation->index;
+						indexFile.close();
 					}
 					else if (foundLocation->directoryListing)
 					{
 						filePath = foundLocation->defaultListingTemplate;
 					}
-					// TODO: 403 Forbidden on the directory without listing and without index!!
+					else
+					{
+						throw ResponseError(403);
+					}
 				}
 
 				resp = Response(200, filePath);
@@ -355,20 +363,18 @@ void	Server::removeFromClients(t_client& client)
 		}
 	}
 }
-
-const std::string	Server::getResponse()
+/* Dummy response */
+/* const std::string	Server::getResponse()
 {
-	/* Dummy response start */
 	std::string response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\n";
 	// std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world\r\n\t</h1>\r\n</body>\r\n</html>";
 	std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world " + std::to_string(time(NULL)) + " " + whoAmI() + "\r\n\t</h1>\r\n</body>\r\n</html>";
 	std::string contentLength = "Content-Length: " + std::to_string(body.length()) + "\r\n";
 	// std::cout << contentLength << std::endl;
 	response = response + contentLength + "\r\n" + body + "\r\n";
-	// /* Dummy response end */
 
 	return response;
-}
+} */
 
 
 std::string Server::whoAmI() const

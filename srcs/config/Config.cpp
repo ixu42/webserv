@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/05 18:09:45 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/07 02:06:36 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,6 +80,11 @@ std::vector<std::string> Config::filterOutInvalidServerStrings(std::vector<std::
 	{
 		std::cout << "Filtering server #" << i << std::endl;
 		std::string generalConfig;
+		if (serverStrings[i].empty())
+		{
+			serverStrings.erase(serverStrings.begin() + i);
+			continue;
+		}
 		
 		std::vector<std::string> split = Utility::splitString(serverStrings[i], "[location]");
 
@@ -87,13 +92,10 @@ std::vector<std::string> Config::filterOutInvalidServerStrings(std::vector<std::
 		generalConfig = split[0];
 		// std::cout << "generalConfig: " << generalConfig << std::endl;
 
-		// Get  server locations string
+		// Get server locations string
 		std::vector<std::string> locationStrings(split.begin() + 1, split.end());
 
 		// Validate general config
-		// Also pass serverStrings vector but only upto current server to validate if the serverName is in another string with the same ipAddress:port
-		// Like this 		int configErrorsFound = ConfigValidator::validateGeneralConfig(generalConfig, partialServerStrings); 
-
 		int configErrorsFound = ConfigValidator::validateGeneralConfig(generalConfig, serverStrings, i);
 		// Validate locations
 		for (std::string& locationString : locationStrings)
@@ -140,15 +142,6 @@ std::string findIpPortKey(std::string generalConfig)
 	}
 	return ipAddress + ":" + port;
 }
-
-// size_t calculateIpPortServers(std::vector<std::string> serverStrings)
-// {
-// 	for (std::string& serverString : serverStrings)
-// 	{
-// 		_servers
-// 	}
-// }
-
 
 void Config::parse()
 {

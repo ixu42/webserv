@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/06 19:26:54 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 22:39:33 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -185,6 +185,7 @@ std::string Response::buildResponse(Response& response)
 	responseNew << "HTTP/1.1 " << response.getStatus() << "\r\n";
 	responseNew << "Date: " << Utility::getDate() << "\r\n";
 	responseNew << "Server: webserv" << "\r\n";
+	responseNew << "Connection: close" << "\r\n";
 	// if (response.getContentLength() == 0)
 	// 	response.setContentLength(response.getBody().size());
 	responseNew << "Content-Length: " << response.getBody().size() << "\r\n";

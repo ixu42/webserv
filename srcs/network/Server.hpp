@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/06 11:51:01 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/07 00:21:17 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,18 +30,23 @@ struct Pipe {
 #include <vector>
 #include <string>
 #include <cstring> // memset()
-#include <arpa/inet.h> // htons(), inet_pton()
+// #include <arpa/inet.h> // htons(), inet_pton()
 #include <signal.h> // signal()
 #include <poll.h> // poll()
 #include <unistd.h> // read(), write(), close()
 
 #include <limits> // for max size_t
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+
 class Server
 {
 	private:
 		Socket						_serverSocket;
-		struct sockaddr_in			_address;
+		struct addrinfo				_hints;
+		struct addrinfo*			_res;
 		std::vector<t_client>		_clients;
 		std::vector<ServerConfig>	_configs;
 		Pipe						_CGIpipes;
@@ -69,6 +74,7 @@ class Server
 		void						responder(t_client& client, Server &server);
 
 		Request*					receiveRequest(int clientSockfd);
+		void						sendResponse(std::string& response, t_client& client);
 		Location*					findLocation(Request* req);
 
 	private:

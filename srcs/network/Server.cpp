@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/06 19:25:22 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/07 00:21:33 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,33 +17,22 @@ void	Server::initServer(const char* ipAddr, int port)
 	_port = port;
 	std::string str(ipAddr);
 	_ipAddr = str;
+	
+	_serverSocket.create();
 
-	std::memset((char*)&_address, 0, sizeof(_address));
-	_address.sin_family = AF_INET;
-	_address.sin_port = htons(port);
-	if (ipAddr == nullptr || ipAddr[0] == '\0')
-		_address.sin_addr.s_addr = INADDR_ANY;
-	else
-	{
-		int ret = inet_pton(AF_INET, ipAddr, &_address.sin_addr); // this should be refactored to use getaddrinfo
-		if (ret <= 0)
-		{
-			std::cerr << "inet_pton() error\n";
-			close(_serverSocket.getSockfd());
-			exit(EXIT_FAILURE);
-		}
+	memset(&_hints, 0, sizeof(_hints));
+	_hints.ai_family = AF_INET;			 	// Use AF_INET6 for IPv6
+	_hints.ai_socktype = SOCK_STREAM;
+	_hints.ai_flags = AI_PASSIVE;			// For wildcard IP address	
+	int status = getaddrinfo(nullptr, std::to_string(port).c_str(), &_hints, &_res);
+	if (status != 0) {
+		std::cerr << "getaddrinfo error: " << gai_strerror(status) << std::endl;
+		throw ServerException("getaddrinfo error");
 	}
 
-	// if (!_serverSocket.create() ||
-	// 	!_serverSocket.bindAddress(_address) ||
-	// 	!_serverSocket.listenForConnections(10))
-	// {
-	// 	std::cerr << "Failed to construct server\n";
-	// 	exit(EXIT_FAILURE);
-	// }
+	_serverSocket.bindAddress(_res);
+	freeaddrinfo(_res);
 
-	_serverSocket.create();
-	_serverSocket.bindAddress(_address);
 	_serverSocket.listenForConnections(10);
 
 }
@@ -212,6 +201,27 @@ void	Server::handler(Server*& server, t_client& client)
 	}
 }
 
+void Server::sendResponse(std::string& response, t_client& client)
+{
+	size_t totalBytesWritten = 0;
+	size_t bytesToWrite = response.length();
+	const char* buffer = response.c_str();
+
+	while (totalBytesWritten < bytesToWrite)
+	{
+		ssize_t bytesWritten = write(client.fd, buffer + totalBytesWritten, bytesToWrite - totalBytesWritten);
+		if (bytesWritten == -1) // We can not use EAGAIN or EWOULDBLOCK here
+			continue;
+		else if (bytesWritten == 0) // Handle case where write returns 0 (should not happen with regular sockets)
+			break;
+		else {
+			totalBytesWritten += bytesWritten;
+		}
+		std::cout << TEXT_GREEN << "Bytes written: " << bytesWritten  << RESET << std::endl;
+	}
+	std::cout << TEXT_GREEN << "response.length(): " << response.length()  << RESET << std::endl;
+}
+
 void	Server::responder(t_client& client, Server &server)
 {
 	/* If response was handled previously in handler (e.g. in receiveRequest) */
@@ -254,9 +264,7 @@ void	Server::responder(t_client& client, Server &server)
 			// std::cout << TEXT_GREEN << "Redirect found: " << foundLocation->redirect << RESET << std::endl;
 
 			/* Check if method is allowed */
-			client.request->printRequest();
-			// std::cout << "Method: " << Utility::strToLower(client.request->getStartLine()["method"]) << std::endl;
-			// std::cout << "Path: " << Utility::strToLower(client.request->getStartLine()["path"]) << std::endl;
+			// client.request->printRequest();
 			if (!foundLocation->methods[Utility::strToLower(client.request->getStartLine()["method"])])
 			{
 				std::string allowedMethods;
@@ -321,9 +329,18 @@ void	Server::responder(t_client& client, Server &server)
 	}
 
 	response = Response::buildResponse(resp);
-	write(client.fd, response.c_str(), response.length());
 
-	std::cout << TEXT_GREEN << response << RESET << std::endl;
+	sendResponse(response, client);
+
+	// std::cout << TEXT_GREEN << response << RESET << std::endl;
+/* 	std::cout << TEXT_GREEN << "First 200 bytes of response" << RESET << std::endl;
+	size_t emptyPos = response.find("\r\n\r\n");
+	std::string bodyStr = response.substr(emptyPos + 4); */
+/* 	for (size_t i = 0; i < 200; i++)
+	{
+		std::cout << i << ": " << bodyStr[i] << " (" << int(bodyStr[i]) << ")" << std::endl;
+	} */
+
 	delete client.request;
 	client.request = nullptr;
 

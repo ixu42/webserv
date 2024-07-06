@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:46 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/05 14:50:36 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 22:51:08 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ bool	Socket::create()
 	return true;
 }
 
-bool	Socket::bindAddress(struct sockaddr_in addr)
+bool	Socket::bindAddress(struct addrinfo* res)
 {
 	DEBUG("Socket::bindAddress() called");
 
@@ -69,12 +69,14 @@ bool	Socket::bindAddress(struct sockaddr_in addr)
 		return false;
 	}
 
-	socklen_t addrlen = sizeof(addr);
-	ret = bind(_sockfd, (struct sockaddr*)&addr, addrlen);
+	// socklen_t addrlen = sizeof(addr);
+	ret = bind(_sockfd, res->ai_addr, res->ai_addrlen);
 	if (ret < 0)
 	{
-		throw ServerException("could not bind socket to address: " + std::string(inet_ntoa(addr.sin_addr)) + ":" + std::to_string(ntohs(addr.sin_port))); // This line should be refactored not to use inet_ntoa
+		freeaddrinfo(res);
+		close(_sockfd);
 		printError("bind() error: ");
+		throw ServerException("could not bind socket to address"); // This line should be refactored not to use inet_ntoa
 		return false;
 	}
 	return true;	
@@ -91,6 +93,7 @@ bool	Socket::listenForConnections(int backlog)
 	if (ret < 0)
 	{
 		printError("listen() error: ");
+		throw ServerException("could not start listening for connections");
 		return false;
 	}
 	return true;
@@ -110,6 +113,13 @@ int	Socket::acceptConnection(struct sockaddr_in addr)
 		printError("accept() error: ");
 		return -1;
 	}
+/* 	int opt = 1;
+	int ret = setsockopt(_sockfd, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(opt));
+	if (ret < 0)
+	{
+		printError("setsockopt() error: ");
+		return false;
+	} */
 	return acceptedSocketFd;
 }
 

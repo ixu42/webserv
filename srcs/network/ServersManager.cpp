@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/05 21:53:55 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 21:55:46 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,24 +19,19 @@ Config* ServersManager::_webservConfig;
 void ServersManager::signalHandler(int signal)
 {
 	std::cout << std::endl << "Signal " << signal << " received." << std::endl;
-
-	// Handle cleanup tasks or other actions here
-	
-	// ServersManager::getInstance()->poll_fds.clear();
 	delete _instance;
-	// servers.clear();
-
 	std::exit(signal); // Exit the program with the received signal as exit code
 }
 
 ServersManager::ServersManager()
 {
 	// Handle ctrl+c
-	signal(SIGINT, ServersManager::signalHandler);
+	signal(SIGINT, ServersManager::signalHandler); /* ctrl + c */
+	signal(SIGTSTP, ServersManager::signalHandler); /* ctrl + z */
+	signal(SIGQUIT, ServersManager::signalHandler); /* ctrl + \ */
 
 	// Add servers
 	int i = 0;
-	// for (std::pair<const std::string, ServerConfig>& serverConfigPair : _webservConfig->getServersConfigsMap())
 
 	std::cout << "ServersManager creating servers... Servers in config: " << _webservConfig->getServersConfigsMap().size() << std::endl;
 	for (auto& [ipPortKey, serverConfigs] : _webservConfig->getServersConfigsMap())
@@ -64,8 +59,6 @@ ServersManager::ServersManager()
 		}
 		if (foundServer)
 			foundServer->setConfig(serverConfigs);
-
-
 
 		// std::cout << "Server config and location: " << servers[i]->getConfig()->locations[0].path << std::endl;
 		i++;

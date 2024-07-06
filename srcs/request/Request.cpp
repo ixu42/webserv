@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/05 15:00:51 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 15:30:59 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,9 +50,7 @@ void Request::parse(std::string request)
 		std::vector<std::string> startLineSplit = Utility::splitString(headerLines[0], " ");
 		std::vector<std::string> querySplit = Utility::splitString(startLineSplit[1], "?");
 
-		_startLine["method"];
-
- 		// _startLine["method"] = Utility::trim(startLineSplit[0]);
+ 		_startLine["method"] = Utility::trim(startLineSplit[0]);
 		_startLine["path"] = Utility::trim(querySplit[0]);
 		_startLine["version"] = Utility::trim(startLineSplit[2]);
 		if (querySplit.size() == 2)

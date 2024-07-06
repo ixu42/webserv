@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/06 13:32:59 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 15:52:56 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -253,7 +253,23 @@ void	Server::responder(t_client& client, Server &server)
 			Location* foundLocation = server.findLocation(client.request);
 			std::cout << TEXT_GREEN << "Location: " << foundLocation->path << RESET << std::endl;
 
-			std::cout << TEXT_GREEN << "Redirect found: " << foundLocation->redirect << RESET << std::endl;
+			// std::cout << TEXT_GREEN << "Redirect found: " << foundLocation->redirect << RESET << std::endl;
+
+			/* Check if method is allowed */
+			client.request->printRequest();
+			// std::cout << "Method: " << Utility::strToLower(client.request->getStartLine()["method"]) << std::endl;
+			// std::cout << "Path: " << Utility::strToLower(client.request->getStartLine()["path"]) << std::endl;
+			if (!foundLocation->methods[Utility::strToLower(client.request->getStartLine()["method"])])
+			{
+				std::string allowedMethods;
+				for (auto& [methodName, methodBool] : foundLocation->methods)
+				{
+					if (methodBool)
+						allowedMethods += allowedMethods.empty() ? methodName : ", " + methodName;
+				}
+				delete client.request;
+				throw ResponseError(405, {{"Allowed", allowedMethods}});
+			}
 
 			/* Handle redirect */
 			if (foundLocation->redirect != "")
@@ -284,12 +300,13 @@ void	Server::responder(t_client& client, Server &server)
 		}
 		catch (ResponseError& e)
 		{
-			std::cerr << BG_RED << TEXT_WHITE << "Response error: " << e.what() << ": " << e.getCode() << RESET << std::endl;
-			resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
+			std::cerr << BG_RED << TEXT_WHITE << "Responder caught an error: " << e.what() << ": " << e.getCode() << RESET << std::endl;
+			resp = Response(e.getCode(), e.getHeaders());
+						// resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
 		}
 		catch (const std::exception& e)
 		{
-			std::cerr << BG_RED << TEXT_WHITE << "Server error: " << e.what() << RESET << std::endl;
+			std::cerr << BG_RED << TEXT_WHITE << "Responder caught an exception: " << e.what() << RESET << std::endl;
 			resp = Response(500);
 		}
 
@@ -358,9 +375,17 @@ std::string Server::whoAmI() const
 ServerConfig* Server::findServerConfig(Request* req)
 {
 	// If request host is an ip address:port or if the ip is not specified for current server, the first config for the server is used
+
+	if (req->getHeaders()["host"].empty())
+		throw ResponseError(400); // Bad request
+
 	std::vector<std::string> hostSplit = Utility::splitString(req->getHeaders()["host"], ":");
+
 	std::string reqHost = Utility::trim(hostSplit[0]);
 	std::string reqPort = Utility::trim(hostSplit[1]);
+
+	if (reqPort.empty())
+		reqPort = "80";
 
 	if (whoAmI() == req->getHeaders()["host"] ||
 		(_ipAddr.empty() && std::to_string(_port) == reqPort)) // Also additional check can be needed for the port 80. The port might be not specified in the request. Check with sudo ./webserv
@@ -394,7 +419,7 @@ Location* Server::findLocation(Request* req)
 	// This block might be redundant as we always have a server config???
 	if (!namedServerConfig)
 	{
-		throw ResponseError(500);
+		throw ResponseError(404);
 	}
 	if (namedServerConfig->locations.empty())
 	{

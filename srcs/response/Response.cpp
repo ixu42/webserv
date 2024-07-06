@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/06 13:40:43 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 16:10:03 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,7 +91,7 @@ Response::Response(int code, std::map<std::string, std::string> optionalHeaders)
 
 	if (code >= 400 && code <= 599)
 	{
-		Response(code, "pages/" + std::to_string(code) + ".html");
+		*this = Response(code, "pages/" + std::to_string(code) + ".html");
 	}
 }
 
@@ -183,7 +183,7 @@ std::string Response::buildResponse(Response& response)
 		response._status = "200 OK";
 	}
 	responseNew << "HTTP/1.1 " << response.getStatus() << "\r\n";
-	responseNew << Utility::getDate() << "\r\n";
+	responseNew << "Date: " << Utility::getDate() << "\r\n";
 	responseNew << "Server: webserv" << "\r\n";
 	// if (response.getContentLength() == 0)
 	// 	response.setContentLength(response.getBody().size());

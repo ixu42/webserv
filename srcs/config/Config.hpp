@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:20 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/06 02:03:49 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 14:48:41 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ struct Location
 	std::string							uploadPath;
 	bool								directoryListing = false;
 	std::string							index = "index.html";
-	std::map<std::string, bool>			methods;
+	std::map<std::string, bool>			methods = {{"get", true}, {"post", false}, {"delete", false}};
 };
 
 struct ServerConfig

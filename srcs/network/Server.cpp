@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/06 17:28:14 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 19:25:22 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -208,14 +208,14 @@ void	Server::handler(Server*& server, t_client& client)
 	catch (ResponseError& e)
 	{
 		std::cerr << BG_RED << TEXT_WHITE << "Request can not be handled: " << e.what() << ": " << e.getCode() << RESET << std::endl;
-		client.response = new Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
+		client.response = new Response(e.getCode());
 	}
 }
 
 void	Server::responder(t_client& client, Server &server)
 {
-	/* If request was handled previously in handler (e.g. in receiveRequest) */
-	if (!client.request)
+	/* If response was handled previously in handler (e.g. in receiveRequest) */
+	if (client.response)
 	{
 		std::string responseString = Response::buildResponse(*client.response);
 		write(client.fd, responseString.c_str(), responseString.length());
@@ -242,8 +242,6 @@ void	Server::responder(t_client& client, Server &server)
 		} catch (const ServerException& e) {
 			std::cerr << BG_RED << e.what() << RESET_BG << std::endl;
 		}
-		response = Response::buildResponse(resp);
-		write(client.fd, response.c_str(), response.length());
 		DEBUG("response: " << response);
 	}
 	else
@@ -288,7 +286,6 @@ void	Server::responder(t_client& client, Server &server)
 				std::cout << "Redirect URL: " << redirectUrl << std::endl;
 				std::cout << "Page path: " << pagePath << std::endl;
 				resp = Response(307, {{"Location", redirectUrl}});
-				// response = "HTTP/1.1 307 Temporary Redirect\r\nServer: webserv\r\nLocation: " + redirectUrl + "\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
 			}
 			else
 			{
@@ -321,23 +318,12 @@ void	Server::responder(t_client& client, Server &server)
 			std::cerr << BG_RED << TEXT_WHITE << "Responder caught an exception: " << e.what() << RESET << std::endl;
 			resp = Response(500);
 		}
-
-		// if (resp.getStatus().empty()) // wtf is this?
-		// {
-			// CGIServer::setResponse(resp, "200 OK", "text/html", "pages/index.html");
-
-			response = Response::buildResponse(resp);
-			write(client.fd, response.c_str(), response.length());
-
-			std::cout << TEXT_GREEN << response << RESET << std::endl;
-		// }
-		// else
-		// {
-		// 	response = Response::buildResponse(resp);
-		// 	write(client.fd, response.c_str(), response.length());
-		// }
 	}
 
+	response = Response::buildResponse(resp);
+	write(client.fd, response.c_str(), response.length());
+
+	std::cout << TEXT_GREEN << response << RESET << std::endl;
 	delete client.request;
 	client.request = nullptr;
 

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/06 16:10:03 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 19:26:54 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,7 +81,7 @@ static const std::map<std::string, std::string> mimeTypes = {
 Response::Response() {}
 
 /**
- * optionalHeaders: {{ "headerKey1": "headerValue1" }, { "headerKey2": "headerValue2}
+ * optionalHeaders: {{ "headerKey1": "headerValue1" }, { "headerKey2": "headerValue2}}
 */
 Response::Response(int code, std::map<std::string, std::string> optionalHeaders)
 {

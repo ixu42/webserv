@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/07 00:21:33 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/07 00:25:15 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -331,15 +331,6 @@ void	Server::responder(t_client& client, Server &server)
 	response = Response::buildResponse(resp);
 
 	sendResponse(response, client);
-
-	// std::cout << TEXT_GREEN << response << RESET << std::endl;
-/* 	std::cout << TEXT_GREEN << "First 200 bytes of response" << RESET << std::endl;
-	size_t emptyPos = response.find("\r\n\r\n");
-	std::string bodyStr = response.substr(emptyPos + 4); */
-/* 	for (size_t i = 0; i < 200; i++)
-	{
-		std::cout << i << ": " << bodyStr[i] << " (" << int(bodyStr[i]) << ")" << std::endl;
-	} */
 
 	delete client.request;
 	client.request = nullptr;

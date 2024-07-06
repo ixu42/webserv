@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/06 15:52:56 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 17:28:14 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -267,7 +267,6 @@ void	Server::responder(t_client& client, Server &server)
 					if (methodBool)
 						allowedMethods += allowedMethods.empty() ? methodName : ", " + methodName;
 				}
-				delete client.request;
 				throw ResponseError(405, {{"Allowed", allowedMethods}});
 			}
 
@@ -295,6 +294,19 @@ void	Server::responder(t_client& client, Server &server)
 			{
 				/* Handle static files */
 				std::string filePath = foundLocation->root + client.request->getStartLine()["path"].substr(foundLocation->path.length());
+				if (client.request->getStartLine()["path"].back() == '/')
+				{
+					if (!foundLocation->index.empty())
+					{
+						filePath += foundLocation->index;
+					}
+					else if (foundLocation->directoryListing)
+					{
+						filePath = foundLocation->defaultListingTemplate;
+					}
+					// TODO: 403 Forbidden on the directory without listing and without index!!
+				}
+
 				resp = Response(200, filePath);
 			}
 		}
@@ -313,6 +325,7 @@ void	Server::responder(t_client& client, Server &server)
 		// if (resp.getStatus().empty()) // wtf is this?
 		// {
 			// CGIServer::setResponse(resp, "200 OK", "text/html", "pages/index.html");
+
 			response = Response::buildResponse(resp);
 			write(client.fd, response.c_str(), response.length());
 
@@ -359,8 +372,6 @@ const std::string	Server::getResponse()
 	// std::cout << contentLength << std::endl;
 	response = response + contentLength + "\r\n" + body + "\r\n";
 	// /* Dummy response end */
-
-
 
 	return response;
 }

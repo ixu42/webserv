@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:20 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/06 14:48:41 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 19:02:16 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,9 @@ struct Location
 	std::string							root;
 	std::string							uploadPath;
 	bool								directoryListing = false;
-	std::string							index = "index.html";
+	std::string					defaultListingTemplate = "pages/lisitng-template.html";
+	std::string					defaultIndex = "index.html";
+	std::string							index;
 	std::map<std::string, bool>			methods = {{"get", true}, {"post", false}, {"delete", false}};
 };
 
@@ -44,7 +46,9 @@ struct ServerConfig
 		std::string					clientMaxBodySize = "100M";
 
 		std::map<int, std::string>	defaultErrorPages = {
-															{404, "pages/404.html"}, 
+															{400, "pages/400.html"},
+															{404, "pages/404.html"},
+															{405, "pages/405.html"},
 															{413, "pages/413.html"},
 															{500, "pages/500.html"}
 														};

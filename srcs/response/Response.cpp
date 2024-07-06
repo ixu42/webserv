@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/06 03:10:07 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 13:02:40 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ static const std::map<int, std::string> statusMessages = {
 	{400, "Bad Request"},
 	{403, "Forbidden"},
 	{404, "Not Found"},
-	{405, "Method Not Allowed"}, // if the location does not allowes method in request. THen put "Allowed: GET, POST" in response header
+	{405, "Method Not Allowed"}, // if the location does not allowes method in request. Then put "Allowed: GET, POST" in response header
 	{413, "Request Entity Too Large"}, // if the request body size exceeds the clientMaxBodySize
 	{500, "Internal Server Error"} // can be used when the server runs into unexpected issues processing the request, including memory allocation failures
 };
@@ -80,14 +80,27 @@ static const std::map<std::string, std::string> mimeTypes = {
 
 Response::Response() {}
 
+/**
+ * optionalHeaders: {{ "headerKey1": "headerValue1" }, { "headerKey2": "headerValue2}
+*/
+Response::Response(int code, std::map<std::string, std::string> optionalHeaders)
+{
+	if (optionalHeaders.size() > 0)
+		_headers.insert(optionalHeaders.begin(), optionalHeaders.end());
+	if (code >= 400 && code <= 599)
+	{
+		Response(code, "pages/" + std::to_string(code) + ".html");
+	}
+}
+
 Response::Response(int code, std::string filePath)
 {
 	auto [file, size] = Utility::readBinaryFile(filePath);
-	setStatus(std::to_string(code) + statusMessages.at(code));
+	setStatus(std::to_string(code) + " " + statusMessages.at(code));
 
 	setContentLength(size);
 
-    std::string fileContent(file.begin(), file.end());
+	std::string fileContent(file.begin(), file.end());
 
 	size_t dotPos = filePath.find_last_of(".");
 
@@ -174,7 +187,14 @@ std::string Response::buildResponse(Response& response)
 	// 	response.setContentLength(response.getBody().size());
 	responseNew << "Content-Length: " << response.getBody().size() << "\r\n";
 	responseNew << "Content-Type: " << response.getType() << "\r\n";
+
+	/* Add optional headers*/
+	for (auto& [headerKey, headerValue] : response._headers)
+		responseNew << headerKey << ": " << headerValue << "\r\n";
+
 	responseNew << "\r\n";
+
+	/* Not adding extra line if body is empty*/
 	if (response.getBody().size() != 0)
 		responseNew << response.getBody() << "\r\n";
 	return responseNew.str();

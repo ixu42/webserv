@@ -1,55 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>webserv</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
-        }
-        .container {
-            text-align: center;
-        }
-        h1 {
-            color: #333;
-        }
-        p {
-            color: #666;
-        }
-        span {
-            font-weight: bold;
-        }
-    </style>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>webserv</title>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			margin: 0;
+			padding: 0;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+			background-color: #f0f0f0;
+		}
+		.container {
+			text-align: center;
+		}
+		h1 {
+			color: #333;
+		}
+		p {
+			color: #666;
+		}
+		span {
+			font-weight: bold;
+		}
+		img {
+			width: 300px;
+			height: auto;
+		}
+	</style>
 </head>
 <body>
-    <div class="container">
-		<p><img src="img2.jpg" /></p>
-        <h1>&#128187 Welcome to the starting page of webserv project &#128187</h1>
-        <p>Project was made by Hive Helsinki students: <span>ixu</span>, <span>vshchuki</span> and <span>dnikifor</span></p>
+	<div class="container">
+		<p><img src="skull.png" /></p>
+		<h1>&#128187 Welcome to the starting page of webserv project &#128187</h1>
+		<p>Project was made by Hive Helsinki students: <span>ixu</span>, <span>vshchuki</span> and <span>dnikifor</span></p>
 		<p>The current time is: <span id="currentTime"></span></p>
-    </div>
+	</div>
 
-    <script>
-        function updateTime() {
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            const formattedTime = `${hours}:${minutes}:${seconds}`;
-            document.getElementById('currentTime').textContent = formattedTime;
-        }
+	<script>
+		function updateTime() {
+			const now = new Date();
+			const hours = String(now.getHours()).padStart(2, '0');
+			const minutes = String(now.getMinutes()).padStart(2, '0');
+			const seconds = String(now.getSeconds()).padStart(2, '0');
+			const formattedTime = `${hours}:${minutes}:${seconds}`;
+			document.getElementById('currentTime').textContent = formattedTime;
+		}
 
-        updateTime();
+		updateTime();
 
-        setInterval(updateTime, 1000);
-    </script>
+		setInterval(updateTime, 1000);
+	</script>
 </body>
 </html>

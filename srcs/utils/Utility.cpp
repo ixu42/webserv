@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:11:23 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/06 02:23:33 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 12:26:48 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,7 +117,7 @@ std::pair<std::vector<uint8_t>, size_t> Utility::readBinaryFile(const std::strin
 	// Open the file in binary mode at the end to get the file size
 	std::ifstream file(filePath, std::ios::binary | std::ios::ate);
 	if (!file) {
-		throw std::runtime_error("Could not open file: " + filePath);
+		throw ResponseError(404);
 	}
 
 	// Get the size of the file
@@ -127,7 +127,7 @@ std::pair<std::vector<uint8_t>, size_t> Utility::readBinaryFile(const std::strin
 	// Read the contents of the file into a vector
 	std::vector<uint8_t> buffer(size);
 	if (!file.read(reinterpret_cast<char*>(buffer.data()), size)) {
-		throw ResponseError(404);
+		throw ResponseError(500);
 	}
 
 	return {buffer, static_cast<size_t>(size)};

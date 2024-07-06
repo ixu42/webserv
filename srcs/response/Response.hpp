@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:51 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/06 02:57:28 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 13:01:11 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,10 +25,12 @@
 			std::string	_body;
 			std::string	_status;
 			std::string	_type;
+			std::map<std::string, std::string> _headers;
 			int			_contentLength = 0;
 
 		public:
 			Response();
+			Response(int code, std::map<std::string, std::string> optionalHeaders = {});
 			Response(int code, std::string filePath);
 
 			std::string& getBody();

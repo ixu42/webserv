@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/06 00:53:23 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 11:51:01 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@ struct Pipe {
 #include "../utils/Utility.hpp"
 #include "../utils/debug.hpp"
 #include "../request/Request.hpp"
+#include "../utils/ServerException.hpp"
 #include "client.hpp"
 #include <vector>
 #include <string>

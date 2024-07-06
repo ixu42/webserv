@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/06 03:02:38 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 12:58:40 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -214,15 +214,15 @@ void	Server::handler(Server*& server, t_client& client)
 
 void	Server::responder(t_client& client, Server &server)
 {
-	// If request was handled previously in handler (e.g. in receiveRequest)
-	// if (client.request)
-	// {
-	// 	std::string responseString = Response::buildResponse(*client.response);
-	// 	write(client.fd, responseString.c_str(), responseString.length());
-	// 	delete client.response;
-	// 	client.response = nullptr;
-	// 	return;
-	// }
+	/* If request was handled previously in handler (e.g. in receiveRequest) */
+	if (!client.request)
+	{
+		std::string responseString = Response::buildResponse(*client.response);
+		write(client.fd, responseString.c_str(), responseString.length());
+		delete client.response;
+		client.response = nullptr;
+		return;
+	}
 
 	DEBUG("Server::responder() called");
 	Response resp;
@@ -253,7 +253,7 @@ void	Server::responder(t_client& client, Server &server)
 			Location* foundLocation = server.findLocation(client.request);
 			std::cout << TEXT_GREEN << "Location: " << foundLocation->path << RESET << std::endl;
 
-			// Handle redirect
+			/* Handle redirect */
 			if (foundLocation->redirect != "")
 			{
 				std::string redirectUrl = foundLocation->redirect;
@@ -270,29 +270,25 @@ void	Server::responder(t_client& client, Server &server)
 
 				std::cout << "Redirect URL: " << redirectUrl << std::endl;
 				std::cout << "Page path: " << pagePath << std::endl;
-				response = "HTTP/1.1 307 Temporary Redirect\r\nServer: webserv\r\nLocation: " + redirectUrl + "\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
+				resp = Response(307, {{"Location", redirectUrl}});
+				// response = "HTTP/1.1 307 Temporary Redirect\r\nServer: webserv\r\nLocation: " + redirectUrl + "\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
 			}
 			else
 			{
-
-				// Handle static files
-				try
-				{
-					std::string filePath = foundLocation->root + client.request->getStartLine()["path"].substr(1);
-					resp = Response(200, filePath);
-				}
-				catch (const ResponseError& e)
-				{
-					std::cerr << BG_RED << TEXT_WHITE << "Response error: " << e.what() << ": " << e.getCode() << RESET << std::endl;
-					// resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
-					resp = Response(500, "pages/500.html");
-				}
-			} 
+				/* Handle static files */
+				std::string filePath = foundLocation->root + client.request->getStartLine()["path"].substr(1);
+				resp = Response(200, filePath);
+			}
 		}
 		catch (ResponseError& e)
 		{
 			std::cerr << BG_RED << TEXT_WHITE << "Response error: " << e.what() << ": " << e.getCode() << RESET << std::endl;
 			resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
+		}
+		catch (const std::exception& e)
+		{
+			std::cerr << BG_RED << TEXT_WHITE << "Server error: " << e.what() << RESET << std::endl;
+			resp = Response(500);
 		}
 
 		// if (resp.getStatus().empty()) // wtf is this?

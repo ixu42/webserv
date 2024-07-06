@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:11:26 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/06 01:51:13 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 11:48:40 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@
 #include <ctime>
 
 #include <utility> // For std::pair
+#include <stdint.h> // for uint8_t
 
 #include "ServerException.hpp"
 

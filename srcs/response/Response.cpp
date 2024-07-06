@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/05 18:19:15 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 03:10:07 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,6 +78,31 @@ static const std::map<std::string, std::string> mimeTypes = {
 // body
 // 200, 400, 403, 404, 405, 413, 500, 307
 
+Response::Response() {}
+
+Response::Response(int code, std::string filePath)
+{
+	auto [file, size] = Utility::readBinaryFile(filePath);
+	setStatus(std::to_string(code) + statusMessages.at(code));
+
+	setContentLength(size);
+
+    std::string fileContent(file.begin(), file.end());
+
+	size_t dotPos = filePath.find_last_of(".");
+
+	if (dotPos != std::string::npos && mimeTypes.find(filePath.substr(filePath.find_last_of(".") + 1)) != mimeTypes.end())
+	{
+		setType(mimeTypes.at(filePath.substr(filePath.find_last_of(".") + 1)));
+		setBody(fileContent);
+	}
+	else
+	{
+		setType(mimeTypes.at("default"));
+		setBody(fileContent);
+	}
+}
+
 std::string& Response::getBody()
 {
 	return _body;
@@ -96,6 +121,12 @@ std::string& Response::getType()
 bool& Response::getCGIflag()
 {
 	return _CGIflag;
+}
+
+
+int Response::getContentLength() const 
+{
+	return _contentLength;
 }
 
 void Response::setBody(std::string body)
@@ -118,6 +149,11 @@ void Response::setCGIflag(bool CGIflag)
 	_CGIflag = CGIflag;
 }
 
+void Response::setContentLength(int contentLength)
+{
+	_contentLength = contentLength;
+}
+
 void Response::appendToBody(char* data, std::size_t length)
 {
 	_body.append(data, length);
@@ -134,9 +170,12 @@ std::string Response::buildResponse(Response& response)
 	responseNew << "HTTP/1.1 " << response.getStatus() << "\r\n";
 	responseNew << Utility::getDate() << "\r\n";
 	responseNew << "Server: webserv" << "\r\n";
+	// if (response.getContentLength() == 0)
+	// 	response.setContentLength(response.getBody().size());
 	responseNew << "Content-Length: " << response.getBody().size() << "\r\n";
 	responseNew << "Content-Type: " << response.getType() << "\r\n";
 	responseNew << "\r\n";
-	responseNew << response.getBody() << "\r\n";
+	if (response.getBody().size() != 0)
+		responseNew << response.getBody() << "\r\n";
 	return responseNew.str();
 }

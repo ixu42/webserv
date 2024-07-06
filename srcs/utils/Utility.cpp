@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:11:23 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 19:40:56 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 02:23:33 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,6 @@ std::string Utility::replaceWhiteSpaces(std::string str, char newChar)
 	}
 	return str;
 }
-
 
 // Function to trim whitespace from both ends of a string
 std::string Utility::trim(std::string str)
@@ -111,4 +110,25 @@ std::string Utility::readLine(std::istream &stream)
 		line.pop_back();
 	}
 	return line;
+}
+
+std::pair<std::vector<uint8_t>, size_t> Utility::readBinaryFile(const std::string& filePath)
+{
+	// Open the file in binary mode at the end to get the file size
+	std::ifstream file(filePath, std::ios::binary | std::ios::ate);
+	if (!file) {
+		throw std::runtime_error("Could not open file: " + filePath);
+	}
+
+	// Get the size of the file
+	std::streamsize size = file.tellg();
+	file.seekg(0, std::ios::beg);
+
+	// Read the contents of the file into a vector
+	std::vector<uint8_t> buffer(size);
+	if (!file.read(reinterpret_cast<char*>(buffer.data()), size)) {
+		throw ResponseError(404);
+	}
+
+	return {buffer, static_cast<size_t>(size)};
 }

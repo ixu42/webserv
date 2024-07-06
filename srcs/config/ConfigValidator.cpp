@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:11 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 19:18:16 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 03:12:24 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,13 +135,13 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 		{"ipAddress", std::regex(R"(\s*ipAddress\s+((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}\s*)")},
 		{"port", std::regex(R"(\s*port\s+[0-9]+\s*)")},
 		{"serverName", std::regex(R"(\s*serverName\s+(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\s*)")},
-		{"clientMaxBodySize", std::regex(R"(\s*clientMaxBodySize\s+[1-9]+[0-9]*(T|G||M|K|B))")},
+		{"clientMaxBodySize", std::regex(R"(\s*clientMaxBodySize\s+[1-9]+[0-9]*(G|M|K|B))")},
 		{"error", std::regex(R"(\s*error\s+[4-5][0-9]{2}(?:,[4-5][0-9]{2})*\s+([^,\s]+(?:\.html|\.htm))\s*)")},
 		{"cgis",std::regex(cgiPatternStr)},
 	};
 
 	std::vector<std::string> oneAllowed = {"ipAddress", "port", "serverName", "clientMaxBodySize"};
-	std::vector<std::string> mandatoryFields = {"port", "serverName"};
+	std::vector<std::string> mandatoryFields = {"port"};
 
 	for (std::string& field : mandatoryFields)
 	{

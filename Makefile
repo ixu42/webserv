@@ -6,7 +6,7 @@
 #    By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/08 17:44:55 by ixu               #+#    #+#              #
-#    Updated: 2024/07/04 19:25:24 by vshchuki         ###   ########.fr        #
+#    Updated: 2024/07/06 02:32:22 by vshchuki         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -31,7 +31,7 @@ OBJS = $(addprefix $(OBJS_DIR), $(SRCS:.cpp=.o))
 
 # Compiler and flags
 COMPILER := c++
-FLAGS := -Wall -Wextra -Werror -Wshadow -std=c++17
+FLAGS := -Wall -Wextra -Werror -Wshadow -std=c++17 -g
 DEBUG_FLAGS := -DDEBUG_MODE
 
 # Color scheme for terminal output

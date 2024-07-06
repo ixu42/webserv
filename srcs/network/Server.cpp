@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/05 18:29:43 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 03:02:38 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,7 @@ int	Server::accepter()
 	std::cout << "\n=== CONNECTION ESTABLISHED WITH CLIENT (SOCKET FD: "
 				<< clientSockfd << ") ===\n";
 
-	_clients.push_back((t_client){clientSockfd, nullptr});
+	_clients.push_back((t_client){clientSockfd, nullptr, nullptr});
 	return clientSockfd;
 }
 
@@ -105,6 +105,39 @@ int findContentLength(std::string request)
 	return -1;
 }
 
+/* When headers and start line are read in receiveRequest, maxClientBodySize can be found */
+size_t Server::findMaxClientBodyBytes(Request request)
+{
+	 // 104857600 bytes; // = 100M
+
+	ServerConfig* serverConfig = findServerConfig(&request);
+	std::string sizeString = serverConfig->clientMaxBodySize;
+
+	// if (sizeString.empty())
+	// 	return 0;
+
+	// Parse the numeric part of the string
+	size_t multiplier = 1;
+	int numericValue = std::stoi(sizeString);
+
+	// Determine multiplier based on the suffix
+	char suffix = std::toupper(sizeString.back());
+	switch (suffix) {
+		case 'G':
+			multiplier *= 1024;
+		case 'M':
+			multiplier *= 1024;
+		case 'K':
+			multiplier *= 1024;
+		case 'B':
+			break;
+		default:
+			break;
+	}
+
+	return static_cast<std::size_t>(numericValue * multiplier);
+}
+
 Request* Server::receiveRequest(int clientSockfd)
 {
 	DEBUG("Server::receiveRequest called");
@@ -117,6 +150,8 @@ Request* Server::receiveRequest(int clientSockfd)
 
 	bool isHeadersRead = false;
 	std::size_t contentLengthNum = std::string::npos;
+
+	std::size_t maxClientBodyBytes = std::numeric_limits<std::size_t>::max();
 	while (1)
 	{
 		bytesRead = read(clientSockfd, buffer, bufferSize);
@@ -141,10 +176,19 @@ Request* Server::receiveRequest(int clientSockfd)
 			contentLengthNum = findContentLength(request);
 			if (contentLengthNum == std::string::npos)
 				break;
+
+			// Find maxClientBodySize
+			maxClientBodyBytes = findMaxClientBodyBytes(Request(request));
 		}
+
 		if (isHeadersRead && contentLengthNum != -std::string::npos)
 		{
-			if (request.length() - emptyLinePos - emptyLinesSize >= contentLengthNum)
+			size_t currRequestBodyBytes = request.length() - emptyLinePos - emptyLinesSize;
+
+			if (currRequestBodyBytes > maxClientBodyBytes)
+				throw ResponseError(407);
+
+			if (currRequestBodyBytes >= contentLengthNum)
 				break;
 		}
 	}
@@ -159,17 +203,27 @@ void	Server::handler(Server*& server, t_client& client)
 {
 	try 
 	{
-		Location* location = server->findLocation(client.request);
-		std::cout << TEXT_GREEN << "Location: " << location->path << RESET << std::endl;
+		client.request = server->receiveRequest(client.fd);
 	}
 	catch (ResponseError& e)
 	{
-		std::cerr << BG_RED << TEXT_WHITE << "Location not found: " << e.what() << ": " << e.getCode() << RESET << std::endl;
+		std::cerr << BG_RED << TEXT_WHITE << "Request can not be handled: " << e.what() << ": " << e.getCode() << RESET << std::endl;
+		client.response = new Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
 	}
 }
 
 void	Server::responder(t_client& client, Server &server)
 {
+	// If request was handled previously in handler (e.g. in receiveRequest)
+	// if (client.request)
+	// {
+	// 	std::string responseString = Response::buildResponse(*client.response);
+	// 	write(client.fd, responseString.c_str(), responseString.length());
+	// 	delete client.response;
+	// 	client.response = nullptr;
+	// 	return;
+	// }
+
 	DEBUG("Server::responder() called");
 	Response resp;
 	std::string response;
@@ -182,7 +236,7 @@ void	Server::responder(t_client& client, Server &server)
 	
 	if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
 	{
-		resp.setCGIflag(true);
+		// resp.setCGIflag(true); // wtf is this?
 		try {
 			CGIServer::handleCGI(*(client.request), server, resp);
 		} catch (const ServerException& e) {
@@ -194,17 +248,66 @@ void	Server::responder(t_client& client, Server &server)
 	}
 	else
 	{
-		if (resp.getStatus().empty())
+		try
 		{
-			CGIServer::setResponse(resp, "200 OK", "text/html", "pages/index.html");
+			Location* foundLocation = server.findLocation(client.request);
+			std::cout << TEXT_GREEN << "Location: " << foundLocation->path << RESET << std::endl;
+
+			// Handle redirect
+			if (foundLocation->redirect != "")
+			{
+				std::string redirectUrl = foundLocation->redirect;
+
+				size_t requestUriPos = foundLocation->redirect.find("$request_uri");
+
+				std::string pagePath = client.request->getStartLine()["path"];
+				pagePath.replace(0, foundLocation->path.length(), "");
+
+				redirectUrl = redirectUrl.substr(0, requestUriPos);
+
+				if (requestUriPos != std::string::npos)
+					redirectUrl.append(pagePath);
+
+				std::cout << "Redirect URL: " << redirectUrl << std::endl;
+				std::cout << "Page path: " << pagePath << std::endl;
+				response = "HTTP/1.1 307 Temporary Redirect\r\nServer: webserv\r\nLocation: " + redirectUrl + "\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
+			}
+			else
+			{
+
+				// Handle static files
+				try
+				{
+					std::string filePath = foundLocation->root + client.request->getStartLine()["path"].substr(1);
+					resp = Response(200, filePath);
+				}
+				catch (const ResponseError& e)
+				{
+					std::cerr << BG_RED << TEXT_WHITE << "Response error: " << e.what() << ": " << e.getCode() << RESET << std::endl;
+					// resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
+					resp = Response(500, "pages/500.html");
+				}
+			} 
+		}
+		catch (ResponseError& e)
+		{
+			std::cerr << BG_RED << TEXT_WHITE << "Response error: " << e.what() << ": " << e.getCode() << RESET << std::endl;
+			resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
+		}
+
+		// if (resp.getStatus().empty()) // wtf is this?
+		// {
+			// CGIServer::setResponse(resp, "200 OK", "text/html", "pages/index.html");
 			response = Response::buildResponse(resp);
 			write(client.fd, response.c_str(), response.length());
-		}
-		else
-		{
-			response = Response::buildResponse(resp);
-			write(client.fd, response.c_str(), response.length());
-		}
+
+			std::cout << TEXT_GREEN << response << RESET << std::endl;
+		// }
+		// else
+		// {
+		// 	response = Response::buildResponse(resp);
+		// 	write(client.fd, response.c_str(), response.length());
+		// }
 	}
 
 	delete client.request;
@@ -253,7 +356,7 @@ std::string Server::whoAmI() const
 	return _ipAddr + ":" + std::to_string(_port);
 }
 
-
+/** If no match found, the first config will be used */
 ServerConfig* Server::findServerConfig(Request* req)
 {
 	// If request host is an ip address:port or if the ip is not specified for current server, the first config for the server is used
@@ -278,7 +381,10 @@ ServerConfig* Server::findServerConfig(Request* req)
 		}
 	}
 
-	return nullptr;
+	if (_configs.empty())
+		throw ServerException("Program has no configs");
+
+	return &_configs[0];
 }
 
 

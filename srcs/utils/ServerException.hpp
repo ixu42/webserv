@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:43 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/05 17:55:16 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 02:29:23 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,5 +40,5 @@ class ResponseError: public ServerException
 
 	public:
 		ResponseError(int code);
-		int getCode();
+		int getCode() const;
 };

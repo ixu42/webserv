@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/05 17:31:11 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 00:53:23 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,8 @@ struct Pipe {
 #include <signal.h> // signal()
 #include <poll.h> // poll()
 #include <unistd.h> // read(), write(), close()
+
+#include <limits> // for max size_t
 
 class Server
 {
@@ -74,6 +76,7 @@ class Server
 		const std::string			getResponse();
 
 		ServerConfig*				findServerConfig(Request* req);
+		size_t						findMaxClientBodyBytes(Request request);
 };
 
 // #pragma once

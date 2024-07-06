@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/04 00:51:19 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/05 17:55:01 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/06 02:29:52 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ const char* ServerException::what() const noexcept
 
 ResponseError::ResponseError(int code) : ServerException("Response error"), _code(code) {}
 
-int ResponseError::getCode()
+int ResponseError::getCode() const
 {
 	return _code;
 }

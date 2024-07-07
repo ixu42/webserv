@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/07 17:19:53 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/07 18:09:05 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -226,42 +226,50 @@ void Server::sendResponse(std::string& response, t_client& client)
  * Creates dynamic body for Response using, current location and html template
  * html template should have 
  */
-Response Server::createDirListResponse(Location& location)
+Response Server::createDirListResponse(Location& location, std::string requestPath)
 {
+	std::string pathShortCode = "[path]";
+	std::string bodyShortCode = "[body]";
 	Response listingResponse = Response();
 	std::string fileString = Utility::readFile(location.defaultListingTemplate);
 	std::stringstream htmlStream;
-	std::string replaceString = "[directory-listing]";
+
 
 	try
 	{
+		htmlStream << "<ul>\n";
+		// int count = 0;
 		// Iterate over all the entries in the directory
-		htmlStream << "<ul>" << "\n";
-		int count = 0;
 		for (const auto& entry : std::filesystem::directory_iterator(location.root)) {
-			count++;
-			std::cout << "Couting lines: " << count << std::endl;
-			// Check if the entry is a regular file
+			// count++;
+			// std::cout << "Couting lines: " << count << std::endl;
 
+			// Check if the entry is a regular file
 			if (entry.is_regular_file()) {
 				std::string filename = entry.path().filename().string();
-				htmlStream << "<li><a href=\"" << filename << "\"/>" << filename << "</a><li>" << "\n";
+				htmlStream << "<li><a href=\"" << filename << "\">" << filename << "</a></li>\n";
 			}
 			// You can also check for directories, symlinks, etc., using similar methods
 			// For directories: if (entry.is_directory())
 			// For symlinks: if (entry.is_symlink())
 		}
-		htmlStream << "</ul>" << "\n";
+		htmlStream << "</ul>\n";
 	}
 	catch (const std::filesystem::filesystem_error& ex)
 	{
 		std::cerr << "Error accessing directory: " << ex.what() << "\n";
 		throw ResponseError(403);
 	}
-	size_t replaceStringPos = fileString.find(replaceString);
 
+	// Replace [body]
+	size_t replaceStringPos = fileString.find(bodyShortCode);
 	if (replaceStringPos != std::string::npos)
-		fileString.replace(replaceStringPos, replaceStringPos + replaceString.length(), htmlStream.str());
+		fileString.replace(replaceStringPos,  bodyShortCode.length(), htmlStream.str());
+
+	// Replace [title]
+	while ((replaceStringPos = fileString.find(pathShortCode)) != std::string::npos)
+		fileString.replace(replaceStringPos, pathShortCode.length(), requestPath);
+
 
 	listingResponse.setBody(fileString);
 	listingResponse.setTypeFromFormat("html");
@@ -340,11 +348,12 @@ void	Server::responder(t_client& client, Server &server)
 			else
 			{
 				/* Handle static files */
-				std::string filePath = foundLocation.root + client.request->getStartLine()["path"].substr(foundLocation.path.length());
+				std::string requestPath = client.request->getStartLine()["path"];
+				std::string filePath = foundLocation.root + requestPath.substr(foundLocation.path.length());
 				Response locationResp;
 
 				// If path ends with /, check for index file and directory listing, otherwise throw 403
-				if (client.request->getStartLine()["path"].back() == '/')
+				if (requestPath.back() == '/')
 				{
 					std::ifstream indexFile;
 					indexFile.open(filePath + foundLocation.index);
@@ -354,7 +363,7 @@ void	Server::responder(t_client& client, Server &server)
 						indexFile.close();
 					}
 					else if (foundLocation.directoryListing)
-						locationResp = createDirListResponse(foundLocation);
+						locationResp = createDirListResponse(foundLocation, requestPath);
 					else
 						throw ResponseError(403);
 				}

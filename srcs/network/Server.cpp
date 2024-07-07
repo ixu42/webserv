@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/06 19:25:22 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/07 14:55:28 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -214,6 +214,8 @@ void	Server::handler(Server*& server, t_client& client)
 
 void	Server::responder(t_client& client, Server &server)
 {
+	DEBUG("Server::responder() called");
+	
 	/* If response was handled previously in handler (e.g. in receiveRequest) */
 	if (client.response)
 	{
@@ -224,8 +226,6 @@ void	Server::responder(t_client& client, Server &server)
 		return;
 	}
 
-	DEBUG("Server::responder() called");
-	Response resp;
 	std::string response;
 	
 	// uncomment the following line for checking content of request
@@ -237,10 +237,24 @@ void	Server::responder(t_client& client, Server &server)
 	if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
 	{
 		// resp.setCGIflag(true); // wtf is this?
-		try {
-			CGIServer::handleCGI(*(client.request), server, resp);
-		} catch (const ServerException& e) {
-			std::cerr << BG_RED << e.what() << RESET_BG << std::endl;
+		try
+		{
+			client.response = new Response();
+			CGIServer::handleCGI(client, server);
+			std::cout << client.response->getBody() << std::endl;
+		}
+		catch (ResponseError& e)
+		{
+			delete client.response;
+			std::cerr << BG_RED << TEXT_WHITE << "Responder caught an error: " << e.what() << ": " << e.getCode() << RESET << std::endl;
+			client.response = new Response(e.getCode(), e.getHeaders());
+						// resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
+		}
+		catch (const std::exception& e)
+		{
+			delete client.response;
+			std::cerr << BG_RED << TEXT_WHITE << "Responder caught an exception: " << e.what() << RESET << std::endl;
+			client.response = new Response(500);
 		}
 		DEBUG("response: " << response);
 	}
@@ -285,7 +299,7 @@ void	Server::responder(t_client& client, Server &server)
 
 				std::cout << "Redirect URL: " << redirectUrl << std::endl;
 				std::cout << "Page path: " << pagePath << std::endl;
-				resp = Response(307, {{"Location", redirectUrl}});
+				client.response = new Response(307, {{"Location", redirectUrl}});
 			}
 			else
 			{
@@ -304,28 +318,31 @@ void	Server::responder(t_client& client, Server &server)
 					// TODO: 403 Forbidden on the directory without listing and without index!!
 				}
 
-				resp = Response(200, filePath);
+				client.response = new Response(200, filePath);
 			}
 		}
 		catch (ResponseError& e)
 		{
 			std::cerr << BG_RED << TEXT_WHITE << "Responder caught an error: " << e.what() << ": " << e.getCode() << RESET << std::endl;
-			resp = Response(e.getCode(), e.getHeaders());
+			client.response = new Response(e.getCode(), e.getHeaders());
 						// resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
 		}
 		catch (const std::exception& e)
 		{
 			std::cerr << BG_RED << TEXT_WHITE << "Responder caught an exception: " << e.what() << RESET << std::endl;
-			resp = Response(500);
+			client.response = new Response(500);
 		}
 	}
-
-	response = Response::buildResponse(resp);
+	
+	response = Response::buildResponse(*client.response);
+	std::cout << response;
 	write(client.fd, response.c_str(), response.length());
 
 	std::cout << TEXT_GREEN << response << RESET << std::endl;
 	delete client.request;
+	delete client.response;
 	client.request = nullptr;
+	client.response = nullptr;
 
 	// after writing, close the connection
 	close(client.fd);

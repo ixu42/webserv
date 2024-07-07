@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/07 02:28:02 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/07 17:19:53 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -222,13 +222,61 @@ void Server::sendResponse(std::string& response, t_client& client)
 	std::cout << TEXT_GREEN << "response.length(): " << response.length()  << RESET << std::endl;
 }
 
+/**
+ * Creates dynamic body for Response using, current location and html template
+ * html template should have 
+ */
+Response Server::createDirListResponse(Location& location)
+{
+	Response listingResponse = Response();
+	std::string fileString = Utility::readFile(location.defaultListingTemplate);
+	std::stringstream htmlStream;
+	std::string replaceString = "[directory-listing]";
+
+	try
+	{
+		// Iterate over all the entries in the directory
+		htmlStream << "<ul>" << "\n";
+		int count = 0;
+		for (const auto& entry : std::filesystem::directory_iterator(location.root)) {
+			count++;
+			std::cout << "Couting lines: " << count << std::endl;
+			// Check if the entry is a regular file
+
+			if (entry.is_regular_file()) {
+				std::string filename = entry.path().filename().string();
+				htmlStream << "<li><a href=\"" << filename << "\"/>" << filename << "</a><li>" << "\n";
+			}
+			// You can also check for directories, symlinks, etc., using similar methods
+			// For directories: if (entry.is_directory())
+			// For symlinks: if (entry.is_symlink())
+		}
+		htmlStream << "</ul>" << "\n";
+	}
+	catch (const std::filesystem::filesystem_error& ex)
+	{
+		std::cerr << "Error accessing directory: " << ex.what() << "\n";
+		throw ResponseError(403);
+	}
+	size_t replaceStringPos = fileString.find(replaceString);
+
+	if (replaceStringPos != std::string::npos)
+		fileString.replace(replaceStringPos, replaceStringPos + replaceString.length(), htmlStream.str());
+
+	listingResponse.setBody(fileString);
+	listingResponse.setTypeFromFormat("html");
+	listingResponse.setStatusFromCode(200);
+	return listingResponse;
+}
+
 void	Server::responder(t_client& client, Server &server)
 {
 	/* If response was handled previously in handler (e.g. in receiveRequest) */
 	if (client.response)
 	{
 		std::string responseString = Response::buildResponse(*client.response);
-		write(client.fd, responseString.c_str(), responseString.length());
+		// write(client.fd, responseString.c_str(), responseString.length());
+		sendResponse(responseString, client);
 		delete client.response;
 		client.response = nullptr;
 		return;
@@ -258,17 +306,15 @@ void	Server::responder(t_client& client, Server &server)
 	{
 		try
 		{
-			Location* foundLocation = server.findLocation(client.request);
-			std::cout << TEXT_GREEN << "Location: " << foundLocation->path << RESET << std::endl;
-
-			// std::cout << TEXT_GREEN << "Redirect found: " << foundLocation->redirect << RESET << std::endl;
+			Location foundLocation = server.findLocation(client.request);
+			std::cout << TEXT_GREEN << "Location: " << foundLocation.path << RESET << std::endl;
 
 			/* Check if method is allowed */
 			// client.request->printRequest();
-			if (!foundLocation->methods[Utility::strToLower(client.request->getStartLine()["method"])])
+			if (!foundLocation.methods[Utility::strToLower(client.request->getStartLine()["method"])])
 			{
 				std::string allowedMethods;
-				for (auto& [methodName, methodBool] : foundLocation->methods)
+				for (auto& [methodName, methodBool] : foundLocation.methods)
 				{
 					if (methodBool)
 						allowedMethods += allowedMethods.empty() ? methodName : ", " + methodName;
@@ -277,16 +323,12 @@ void	Server::responder(t_client& client, Server &server)
 			}
 
 			/* Handle redirect */
-			if (foundLocation->redirect != "")
+			if (foundLocation.redirect != "")
 			{
-				std::string redirectUrl = foundLocation->redirect;
-
-				size_t requestUriPos = foundLocation->redirect.find("$request_uri");
-
-				std::string pagePath = client.request->getStartLine()["path"];
-				pagePath.replace(0, foundLocation->path.length(), "");
-
-				redirectUrl = redirectUrl.substr(0, requestUriPos);
+			// std::cout << TEXT_GREEN << "Redirect found: " << foundLocation.redirect << RESET << std::endl;
+				size_t requestUriPos = foundLocation.redirect.find("$request_uri");
+				std::string redirectUrl = foundLocation.redirect.substr(0, requestUriPos);
+				std::string pagePath = client.request->getStartLine()["path"].substr(foundLocation.path.length());
 
 				if (requestUriPos != std::string::npos)
 					redirectUrl.append(pagePath);
@@ -298,29 +340,25 @@ void	Server::responder(t_client& client, Server &server)
 			else
 			{
 				/* Handle static files */
-				std::string filePath = foundLocation->root + client.request->getStartLine()["path"].substr(foundLocation->path.length());
+				std::string filePath = foundLocation.root + client.request->getStartLine()["path"].substr(foundLocation.path.length());
+				Response locationResp;
 
 				// If path ends with /, check for index file and directory listing, otherwise throw 403
 				if (client.request->getStartLine()["path"].back() == '/')
 				{
 					std::ifstream indexFile;
-					indexFile.open(filePath + foundLocation->index);
+					indexFile.open(filePath + foundLocation.index);
 					if (indexFile.is_open())
 					{
-						filePath += foundLocation->index;
+						filePath += foundLocation.index;
 						indexFile.close();
 					}
-					else if (foundLocation->directoryListing)
-					{
-						filePath = foundLocation->defaultListingTemplate;
-					}
+					else if (foundLocation.directoryListing)
+						locationResp = createDirListResponse(foundLocation);
 					else
-					{
 						throw ResponseError(403);
-					}
 				}
-
-				resp = Response(200, filePath);
+				resp = locationResp.getStatus().empty() ? Response(200, filePath) : locationResp; // Checks if location response was formed, otherwise creates Response from filePath
 			}
 		}
 		catch (ResponseError& e)
@@ -386,7 +424,8 @@ std::string Server::whoAmI() const
 ServerConfig* Server::findServerConfig(Request* req)
 {
 	// If request host is an ip address:port or if the ip is not specified for current server, the first config for the server is used
-
+	if(!req)
+		throw ResponseError(400);
 	if (req->getHeaders()["host"].empty())
 		throw ResponseError(400); // Bad request
 
@@ -422,9 +461,11 @@ ServerConfig* Server::findServerConfig(Request* req)
 }
 
 
-Location* Server::findLocation(Request* req)
+Location Server::findLocation(Request* req)
 {
 	std::cout << "== Finding server for current location ==" << std::endl;
+	if (!req)
+		throw ResponseError(400);
 
 	ServerConfig* namedServerConfig = findServerConfig(req);
 	// This block might be redundant as we always have a server config???
@@ -440,19 +481,19 @@ Location* Server::findLocation(Request* req)
 
 	std::cout << "== Server found. Finding location... ==" << std::endl;
 	// Find the longest matching location
-	Location* foundLocation = nullptr;
+	Location foundLocation;
 	size_t locationLength = 0;
 	std::string requestPath = req->getStartLine()["path"];
 
 	std::cout << "Let's find location for request path: " << requestPath << std::endl;
-	std::cout << "We have locations to check	: " << namedServerConfig->locations.size() << std::endl;
+	std::cout << "We have locations to check: " << namedServerConfig->locations.size() << std::endl;
 	for (Location& location : namedServerConfig->locations)
 	{
 		std::cout << "Path: " << location.path << " RequestPath: " << requestPath << std::endl;
 		if (location.path == requestPath)
 		{
 			std::cout << "Location found, perfect match: " << location.path << std::endl;
-			foundLocation = &location;
+			foundLocation = location;
 			break;
 		}
 		else if (requestPath.rfind(location.path, 0) == 0 && location.path[location.path.length() - 1] == '/')
@@ -461,7 +502,7 @@ Location* Server::findLocation(Request* req)
 			if (location.path.length() > locationLength)
 			{
 				locationLength = location.path.length();
-				foundLocation = &location;
+				foundLocation = location;
 			}
 		}
 
@@ -636,16 +677,16 @@ Server::Server(std::string ipAddress, int port)
 	// }
 	// else
 	// {
-	// 	std::cout << "Great this is your location: " << foundLocation->path << std::endl;
+	// 	std::cout << "Great this is your location: " << foundLocation.path << std::endl;
 	// 	// Handling redirect
-	// 	if (foundLocation->redirect != "")
+	// 	if (foundLocation.redirect != "")
 	// 	{
-	// 		std::string redirectUrl = foundLocation->redirect;
+	// 		std::string redirectUrl = foundLocation.redirect;
 
-	// 		size_t requestUriPos = foundLocation->redirect.find("$request_uri");
+	// 		size_t requestUriPos = foundLocation.redirect.find("$request_uri");
 
 	// 		std::string pagePath = req.getStartLine()["path"];
-	// 		pagePath.replace(0, foundLocation->path.length(), "");
+	// 		pagePath.replace(0, foundLocation.path.length(), "");
 
 	// 		redirectUrl = redirectUrl.substr(0, requestUriPos);
 

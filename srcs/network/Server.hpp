@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/07 02:28:08 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/07 16:40:26 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,8 @@ struct Pipe {
 
 #include <fstream> //open file
 
+#include <filesystem> // for createDirListResp()
+
 class Server
 {
 	private:
@@ -77,7 +79,9 @@ class Server
 
 		Request*					receiveRequest(int clientSockfd);
 		void						sendResponse(std::string& response, t_client& client);
-		Location*					findLocation(Request* req);
+		Location					findLocation(Request* req);
+
+		Response					createDirListResponse(Location& location);
 
 	private:
 		void						initServer(const char* ipAddr, int port);

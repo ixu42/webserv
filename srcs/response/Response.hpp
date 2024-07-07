@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:51 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/06 13:01:11 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/07 16:55:19 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,9 @@
 
 			void setBody(std::string body);
 			void setStatus(std::string status);
+			void setStatusFromCode(int code);
 			void setType(std::string type);
+			void setTypeFromFormat(std::string format);
 			void setCGIflag(bool CGIflag);
 			void setContentLength(int contentLength);
 			

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:20 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 14:47:42 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 15:36:26 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <list>
 #include <map>
 
 #include <sstream>
@@ -63,6 +64,7 @@ class Config
 {
 	private:
 		std::string											_configString;
+		std::list<std::string>								_serversConfigsMapKeys;
 		std::map<std::string, std::vector<ServerConfig>>	_serversConfigsMap; // map element example: {"127.0.0.1:8000", serverConfigs}
 
 		Config() = delete;
@@ -77,4 +79,5 @@ class Config
 		Config(std::string filePath);
 
 		std::map<std::string, std::vector<ServerConfig>>& getServersConfigsMap();
+		std::list<std::string>& getServersConfigsMapKeys();
 };

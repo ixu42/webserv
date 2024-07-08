@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 14:48:30 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 15:42:44 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,11 +30,12 @@ void Config::printConfig()
 {
 	LOG_DEBUG(TEXT_YELLOW, "=== Printing parsed config ===", RESET);
 	int i = 0;
-	for (auto& serversConfigs : _serversConfigsMap) // also should go through the map of configs
+	for (auto& key : _serversConfigsMapKeys) // also should go through the map of configs
 	{
+		std::vector<ServerConfig> serversConfigs = _serversConfigsMap[key];
 		int j = 0;
 		LOG_DEBUG(BG_YELLOW, TEXT_BLACK, TEXT_BOLD, "Server #", i, RESET);
-		for (ServerConfig server : serversConfigs.second)
+		for (ServerConfig server : serversConfigs)
 		{
 			LOG_DEBUG(TEXT_BOLD, TEXT_UNDERLINE, TEXT_YELLOW,"Named Server #", j, RESET);
 			LOG_DEBUG(TEXT_YELLOW, "\tipAddress: ", server.ipAddress, RESET);
@@ -231,7 +232,18 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 
 		parseLocations(serverConfig, locationStrings);
 		_serversConfigsMap[findIpPortKey(generalConfig)].push_back(serverConfig);
+		_serversConfigsMapKeys.push_back(findIpPortKey(generalConfig));
 		i++;
+	}
+	LOG_DEBUG("=== Server in map ===");
+	for (auto& key : _serversConfigsMapKeys)
+	{
+		auto& serverConfigs = _serversConfigsMap[key];
+		LOG_DEBUG("Server: ", key);
+		for (ServerConfig serverConfig : serverConfigs)
+		{
+			LOG_DEBUG("ServerName: ", serverConfig.serverName);
+		}
 	}
 }
 
@@ -285,4 +297,9 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 std::map<std::string, std::vector<ServerConfig>>& Config::getServersConfigsMap()
 {
 	return _serversConfigsMap;
+}
+
+std::list<std::string>& Config::getServersConfigsMapKeys()
+{
+	return _serversConfigsMapKeys;
 }

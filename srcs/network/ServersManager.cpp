@@ -3,7 +3,7 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
 /*   Updated: 2024/07/08 16:20:59 by ixu              ###   ########.fr       */
@@ -37,8 +37,12 @@ ServersManager::ServersManager()
 	// Add servers
 	LOG_DEBUG("ServersManager creating servers... Servers in config: ", _webservConfig->getServersConfigsMap().size());
 
-	for (auto& [ipPortKey, serverConfigs] : _webservConfig->getServersConfigsMap())
+	// iterate according to keys because map is ordered and we can not use unordered map as the order is not guaranteed
+	for (auto& key : _webservConfig->getServersConfigsMapKeys())
+
 	{
+		std::vector<ServerConfig> serverConfigs = _webservConfig->getServersConfigsMap()[key];
+
 		Server* foundServer = nullptr;
 		for (auto& server : _servers)
 		{

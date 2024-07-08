@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/07 16:57:04 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/08 16:51:18 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,7 +137,6 @@ bool& Response::getCGIflag()
 {
 	return _CGIflag;
 }
-
 
 int Response::getContentLength() const 
 {

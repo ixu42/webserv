@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:43 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/06 15:53:21 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/08 17:18:19 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@
 
 class ServerException : public std::exception
 {
-	private:
+	protected:
 		std::string _message;
 
 	public:
@@ -41,7 +41,7 @@ class ResponseError: public ServerException
 		std::map<std::string, std::string>	_headers;
 
 	public:
-		ResponseError(int code, std::map<std::string, std::string> optionalHeaders = {});
+		ResponseError(int code, std::map<std::string, std::string> optionalHeaders = {}, std::string message = "");
 		int 								getCode() const;
 		std::map<std::string, std::string>	getHeaders() const;
 };

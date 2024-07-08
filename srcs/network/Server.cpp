@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/08 14:48:02 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 18:08:47 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -420,6 +420,7 @@ void	Server::responder(t_client& client, Server &server)
 	response = Response::buildResponse(*client.response);
 
 	sendResponse(response, client);
+	// write(client.fd, response.c_str(), response.size());
 
 	delete client.request;
 	delete client.response;

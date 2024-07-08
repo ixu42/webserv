@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/08 14:48:02 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 17:13:51 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,6 +61,8 @@ Server::~Server()
 		close(client.fd);
 		if (client.request)
 			delete client.request;
+		if (client.response)
+			delete client.response;
 	}
 }
 
@@ -277,6 +279,7 @@ Response* Server::createDirListResponse(Location& location, std::string requestP
 	catch (const fs::filesystem_error& e)
 	{
 		LOG_ERROR("Error accessing directory: ", e.what());
+		delete listingResponse;
 		throw ResponseError(403);
 	}
 

@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/08 11:02:00 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/08 11:12:09 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -234,30 +234,49 @@ Response* Server::createDirListResponse(Location& location, std::string requestP
 	std::string fileString = Utility::readFile(location.defaultListingTemplate);
 	std::stringstream htmlStream;
 
+	// Find the root for requstPath
+	std::string root = location.root + requestPath.substr(location.path.length());
 
 	try
 	{
-		htmlStream << "<ul>\n";
-		// int count = 0;
+		htmlStream << "<div class=\"file-list\">\n";
+		htmlStream << "<div class=\"file-row\">\n";
+		htmlStream << "<div class=\"file-cell\"><a href=\"../\">../</a></div>\n";
+		htmlStream << "<div class=\"file-cell\"></div>\n";
+		htmlStream << "<div class=\"file-cell\"></div>\n";
+		htmlStream << "</div>\n";
 		// Iterate over all the entries in the directory
-		for (const auto& entry : std::filesystem::directory_iterator(location.root)) {
-			// count++;
-			// std::cout << "Couting lines: " << count << std::endl;
+		for (const auto& entry : fs::directory_iterator(root)) {
+			fs::path filePath = entry.path();
+			std::string fileName = filePath.filename().string();
 
-			// Check if the entry is a regular file
-			if (entry.is_regular_file()) {
-				std::string filename = entry.path().filename().string();
-				htmlStream << "<li><a href=\"" << filename << "\">" << filename << "</a></li>\n";
-			}
-			// You can also check for directories, symlinks, etc., using similar methods
-			// For directories: if (entry.is_directory())
-			// For symlinks: if (entry.is_symlink())
+			// Calculate last write time
+			auto ftime = fs::last_write_time(filePath);
+			auto sctp = std::chrono::time_point_cast<std::chrono::system_clock::duration>(ftime - fs::file_time_type::clock::now()
+					+ std::chrono::system_clock::now());
+			std::time_t cftime = std::chrono::system_clock::to_time_t(sctp);
+
+			htmlStream << "<div class=\"file-row\">\n";
+			// Output name
+			htmlStream << "<div class=\"file-cell name\"><a href=\"" << fileName;
+			if (entry.is_directory())
+				htmlStream << "/";
+			htmlStream << "\">" << fileName;
+			if (entry.is_directory())
+				htmlStream << "/"; 
+			htmlStream << "</a></div>\n";
+			// Output last write time
+			htmlStream << "<div class=\"file-cell date\">" << std::put_time(std::localtime(&cftime), "%d-%b-%Y %T") << "</div>";
+			// Output size
+			htmlStream << "<div class=\"file-cell size\">";
+			htmlStream << (!entry.is_directory() ? std::to_string(fs::file_size(filePath)) : "-");
+			htmlStream << "</div></div>\n";
 		}
-		htmlStream << "</ul>\n";
+		htmlStream << "</div>\n";
 	}
-	catch (const std::filesystem::filesystem_error& ex)
+	catch (const fs::filesystem_error& e)
 	{
-		std::cerr << "Error accessing directory: " << ex.what() << "\n";
+		std::cerr << "Error accessing directory: " << e.what() << "\n";
 		throw ResponseError(403);
 	}
 
@@ -265,7 +284,6 @@ Response* Server::createDirListResponse(Location& location, std::string requestP
 	size_t replaceStringPos = fileString.find(bodyShortCode);
 	if (replaceStringPos != std::string::npos)
 		fileString.replace(replaceStringPos,  bodyShortCode.length(), htmlStream.str());
-
 	// Replace [title]
 	while ((replaceStringPos = fileString.find(pathShortCode)) != std::string::npos)
 		fileString.replace(replaceStringPos, pathShortCode.length(), requestPath);
@@ -350,9 +368,9 @@ void	Server::responder(t_client& client, Server &server)
 			if (foundLocation.redirect != "")
 			{
 			// std::cout << TEXT_GREEN << "Redirect found: " << foundLocation.redirect << RESET << std::endl;
+				std::string pagePath = client.request->getStartLine()["path"].substr(foundLocation.path.length());
 				size_t requestUriPos = foundLocation.redirect.find("$request_uri");
 				std::string redirectUrl = foundLocation.redirect.substr(0, requestUriPos);
-				std::string pagePath = client.request->getStartLine()["path"].substr(foundLocation.path.length());
 
 				if (requestUriPos != std::string::npos)
 					redirectUrl.append(pagePath);
@@ -378,7 +396,7 @@ void	Server::responder(t_client& client, Server &server)
 						filePath += foundLocation.index;
 						indexFile.close();
 					}
-					else if (foundLocation.directoryListing)
+					else if (foundLocation.autoindex)
 						locationResp = createDirListResponse(foundLocation, requestPath);
 					else
 						throw ResponseError(403);

@@ -6,11 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2024/07/07 17:52:19 by vshchuki         ###   ########.fr       */
-=======
-/*   Updated: 2024/07/08 10:45:19 by dnikifor         ###   ########.fr       */
->>>>>>> nikkxll/cgi-refactor
+/*   Updated: 2024/07/08 11:12:18 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +44,9 @@ struct Pipe {
 #include <fstream> //open file
 
 #include <filesystem> // for createDirListResp()
+#include <chrono> // for createDirListResp()
+
+namespace fs = std::filesystem;
 
 class Server
 {

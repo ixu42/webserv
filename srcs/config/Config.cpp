@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/07 02:06:36 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/07 23:13:23 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,7 @@ void Config::printConfig()
 				std::cout << "\t\tredirect: " << location.redirect << std::endl;
 				std::cout << "\t\troot: " << location.root << std::endl;
 				std::cout << "\t\tuploadPath: " << location.uploadPath << std::endl;
-				std::cout << "\t\tdirectoryListing: " << std::boolalpha << location.directoryListing << std::endl;
+				std::cout << "\t\tautoindex: " << std::boolalpha << location.autoindex << std::endl;
 				std::cout << "\t\tindex: " << location.index << std::endl;
 				for (auto& method : location.methods)
 				{
@@ -270,8 +270,8 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 					serverConfig.locations[j].root = value;
 				else if (key == "uploadPath")
 					serverConfig.locations[j].uploadPath = value;
-				else if (key == "directoryListing" && value == "on")
-						serverConfig.locations[j].directoryListing = true;
+				else if (key == "autoindex" && value == "on")
+						serverConfig.locations[j].autoindex = true;
 				else if (key == "index")
 						serverConfig.locations[j].index = value;
 				else if (key == "methods")

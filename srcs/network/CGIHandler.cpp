@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/08 11:59:16 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 13:22:54 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,7 +129,6 @@ void CGIServer::handleParentProcess(Server& server, Response* response, const st
 		throw ResponseError(500);
 	}
 	close(server.getPipe().output[IN]);
-	std::cout<<response->getBody()<<std::endl;
 }
 
 void CGIServer::handleProcesses(t_client& client, Server& server,
@@ -157,5 +156,4 @@ void CGIServer::handleProcesses(t_client& client, Server& server,
 		handleParentProcess(server, client.response, client.request->getStartLine()["method"], client.request->getBody());
 		waitpid(pid, nullptr, 0);
 	}
-	std::cout<<client.response->getBody()<<std::endl;
 }

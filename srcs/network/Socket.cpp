@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:46 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/08 10:45:16 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 12:47:39 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,7 +138,7 @@ bool	Socket::isValidSocketFd()
 
 void	Socket::printError(const std::string& msg)
 {
-	std::cerr << msg << strerror(errno) << std::endl;
+	LOG_DEBUG(msg, strerror(errno));
 	if (isValidSocketFd())
 		close(_sockfd);
 }

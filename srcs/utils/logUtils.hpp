@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/13 11:05:45 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/05 19:38:04 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 13:50:23 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@
  * messages at INFO, WARNING, ERROR levels are displayed on terminal.
  * 
  * Usage:
- * LOG_DEBUG(arg_1, arg_2 ... arg_8); up to 8 args separated by comma are accepted. 
+ * LOG_DEBUG(arg_1, arg_2 ... arg_9); up to 9 args separated by comma are accepted. 
  * LOG_INFO(arg_1, arg_2 ... arg_n); no limitation on the number of arguments passed 
  * to LOG_INFO(), LOG_WARNING(), LOG_ERROR().
  * Simple data types or objects can be passed as args, not function template such as std::endl
@@ -36,7 +36,7 @@ void LogDebug(Args... args)
 	std::ostringstream oss;
 	// Fold expression to concatenate all arguments
 	(oss << ... << args);
-	std::cerr << "[DEBUG]: " << oss.str() << std::endl;
+	std::cerr << "[DEBUG] " << oss.str() << std::endl;
 }
 
 template<typename... Args>
@@ -44,7 +44,7 @@ void LogDebugMultiline(Args... args)
 {
 	std::ostringstream oss;
 	(oss << ... << args);
-	std::cerr << "[DEBUG]: " << std::endl << oss.str() << std::endl;
+	std::cerr << "[DEBUG] " << std::endl << oss.str() << std::endl;
 }
 
 template<typename... Args>
@@ -68,7 +68,7 @@ void LogWarning(Args... args)
 {
 	std::ostringstream oss;
 	(oss << ... << args);
-	std::cout << TEXT_YELLOW << "[WARNING] " << oss.str() << RESET << std::endl;
+	std::cout << TEXT_BRIGHT_YELLOW << "[WARNING] " << oss.str() << RESET << std::endl;
 }
 
 template<typename... Args>
@@ -91,11 +91,12 @@ void LogError(Args... args)
 #define APPLY_6(func, a, b, c, d, e, f) func(a); func(b); func(c); func(d), func(e), func(f)
 #define APPLY_7(func, a, b, c, d, e, f, g) func(a); func(b); func(c); func(d), func(e), func(f), func(g)
 #define APPLY_8(func, a, b, c, d, e, f, g, h) func(a); func(b); func(c); func(d), func(e), func(f), func(g), func(h)
-// Current implementation accepts 8 args passed to variadic macros such as LOG_DEBUG(). Add more as needed
+#define APPLY_9(func, a, b, c, d, e, f, g, h, i) func(a); func(b); func(c); func(d), func(e), func(f), func(g), func(h), func(i)
+// Current implementation accepts 9 args passed to variadic macros such as LOG_DEBUG(). Add more as needed
 
 // Helper macros to count the number of arguments
-#define GET_MACRO(_1, _2, _3, _4, _5, _6, _7, _8, NAME, ...) NAME
-#define APPLY_TO_EACH(func, ...) GET_MACRO(__VA_ARGS__, APPLY_8, APPLY_7, APPLY_6, APPLY_5, APPLY_4, APPLY_3, APPLY_2, APPLY_1)(func, __VA_ARGS__)
+#define GET_MACRO(_1, _2, _3, _4, _5, _6, _7, _8, _9, NAME, ...) NAME
+#define APPLY_TO_EACH(func, ...) GET_MACRO(__VA_ARGS__, APPLY_9, APPLY_8, APPLY_7, APPLY_6, APPLY_5, APPLY_4, APPLY_3, APPLY_2, APPLY_1)(func, __VA_ARGS__)
 
 #ifdef DEBUG_MODE
 	// Macros for printing contextual info mostly used for problem diagnosis
@@ -111,12 +112,9 @@ void LogError(Args... args)
 
 // Macro for printing key info for tracing program execution in a production environment
 #define LOG_INFO(...) LogInfo(__VA_ARGS__);
-// #define LOG_INFO(...) std::cout << TEXT_CYAN << "[INFO] " << __VA_ARGS__ << RESET << std::endl;
 
 // Macro for printing a warning message indicating a potential issue in the system
-#define LOG_WARNING(...) Log_Warning(__VA_ARGS__);
-// #define LOG_WARNING(...) std::cout << TEXT_YELLOW << "[WARNING] " << __VA_ARGS__ << RESET << std::endl;
+#define LOG_WARNING(...) LogWarning(__VA_ARGS__);
 
 // Macro for printing an error message indicating an error has occurred
 #define LOG_ERROR(...) LogError(__VA_ARGS__);
-// #define LOG_ERROR(...) std::cout << TEXT_RED << "[ERROR] " << __VA_ARGS__ << RESET << std::endl;

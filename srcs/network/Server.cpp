@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/08 12:01:23 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 13:51:39 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,8 +25,9 @@ void	Server::initServer(const char* ipAddr, int port)
 	_hints.ai_socktype = SOCK_STREAM;
 	_hints.ai_flags = AI_PASSIVE;			// For wildcard IP address	
 	int status = getaddrinfo(nullptr, std::to_string(port).c_str(), &_hints, &_res);
-	if (status != 0) {
-		std::cerr << "getaddrinfo error: " << gai_strerror(status) << std::endl;
+	if (status != 0)
+	{
+		LOG_DEBUG("getaddrinfo error: ", gai_strerror(status));
 		throw ServerException("getaddrinfo error");
 	}
 
@@ -71,7 +72,7 @@ int	Server::accepter()
 	int clientSockfd = _serverSocket.acceptConnection(clientAddr);
 	if (clientSockfd == -1)
 		return -1;
-	LOG_INFO("Connection established with client (socket fd: ", clientSockfd, ").");
+	LOG_INFO("Connection established with client (socket fd: ", clientSockfd, ")");
 
 	_clients.push_back((t_client){clientSockfd, nullptr, nullptr});
 	return clientSockfd;
@@ -182,7 +183,7 @@ Request* Server::receiveRequest(int clientSockfd)
 		}
 	}
 
-	LOG_INFO("Request read.");
+	LOG_INFO("Request read");
 	LOG_DEBUG_MULTILINE(TEXT_YELLOW, request, RESET);
 
 	return new Request(request);
@@ -196,7 +197,7 @@ void	Server::handler(Server*& server, t_client& client)
 	}
 	catch (ResponseError& e)
 	{
-		std::cerr << BG_RED << TEXT_WHITE << "Request can not be handled: " << e.what() << ": " << e.getCode() << RESET << std::endl;
+		LOG_ERROR("Request can not be handled: ", e.what(), ": ", e.getCode());
 	}
 }
 
@@ -216,9 +217,9 @@ void Server::sendResponse(std::string& response, t_client& client)
 		else {
 			totalBytesWritten += bytesWritten;
 		}
-		std::cout << TEXT_GREEN << "Bytes written: " << bytesWritten  << RESET << std::endl;
+		LOG_DEBUG(TEXT_GREEN, "Bytes written: ", bytesWritten, RESET);
 	}
-	std::cout << TEXT_GREEN << "response.length(): " << response.length()  << RESET << std::endl;
+	LOG_DEBUG(TEXT_GREEN, "response.length(): ", response.length(), RESET);
 }
 
 /**
@@ -256,7 +257,7 @@ Response* Server::createDirListResponse(Location& location, std::string requestP
 	}
 	catch (const std::filesystem::filesystem_error& ex)
 	{
-		std::cerr << "Error accessing directory: " << ex.what() << "\n";
+		LOG_ERROR("Error accessing directory: ", ex.what());
 		throw ResponseError(403);
 	}
 
@@ -308,19 +309,18 @@ void	Server::responder(t_client& client, Server &server)
 		{
 			client.response = new Response();
 			CGIServer::handleCGI(client, server);
-			std::cout << client.response->getBody() << std::endl;
 		}
 		catch (ResponseError& e)
 		{
 			delete client.response;
-			std::cerr << BG_RED << TEXT_WHITE << "Responder caught an error: " << e.what() << ": " << e.getCode() << RESET << std::endl;
+			LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
 			client.response = new Response(e.getCode(), e.getHeaders());
 						// resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
 		}
 		catch (const std::exception& e)
 		{
 			delete client.response;
-			std::cerr << BG_RED << TEXT_WHITE << "Responder caught an exception: " << e.what() << RESET << std::endl;
+			LOG_ERROR("Responder caught an exception: ", e.what());
 			client.response = new Response(500);
 		}
 	}
@@ -329,7 +329,7 @@ void	Server::responder(t_client& client, Server &server)
 		try
 		{
 			Location foundLocation = server.findLocation(client.request);
-			std::cout << TEXT_GREEN << "Location: " << foundLocation.path << RESET << std::endl;
+			LOG_DEBUG(TEXT_GREEN, "Location: ", foundLocation.path, RESET);
 
 			/* Check if method is allowed */
 			// client.request->printRequest();
@@ -355,8 +355,8 @@ void	Server::responder(t_client& client, Server &server)
 				if (requestUriPos != std::string::npos)
 					redirectUrl.append(pagePath);
 
-				std::cout << "Redirect URL: " << redirectUrl << std::endl;
-				std::cout << "Page path: " << pagePath << std::	endl;
+				LOG_DEBUG("Redirect URL: ", redirectUrl);
+				LOG_DEBUG("Page path: ", pagePath);
 				client.response = new Response(307, {{"Location", redirectUrl}});
 			}
 			else
@@ -387,14 +387,14 @@ void	Server::responder(t_client& client, Server &server)
 		catch (ResponseError& e)
 		{
 			delete client.response;
-			std::cerr << BG_RED << TEXT_WHITE << "Responder caught an error: " << e.what() << ": " << e.getCode() << RESET << std::endl;
+			LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
 			client.response = new Response(e.getCode(), e.getHeaders());
 						// resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
 		}
 		catch (const std::exception& e)
 		{
 			delete client.response;
-			std::cerr << BG_RED << TEXT_WHITE << "Responder caught an exception: " << e.what() << RESET << std::endl;
+			LOG_ERROR("Responder caught an exception: ", e.what());
 			client.response = new Response(500);
 		}
 	}
@@ -413,7 +413,7 @@ void	Server::responder(t_client& client, Server &server)
 	removeFromClients(client);
 
 	LOG_DEBUG("response: ", response);
-	LOG_INFO("Response sent and connection closed (socket fd: ", client.fd, ").");
+	LOG_INFO("Response sent and connection closed (socket fd: ", client.fd, ")");
 }
 
 void	Server::removeFromClients(t_client& client)
@@ -490,7 +490,7 @@ ServerConfig* Server::findServerConfig(Request* req)
 
 Location Server::findLocation(Request* req)
 {
-	std::cout << "== Finding server for current location ==" << std::endl;
+	LOG_INFO("Searching for server for current location...");
 	if (!req)
 		throw ResponseError(400);
 
@@ -502,30 +502,30 @@ Location Server::findLocation(Request* req)
 	}
 	if (namedServerConfig->locations.empty())
 	{
-		std::cerr << "No locations found for server: " << whoAmI() << std::endl;
+		LOG_ERROR("No locations found for server: ", whoAmI());
 		throw ResponseError(404);
 	}
 
-	std::cout << "== Server found. Finding location... ==" << std::endl;
+	LOG_INFO("Server found. Searching for location...");
 	// Find the longest matching location
 	Location foundLocation;
 	size_t locationLength = 0;
 	std::string requestPath = req->getStartLine()["path"];
 
-	std::cout << "Let's find location for request path: " << requestPath << std::endl;
-	std::cout << "We have locations to check: " << namedServerConfig->locations.size() << std::endl;
+	LOG_INFO("Let's find location for request path: ", requestPath);
+	LOG_INFO("We have locations to check: ", namedServerConfig->locations.size());
 	for (Location& location : namedServerConfig->locations)
 	{
-		std::cout << "Path: " << location.path << " RequestPath: " << requestPath << std::endl;
+		LOG_INFO("Path: ", location.path, " RequestPath: ", requestPath);
 		if (location.path == requestPath)
 		{
-			std::cout << "Location found, perfect match: " << location.path << std::endl;
+			LOG_INFO("Location found, perfect match: ", location.path);
 			foundLocation = location;
 			break;
 		}
 		else if (requestPath.rfind(location.path, 0) == 0 && location.path[location.path.length() - 1] == '/')
 		{
-			std::cout << "Location found: " << location.path << std::endl;
+			LOG_INFO("Location found: ", location.path);
 			if (location.path.length() > locationLength)
 			{
 				locationLength = location.path.length();

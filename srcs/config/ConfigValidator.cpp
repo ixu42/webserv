@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:11 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 11:34:21 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 12:46:07 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@ int ConfigValidator::validateSeverNamePerIpPort(std::vector<std::string> serverS
 		}
 		if (serverName == currServerName && port == currPort && ipAddress == currIpAddress)
 		{
-			std::cout << "Config not valid: " << TEXT_RED << "Server name " << serverName << " is not unique for " << currIpAddress << ":" << currPort << RESET << std::endl;
+			LOG_DEBUG("Config not valid: ", TEXT_RED, "Server name ", serverName, " is not unique for ", currIpAddress, ":", currPort, RESET);
 			return 1;
 		}
 	}
@@ -110,7 +110,7 @@ int ConfigValidator::validateMandatoryFields(std::string str,
 	{
 		if (countMatchInRegex(str, patterns[field]) == 0)
 		{
-			std::cout << "Line not valid: " << TEXT_RED << "Location should have at least 1 " << field << RESET << std::endl;
+			LOG_DEBUG("Line not valid: ", TEXT_RED, "Location should have at least 1 ", field, RESET);
 			stringErrorsCount++;
 		}
 	}
@@ -180,7 +180,7 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 				if (it != oneAllowed.end() && countMatchInRegex(generalConfig, patterns[pattern.first]) > 1)
 				{
 					// std::cout << "Match found for repeating field" << std::endl;
-					std::cout << "Line not valid: " << TEXT_RED << line << RESET << std::endl;
+					LOG_DEBUG("Line not valid: ", TEXT_RED, line, RESET);
 					errorCaught = 1;
 					generalConfigErrorsCount++;
 					break;

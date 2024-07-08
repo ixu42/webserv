@@ -3,24 +3,25 @@
 /*                                                        :::      ::::::::   */
 /*   Colors.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:28 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/01 19:08:29 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/08 13:44:06 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 // Text color macros
-#define TEXT_BLACK   "\033[30m"
-#define TEXT_RED     "\033[31m"
-#define TEXT_GREEN   "\033[32m"
-#define TEXT_YELLOW  "\033[33m"
-#define TEXT_BLUE    "\033[34m"
-#define TEXT_MAGENTA "\033[35m"
-#define TEXT_CYAN    "\033[36m"
-#define TEXT_WHITE   "\033[37m"
+#define TEXT_BLACK         "\033[30m"
+#define TEXT_RED           "\033[31m"
+#define TEXT_GREEN         "\033[32m"
+#define TEXT_YELLOW        "\033[33m"
+#define TEXT_BLUE          "\033[34m"
+#define TEXT_MAGENTA       "\033[35m"
+#define TEXT_CYAN          "\033[36m"
+#define TEXT_WHITE         "\033[37m"
+#define TEXT_BRIGHT_YELLOW "\033[0;93m"
 
 // Background color macros
 #define BG_BLACK   "\033[40m"

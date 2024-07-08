@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 12:06:17 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 13:33:22 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,7 @@ ServersManager::ServersManager()
 			}
 			catch (const std::exception& e)
 			{
-				LOG_ERROR("Failed to launch server: ", e.what());
+				LOG_DEBUG("Failed to launch server: ", e.what());
 			}
 		}
 		if (foundServer)
@@ -75,7 +75,7 @@ ServersManager::ServersManager()
 		LOG_ERROR("No valid servers");
 		std::exit(EXIT_FAILURE);
 	}
-	LOG_INFO("ServersManager created ", _servers.size(), " servers.");
+	LOG_INFO("ServersManager created ", _servers.size(), " servers");
 }
 
 ServersManager::~ServersManager()

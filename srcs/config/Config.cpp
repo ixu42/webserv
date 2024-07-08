@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 11:33:01 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 12:46:30 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,10 +69,11 @@ void Config::printConfig()
 
 std::vector<std::string> Config::filterOutInvalidServerStrings(std::vector<std::string> serverStrings)
 {
+	int j = 0;
 	// for (std::string server : serverStrings)
 	for (size_t i = 0; i < serverStrings.size();)
 	{
-		std::cout << "Filtering server #" << i << std::endl;
+		LOG_DEBUG("Filtering server #", i);
 		std::string generalConfig;
 		if (serverStrings[i].empty())
 		{
@@ -100,11 +101,13 @@ std::vector<std::string> Config::filterOutInvalidServerStrings(std::vector<std::
 		if (configErrorsFound != 0)
 		{
 			// decrease servers vector because config is faulty
-			std::cout << "This server config has " << configErrorsFound << " config errors and will be ignored" << std::endl;
+			LOG_WARNING("Server config (server #", j, ") has ", configErrorsFound, " config errors and will be ignored");
 			// _servers.resize(_servers.size() - 1);
 			serverStrings.erase(serverStrings.begin() + i);
+			j++;
 			continue;
 		}
+		j++;
 		i++;
 	}
 	return serverStrings;
@@ -157,7 +160,7 @@ void Config::parse()
 
 	parseServers(serverStrings);
 
-	LOG_INFO("Config file parsed.");
+	LOG_INFO("Config file parsed");
 }
 
 void Config::parseServers(std::vector<std::string> serverStrings)

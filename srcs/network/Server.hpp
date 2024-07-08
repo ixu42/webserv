@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/08 14:48:13 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 17:01:56 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,7 +89,9 @@ class Server
 	private:
 		void						initServer(const char* ipAddr, int port);
 		void						removeFromClients(t_client& client);
-		const std::string			getResponse();
+		bool						formRequestErrorResponse(t_client& client);
+		bool						formCGIConfigAbsenceResponse(t_client& client, Server &server);
+		void						handleCGIResponse(t_client& client, Server &server);
 
 		ServerConfig*				findServerConfig(Request* req);
 		size_t						findMaxClientBodyBytes(Request request);

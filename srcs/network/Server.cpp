@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/08 16:51:33 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/08 17:02:21 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -295,11 +295,8 @@ Response* Server::createDirListResponse(Location& location, std::string requestP
 	return listingResponse;
 }
 
-void	Server::responder(t_client& client, Server &server)
+bool	Server::formRequestErrorResponse(t_client& client)
 {
-	LOG_DEBUG("Server::responder() called");
-
-	/* If response was handled previously in handler (e.g. in receiveRequest) */
 	if (client.response)
 	{
 		std::string responseString = Response::buildResponse(*client.response);
@@ -308,16 +305,16 @@ void	Server::responder(t_client& client, Server &server)
 		client.response = nullptr;
 		close(client.fd);
 		removeFromClients(client);
-		return;
+		return true;
 	}
 	
-	// uncomment the following line for checking content of request
-	client.request->printRequest();
+	return false;
+}
 
-	// replace writing a dummy response by the actual response
-	// request obj can be accessed by e.g. client.request->
-	
-	if (!server.findServerConfig(client.request)->cgis["php"] && !server.findServerConfig(client.request)->cgis["py"])
+bool	Server::formCGIConfigAbsenceResponse(t_client& client, Server &server)
+{
+	if (!server.findServerConfig(client.request)->cgis["php"]
+		&& !server.findServerConfig(client.request)->cgis["py"])
 	{
 		client.response = new Response(404);
 		std::string responseString = Response::buildResponse(*client.response);
@@ -326,29 +323,93 @@ void	Server::responder(t_client& client, Server &server)
 		client.response = nullptr;
 		close(client.fd);
 		removeFromClients(client);
-		return;
+		return true;
 	}
+	
+	return false;
+}
+
+void	Server::handleCGIResponse(t_client& client, Server &server)
+{
+	try
+	{
+		client.response = new Response();
+		CGIServer::handleCGI(client, server);
+	}
+	catch (ResponseError& e)
+	{
+		delete client.response;
+		LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
+		client.response = new Response(e.getCode(), e.getHeaders());
+					// resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
+	}
+	catch (const std::exception& e)
+	{
+		delete client.response;
+		LOG_ERROR("Responder caught an exception: ", e.what());
+		client.response = new Response(500);
+	}
+}
+
+void	Server::responder(t_client& client, Server &server)
+{
+	LOG_DEBUG("Server::responder() called");
+
+	/* If response was handled previously in handler (e.g. in receiveRequest) */
+	// if (client.response)
+	// {
+	// 	std::string responseString = Response::buildResponse(*client.response);
+	// 	sendResponse(responseString, client);
+	// 	delete client.response;
+	// 	client.response = nullptr;
+	// 	close(client.fd);
+	// 	removeFromClients(client);
+	// 	return;
+	// }
+
+	if (formRequestErrorResponse(client)) return;
+	
+	// uncomment the following line for checking content of request
+	client.request->printRequest();
+
+	// replace writing a dummy response by the actual response
+	// request obj can be accessed by e.g. client.request->
+	
+	if (formCGIConfigAbsenceResponse(client, server)) return;
+
+	// if (!server.findServerConfig(client.request)->cgis["php"] && !server.findServerConfig(client.request)->cgis["py"])
+	// {
+	// 	client.response = new Response(404);
+	// 	std::string responseString = Response::buildResponse(*client.response);
+	// 	sendResponse(responseString, client);
+	// 	delete client.response;
+	// 	client.response = nullptr;
+	// 	close(client.fd);
+	// 	removeFromClients(client);
+	// 	return;
+	// }
 	
 	if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
 	{
-		try
-		{
-			client.response = new Response();
-			CGIServer::handleCGI(client, server);
-		}
-		catch (ResponseError& e)
-		{
-			delete client.response;
-			LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
-			client.response = new Response(e.getCode(), e.getHeaders());
-						// resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
-		}
-		catch (const std::exception& e)
-		{
-			delete client.response;
-			LOG_ERROR("Responder caught an exception: ", e.what());
-			client.response = new Response(500);
-		}
+		handleCGIResponse(client, server);
+		// try
+		// {
+		// 	client.response = new Response();
+		// 	CGIServer::handleCGI(client, server);
+		// }
+		// catch (ResponseError& e)
+		// {
+		// 	delete client.response;
+		// 	LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
+		// 	client.response = new Response(e.getCode(), e.getHeaders());
+		// 				// resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
+		// }
+		// catch (const std::exception& e)
+		// {
+		// 	delete client.response;
+		// 	LOG_ERROR("Responder caught an exception: ", e.what());
+		// 	client.response = new Response(500);
+		// }
 	}
 	else
 	{

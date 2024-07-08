@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/06 21:55:46 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/08 11:02:23 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,8 @@ ServersManager::ServersManager()
 	signal(SIGQUIT, ServersManager::signalHandler); /* ctrl + \ */
 
 	// Add servers
-	int i = 0;
+	// int i = 0;
+	// for (std::pair<const std::string, ServerConfig>& serverConfigPair : _webservConfig->getServersConfigsMap())
 
 	std::cout << "ServersManager creating servers... Servers in config: " << _webservConfig->getServersConfigsMap().size() << std::endl;
 	for (auto& [ipPortKey, serverConfigs] : _webservConfig->getServersConfigsMap())
@@ -61,7 +62,7 @@ ServersManager::ServersManager()
 			foundServer->setConfig(serverConfigs);
 
 		// std::cout << "Server config and location: " << servers[i]->getConfig()->locations[0].path << std::endl;
-		i++;
+		// i++;
 	}
 
 	// Add all server fds to pollfd vector

@@ -3,10 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
+<<<<<<< HEAD
 /*   Updated: 2024/07/07 17:52:19 by vshchuki         ###   ########.fr       */
+=======
+/*   Updated: 2024/07/08 10:45:19 by dnikifor         ###   ########.fr       */
+>>>>>>> nikkxll/cgi-refactor
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,7 +85,7 @@ class Server
 		void						sendResponse(std::string& response, t_client& client);
 		Location					findLocation(Request* req);
 
-		Response					createDirListResponse(Location& location, std::string requestPath);
+		Response*					createDirListResponse(Location& location, std::string requestPath);
 
 	private:
 		void						initServer(const char* ipAddr, int port);

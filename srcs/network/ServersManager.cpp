@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 11:38:10 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 12:06:17 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ ServersManager::ServersManager()
 
 	// Add servers
 	LOG_DEBUG("ServersManager creating servers... Servers in config: ", _webservConfig->getServersConfigsMap().size());
+
 	for (auto& [ipPortKey, serverConfigs] : _webservConfig->getServersConfigsMap())
 	{
 		Server* foundServer = nullptr;

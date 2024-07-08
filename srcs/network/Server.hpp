@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/08 10:45:46 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 12:05:20 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,7 +81,7 @@ class Server
 		void						sendResponse(std::string& response, t_client& client);
 		Location					findLocation(Request* req);
 
-		Response					createDirListResponse(Location& location, std::string requestPath);
+		Response*					createDirListResponse(Location& location, std::string requestPath);
 
 	private:
 		void						initServer(const char* ipAddr, int port);

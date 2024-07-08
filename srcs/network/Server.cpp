@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/08 11:09:04 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 12:01:23 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -225,11 +225,11 @@ void Server::sendResponse(std::string& response, t_client& client)
  * Creates dynamic body for Response using, current location and html template
  * html template should have 
  */
-Response Server::createDirListResponse(Location& location, std::string requestPath)
+Response* Server::createDirListResponse(Location& location, std::string requestPath)
 {
 	std::string pathShortCode = "[path]";
 	std::string bodyShortCode = "[body]";
-	Response listingResponse = Response();
+	Response* listingResponse = new Response();
 	std::string fileString = Utility::readFile(location.defaultListingTemplate);
 	std::stringstream htmlStream;
 
@@ -270,9 +270,9 @@ Response Server::createDirListResponse(Location& location, std::string requestPa
 		fileString.replace(replaceStringPos, pathShortCode.length(), requestPath);
 
 
-	listingResponse.setBody(fileString);
-	listingResponse.setTypeFromFormat("html");
-	listingResponse.setStatusFromCode(200);
+	listingResponse->setBody(fileString);
+	listingResponse->setTypeFromFormat("html");
+	listingResponse->setStatusFromCode(200);
 	return listingResponse;
 }
 
@@ -288,10 +288,11 @@ void	Server::responder(t_client& client, Server &server)
 		sendResponse(responseString, client);
 		delete client.response;
 		client.response = nullptr;
+		close(client.fd);
+		removeFromClients(client);
 		return;
 	}
 
-	Response resp;
 	std::string response;
 	
 	// uncomment the following line for checking content of request
@@ -303,10 +304,24 @@ void	Server::responder(t_client& client, Server &server)
 	if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
 	{
 		// resp.setCGIflag(true); // wtf is this?
-		try {
-			CGIServer::handleCGI(*(client.request), server, resp);
-		} catch (const ServerException& e) {
-			std::cerr << BG_RED << e.what() << RESET_BG << std::endl;
+		try
+		{
+			client.response = new Response();
+			CGIServer::handleCGI(client, server);
+			std::cout << client.response->getBody() << std::endl;
+		}
+		catch (ResponseError& e)
+		{
+			delete client.response;
+			std::cerr << BG_RED << TEXT_WHITE << "Responder caught an error: " << e.what() << ": " << e.getCode() << RESET << std::endl;
+			client.response = new Response(e.getCode(), e.getHeaders());
+						// resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
+		}
+		catch (const std::exception& e)
+		{
+			delete client.response;
+			std::cerr << BG_RED << TEXT_WHITE << "Responder caught an exception: " << e.what() << RESET << std::endl;
+			client.response = new Response(500);
 		}
 	}
 	else
@@ -341,15 +356,15 @@ void	Server::responder(t_client& client, Server &server)
 					redirectUrl.append(pagePath);
 
 				std::cout << "Redirect URL: " << redirectUrl << std::endl;
-				std::cout << "Page path: " << pagePath << std::endl;
-				resp = Response(307, {{"Location", redirectUrl}});
+				std::cout << "Page path: " << pagePath << std::	endl;
+				client.response = new Response(307, {{"Location", redirectUrl}});
 			}
 			else
 			{
 				/* Handle static files */
 				std::string requestPath = client.request->getStartLine()["path"];
 				std::string filePath = foundLocation.root + requestPath.substr(foundLocation.path.length());
-				Response locationResp;
+				Response* locationResp = nullptr;
 
 				// If path ends with /, check for index file and directory listing, otherwise throw 403
 				if (requestPath.back() == '/')
@@ -366,28 +381,32 @@ void	Server::responder(t_client& client, Server &server)
 					else
 						throw ResponseError(403);
 				}
-				resp = locationResp.getStatus().empty() ? Response(200, filePath) : locationResp; // Checks if location response was formed, otherwise creates Response from filePath
+				client.response = !locationResp ? new Response(200, filePath) : locationResp; // Checks if location response was formed, otherwise creates Response from filePath
 			}
 		}
 		catch (ResponseError& e)
 		{
+			delete client.response;
 			std::cerr << BG_RED << TEXT_WHITE << "Responder caught an error: " << e.what() << ": " << e.getCode() << RESET << std::endl;
-			resp = Response(e.getCode(), e.getHeaders());
+			client.response = new Response(e.getCode(), e.getHeaders());
 						// resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
 		}
 		catch (const std::exception& e)
 		{
+			delete client.response;
 			std::cerr << BG_RED << TEXT_WHITE << "Responder caught an exception: " << e.what() << RESET << std::endl;
-			resp = Response(500);
+			client.response = new Response(500);
 		}
 	}
 
-	response = Response::buildResponse(resp);
+	response = Response::buildResponse(*client.response);
 
 	sendResponse(response, client);
 
 	delete client.request;
+	delete client.response;
 	client.request = nullptr;
+	client.response = nullptr;
 
 	// after writing, close the connection
 	close(client.fd);

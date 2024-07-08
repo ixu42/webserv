@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/07 13:57:35 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/08 10:49:38 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,20 +19,16 @@ Config* ServersManager::_webservConfig;
 void ServersManager::signalHandler(int signal)
 {
 	std::cout << std::endl << "Signal " << signal << " received." << std::endl;
-
-	// Handle cleanup tasks or other actions here
-	
-	// ServersManager::getInstance()->poll_fds.clear();
 	delete _instance;
-	// servers.clear();
-
 	std::exit(signal); // Exit the program with the received signal as exit code
 }
 
 ServersManager::ServersManager()
 {
 	// Handle ctrl+c
-	signal(SIGINT, ServersManager::signalHandler);
+	signal(SIGINT, ServersManager::signalHandler); /* ctrl + c */
+	signal(SIGTSTP, ServersManager::signalHandler); /* ctrl + z */
+	signal(SIGQUIT, ServersManager::signalHandler); /* ctrl + \ */
 
 	// Add servers
 	// int i = 0;
@@ -64,8 +60,6 @@ ServersManager::ServersManager()
 		}
 		if (foundServer)
 			foundServer->setConfig(serverConfigs);
-
-
 
 		// std::cout << "Server config and location: " << servers[i]->getConfig()->locations[0].path << std::endl;
 		// i++;

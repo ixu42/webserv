@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/06 19:26:54 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/07 16:57:04 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,7 @@ Response::Response() {}
 */
 Response::Response(int code, std::map<std::string, std::string> optionalHeaders)
 {
-	setStatus(std::to_string(code) + " " + statusMessages.at(code));
+	setStatusFromCode(code);
 	if (optionalHeaders.size() > 0)
 		_headers.insert(optionalHeaders.begin(), optionalHeaders.end());
 
@@ -98,7 +98,7 @@ Response::Response(int code, std::map<std::string, std::string> optionalHeaders)
 Response::Response(int code, std::string filePath)
 {
 	auto [file, size] = Utility::readBinaryFile(filePath);
-	setStatus(std::to_string(code) + " " + statusMessages.at(code));
+	setStatusFromCode(code);
 
 	setContentLength(size);
 
@@ -154,9 +154,26 @@ void Response::setStatus(std::string status)
 	_status = status;
 }
 
+void Response::setStatusFromCode(int code)
+{
+	_status = std::to_string(code) + " " + statusMessages.at(code);
+}
+
 void Response::setType(std::string type)
 {
 	_type = type;
+}
+
+void Response::setTypeFromFormat(std::string format)
+{
+	try
+	{
+		_type = mimeTypes.at(format);
+	}
+	catch (const std::exception& e)
+	{
+		_type = mimeTypes.at("default");
+	}
 }
 
 void Response::setCGIflag(bool CGIflag)
@@ -185,6 +202,7 @@ std::string Response::buildResponse(Response& response)
 	responseNew << "HTTP/1.1 " << response.getStatus() << "\r\n";
 	responseNew << "Date: " << Utility::getDate() << "\r\n";
 	responseNew << "Server: webserv" << "\r\n";
+	responseNew << "Connection: close" << "\r\n";
 	// if (response.getContentLength() == 0)
 	// 	response.setContentLength(response.getBody().size());
 	responseNew << "Content-Length: " << response.getBody().size() << "\r\n";

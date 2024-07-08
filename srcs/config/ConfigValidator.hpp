@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:16 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/04 19:24:15 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/07 01:29:25 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,5 +39,8 @@ class ConfigValidator
 		static int							validateSeverNamePerIpPort(std::vector<std::string> serverStrings, size_t i, std::map<std::string, std::regex> patterns);
 		static int							validateLocationConfig(std::string locationString);
 		static int							countMatchInRegex(std::string str, std::regex pattern);
+		static int							validateMandatoryFields(std::string str,
+																	std::vector<std::string> mandatoryFields,
+																	std::map<std::string, std::regex> patterns);
 		static std::pair<std::string, int>	contructCgiString();
 };

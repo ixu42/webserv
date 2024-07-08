@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:11 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/06 03:12:24 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/07 01:30:46 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ int ConfigValidator::checkUnique(std::string line)
 }
 
 /**
- * pattern1 matches the line and pattern2
+ * pattern1 matches the line and pattern2 is to check if line is valid
  * Returns 1 if line is not valid
 */
 int ConfigValidator::matchLinePattern(std::string& line, std::string field, std::regex pattern2)
@@ -99,6 +99,22 @@ int ConfigValidator::countMatchInRegex(std::string str, std::regex pattern)
 	auto words_end = std::sregex_iterator();
 
 	return std::distance(words_begin, words_end);
+}
+int ConfigValidator::validateMandatoryFields(std::string str,
+											std::vector<std::string> mandatoryFields,
+											std::map<std::string, std::regex> patterns)
+{
+	int stringErrorsCount = 0;
+
+	for (std::string& field : mandatoryFields)
+	{
+		if (countMatchInRegex(str, patterns[field]) == 0)
+		{
+			std::cout << "Line not valid: " << TEXT_RED << "Location should have at least 1 " << field << RESET << std::endl;
+			stringErrorsCount++;
+		}
+	}
+	return stringErrorsCount;
 }
 
 // Cgi pattern is constructed from cgis map default keys
@@ -143,15 +159,8 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 	std::vector<std::string> oneAllowed = {"ipAddress", "port", "serverName", "clientMaxBodySize"};
 	std::vector<std::string> mandatoryFields = {"port"};
 
-	for (std::string& field : mandatoryFields)
-	{
-		if (countMatchInRegex(generalConfig, patterns[field]) == 0)
-		{
-			std::cout << "Line not valid: " << TEXT_RED << "Config should have at least 1 " << field << RESET << std::endl;
-			generalConfigErrorsCount++;
-		}
-	}
 
+	generalConfigErrorsCount += validateMandatoryFields(generalConfig, mandatoryFields, patterns);
 	generalConfigErrorsCount += validateSeverNamePerIpPort(serverStrings, i, patterns);
 
 	std::istringstream stream(generalConfig); 
@@ -229,10 +238,14 @@ int ConfigValidator::validateLocationConfig(std::string locationString)
 	};
 
 	int locationStringErrorsCount = 0;
+	std::vector<std::string> mandatoryFields = {"path"};
+
+
+	std::cout << "Let's validate location..." << std::endl;
+	validateMandatoryFields(locationString, mandatoryFields, patterns);
 
 	std::istringstream stream(locationString); 
 	std::string line;
-	std::cout << "Let's validate location..." << std::endl;
 	while (std::getline(stream, line))
 	{
 		int errorCaught = 0;

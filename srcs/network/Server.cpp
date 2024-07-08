@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/08 17:02:21 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/08 19:30:43 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ void	Server::initServer(const char* ipAddr, int port)
 	memset(&_hints, 0, sizeof(_hints));
 	_hints.ai_family = AF_INET;			 	// Use AF_INET6 for IPv6
 	_hints.ai_socktype = SOCK_STREAM;
-	_hints.ai_flags = AI_PASSIVE;			// For wildcard IP address	
+	_hints.ai_flags = AI_PASSIVE;			// For wildcard IP address
 	int status = getaddrinfo(nullptr, std::to_string(port).c_str(), &_hints, &_res);
 	if (status != 0)
 	{
@@ -222,6 +222,48 @@ void Server::sendResponse(std::string& response, t_client& client)
 	LOG_DEBUG(TEXT_GREEN, "response.length(): ", response.length(), RESET);
 }
 
+std::stringstream Server::generateDirectoryListingHtml(const std::string& root)
+{
+	std::stringstream htmlStream;
+	
+	htmlStream << "<div class=\"file-list\">\n";
+	htmlStream << "<div class=\"file-row\">\n";
+	htmlStream << "<div class=\"file-cell\"><a href=\"../\">../</a></div>\n";
+	htmlStream << "<div class=\"file-cell\"></div>\n";
+	htmlStream << "<div class=\"file-cell\"></div>\n";
+	htmlStream << "</div>\n";
+	// Iterate over all the entries in the directory
+	for (const auto& entry : fs::directory_iterator(root)) {
+		fs::path filePath = entry.path();
+		std::string fileName = filePath.filename().string();
+
+		// Calculate last write time
+		auto ftime = fs::last_write_time(filePath);
+		auto sctp = std::chrono::time_point_cast<std::chrono::system_clock::duration>(ftime - fs::file_time_type::clock::now()
+				+ std::chrono::system_clock::now());
+		std::time_t cftime = std::chrono::system_clock::to_time_t(sctp);
+
+		htmlStream << "<div class=\"file-row\">\n";
+		// Output name
+		htmlStream << "<div class=\"file-cell name\"><a href=\"" << fileName;
+		if (entry.is_directory())
+			htmlStream << "/";
+		htmlStream << "\">" << fileName;
+		if (entry.is_directory())
+			htmlStream << "/"; 
+		htmlStream << "</a></div>\n";
+		// Output last write time
+		htmlStream << "<div class=\"file-cell date\">" << std::put_time(std::localtime(&cftime), "%d-%b-%Y %T") << "</div>";
+		// Output size
+		htmlStream << "<div class=\"file-cell size\">";
+		htmlStream << (!entry.is_directory() ? std::to_string(fs::file_size(filePath)) : "-");
+		htmlStream << "</div></div>\n";
+	}
+	htmlStream << "</div>\n";
+	
+	return htmlStream;
+}
+
 /**
  * Creates dynamic body for Response using, current location and html template
  * html template should have 
@@ -239,40 +281,7 @@ Response* Server::createDirListResponse(Location& location, std::string requestP
 
 	try
 	{
-		htmlStream << "<div class=\"file-list\">\n";
-		htmlStream << "<div class=\"file-row\">\n";
-		htmlStream << "<div class=\"file-cell\"><a href=\"../\">../</a></div>\n";
-		htmlStream << "<div class=\"file-cell\"></div>\n";
-		htmlStream << "<div class=\"file-cell\"></div>\n";
-		htmlStream << "</div>\n";
-		// Iterate over all the entries in the directory
-		for (const auto& entry : fs::directory_iterator(root)) {
-			fs::path filePath = entry.path();
-			std::string fileName = filePath.filename().string();
-
-			// Calculate last write time
-			auto ftime = fs::last_write_time(filePath);
-			auto sctp = std::chrono::time_point_cast<std::chrono::system_clock::duration>(ftime - fs::file_time_type::clock::now()
-					+ std::chrono::system_clock::now());
-			std::time_t cftime = std::chrono::system_clock::to_time_t(sctp);
-
-			htmlStream << "<div class=\"file-row\">\n";
-			// Output name
-			htmlStream << "<div class=\"file-cell name\"><a href=\"" << fileName;
-			if (entry.is_directory())
-				htmlStream << "/";
-			htmlStream << "\">" << fileName;
-			if (entry.is_directory())
-				htmlStream << "/"; 
-			htmlStream << "</a></div>\n";
-			// Output last write time
-			htmlStream << "<div class=\"file-cell date\">" << std::put_time(std::localtime(&cftime), "%d-%b-%Y %T") << "</div>";
-			// Output size
-			htmlStream << "<div class=\"file-cell size\">";
-			htmlStream << (!entry.is_directory() ? std::to_string(fs::file_size(filePath)) : "-");
-			htmlStream << "</div></div>\n";
-		}
-		htmlStream << "</div>\n";
+		htmlStream = generateDirectoryListingHtml(root);
 	}
 	catch (const fs::filesystem_error& e)
 	{
@@ -288,10 +297,10 @@ Response* Server::createDirListResponse(Location& location, std::string requestP
 	while ((replaceStringPos = fileString.find(pathShortCode)) != std::string::npos)
 		fileString.replace(replaceStringPos, pathShortCode.length(), requestPath);
 
-
 	listingResponse->setBody(fileString);
 	listingResponse->setTypeFromFormat("html");
 	listingResponse->setStatusFromCode(200);
+
 	return listingResponse;
 }
 
@@ -314,7 +323,8 @@ bool	Server::formRequestErrorResponse(t_client& client)
 bool	Server::formCGIConfigAbsenceResponse(t_client& client, Server &server)
 {
 	if (!server.findServerConfig(client.request)->cgis["php"]
-		&& !server.findServerConfig(client.request)->cgis["py"])
+		&& !server.findServerConfig(client.request)->cgis["py"]
+		&& client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
 	{
 		client.response = new Response(404);
 		std::string responseString = Response::buildResponse(*client.response);
@@ -341,7 +351,7 @@ void	Server::handleCGIResponse(t_client& client, Server &server)
 		delete client.response;
 		LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
 		client.response = new Response(e.getCode(), e.getHeaders());
-					// resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
+		// resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
 	}
 	catch (const std::exception& e)
 	{
@@ -351,141 +361,97 @@ void	Server::handleCGIResponse(t_client& client, Server &server)
 	}
 }
 
-void	Server::responder(t_client& client, Server &server)
+void	Server::handleNonCGIResponse(t_client& client, Server &server)
 {
-	LOG_DEBUG("Server::responder() called");
-
-	/* If response was handled previously in handler (e.g. in receiveRequest) */
-	// if (client.response)
-	// {
-	// 	std::string responseString = Response::buildResponse(*client.response);
-	// 	sendResponse(responseString, client);
-	// 	delete client.response;
-	// 	client.response = nullptr;
-	// 	close(client.fd);
-	// 	removeFromClients(client);
-	// 	return;
-	// }
-
-	if (formRequestErrorResponse(client)) return;
-	
-	// uncomment the following line for checking content of request
-	client.request->printRequest();
-
-	// replace writing a dummy response by the actual response
-	// request obj can be accessed by e.g. client.request->
-	
-	if (formCGIConfigAbsenceResponse(client, server)) return;
-
-	// if (!server.findServerConfig(client.request)->cgis["php"] && !server.findServerConfig(client.request)->cgis["py"])
-	// {
-	// 	client.response = new Response(404);
-	// 	std::string responseString = Response::buildResponse(*client.response);
-	// 	sendResponse(responseString, client);
-	// 	delete client.response;
-	// 	client.response = nullptr;
-	// 	close(client.fd);
-	// 	removeFromClients(client);
-	// 	return;
-	// }
-	
-	if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
+	try
 	{
-		handleCGIResponse(client, server);
-		// try
-		// {
-		// 	client.response = new Response();
-		// 	CGIServer::handleCGI(client, server);
-		// }
-		// catch (ResponseError& e)
-		// {
-		// 	delete client.response;
-		// 	LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
-		// 	client.response = new Response(e.getCode(), e.getHeaders());
-		// 				// resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
-		// }
-		// catch (const std::exception& e)
-		// {
-		// 	delete client.response;
-		// 	LOG_ERROR("Responder caught an exception: ", e.what());
-		// 	client.response = new Response(500);
-		// }
-	}
-	else
-	{
-		try
+		Location foundLocation = server.findLocation(client.request);
+		LOG_DEBUG(TEXT_GREEN, "Location: ", foundLocation.path, RESET);
+
+		/* Check if method is allowed */
+		// client.request->printRequest();
+		
+		checkIfAllowed(client, foundLocation);
+		if (foundLocation.redirect != "")
 		{
-			Location foundLocation = server.findLocation(client.request);
-			LOG_DEBUG(TEXT_GREEN, "Location: ", foundLocation.path, RESET);
-
-			/* Check if method is allowed */
-			// client.request->printRequest();
-			if (!foundLocation.methods[Utility::strToLower(client.request->getStartLine()["method"])])
-			{
-				std::string allowedMethods;
-				for (auto& [methodName, methodBool] : foundLocation.methods)
-				{
-					if (methodBool)
-						allowedMethods += allowedMethods.empty() ? methodName : ", " + methodName;
-				}
-				throw ResponseError(405, {{"Allowed", allowedMethods}});
-			}
-
-			/* Handle redirect */
-			if (foundLocation.redirect != "")
-			{
-			// std::cout << TEXT_GREEN << "Redirect found: " << foundLocation.redirect << RESET << std::endl;
-				std::string pagePath = client.request->getStartLine()["path"].substr(foundLocation.path.length());
-				size_t requestUriPos = foundLocation.redirect.find("$request_uri");
-				std::string redirectUrl = foundLocation.redirect.substr(0, requestUriPos);
-
-				if (requestUriPos != std::string::npos)
-					redirectUrl.append(pagePath);
-
-				LOG_DEBUG("Redirect URL: ", redirectUrl);
-				LOG_DEBUG("Page path: ", pagePath);
-				client.response = new Response(307, {{"Location", redirectUrl}});
-			}
-			else
-			{
-				/* Handle static files */
-				std::string requestPath = client.request->getStartLine()["path"];
-				std::string filePath = foundLocation.root + requestPath.substr(foundLocation.path.length());
-				Response* locationResp = nullptr;
-
-				// If path ends with /, check for index file and directory listing, otherwise throw 403
-				if (requestPath.back() == '/')
-				{
-					std::ifstream indexFile;
-					indexFile.open(filePath + foundLocation.index);
-					if (indexFile.is_open())
-					{
-						filePath += foundLocation.index;
-						indexFile.close();
-					}
-					else if (foundLocation.autoindex)
-						locationResp = createDirListResponse(foundLocation, requestPath);
-					else
-						throw ResponseError(403);
-				}
-				client.response = !locationResp ? new Response(200, filePath) : locationResp; // Checks if location response was formed, otherwise creates Response from filePath
-			}
+			handleRedirect(client, foundLocation);
 		}
-		catch (ResponseError& e)
+		else
 		{
-			delete client.response;
-			LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
-			client.response = new Response(e.getCode(), e.getHeaders());
-						// resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
-		}
-		catch (const std::exception& e)
-		{
-			delete client.response;
-			LOG_ERROR("Responder caught an exception: ", e.what());
-			client.response = new Response(500);
+			handleStaticFiles(client, foundLocation);
 		}
 	}
+	catch (ResponseError& e)
+	{
+		delete client.response;
+		LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
+		client.response = new Response(e.getCode(), e.getHeaders());
+		// resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
+	}
+	catch (const std::exception& e)
+	{
+		delete client.response;
+		LOG_ERROR("Responder caught an exception: ", e.what());
+		client.response = new Response(500);
+	}
+}
 
+void	Server::checkIfAllowed(t_client& client, Location& foundLocation)
+{
+	if (!foundLocation.methods[Utility::strToLower(client.request->getStartLine()["method"])])
+	{
+		std::string allowedMethods;
+		for (auto& [methodName, methodBool] : foundLocation.methods)
+		{
+			if (methodBool)
+				allowedMethods += allowedMethods.empty() ? methodName : ", " + methodName;
+		}
+		throw ResponseError(405, {{"Allowed", allowedMethods}});
+	}
+}
+
+void	Server::handleRedirect(t_client& client, Location& foundLocation)
+{
+	std::string pagePath = client.request->getStartLine()["path"].substr(foundLocation.path.length());
+	size_t requestUriPos = foundLocation.redirect.find("$request_uri");
+	std::string redirectUrl = foundLocation.redirect.substr(0, requestUriPos);
+
+	if (requestUriPos != std::string::npos)
+		redirectUrl.append(pagePath);
+
+	LOG_DEBUG("Redirect URL: ", redirectUrl);
+	LOG_DEBUG("Page path: ", pagePath);
+	client.response = new Response(307, {{"Location", redirectUrl}});
+}
+
+void	Server::handleStaticFiles(t_client& client, Location& foundLocation)
+{
+	std::string requestPath = client.request->getStartLine()["path"];
+	std::string filePath = foundLocation.root + requestPath.substr(foundLocation.path.length());
+	Response* locationResp = nullptr;
+
+	// If path ends with /, check for index file and directory listing, otherwise throw 403
+	if (requestPath.back() == '/')
+	{
+		std::ifstream indexFile;
+		indexFile.open(filePath + foundLocation.index);
+		if (indexFile.is_open())
+		{
+			filePath += foundLocation.index;
+			indexFile.close();
+		}
+		else if (foundLocation.autoindex)
+			locationResp = createDirListResponse(foundLocation, requestPath);
+		else
+			throw ResponseError(403);
+	}
+	
+	// Checks if location response was formed, otherwise creates Response from filePath
+	client.response = !locationResp ? new Response(200, filePath) : locationResp; 
+}
+
+void	Server::finalizeResponse(t_client& client)
+{
 	std::string response = Response::buildResponse(*client.response);
 
 	sendResponse(response, client);
@@ -495,11 +461,34 @@ void	Server::responder(t_client& client, Server &server)
 	client.request = nullptr;
 	client.response = nullptr;
 
-	// after writing, close the connection
 	close(client.fd);
 	removeFromClients(client);
 
 	LOG_DEBUG("response: ", response);
+}
+
+void	Server::responder(t_client& client, Server &server)
+{
+	LOG_DEBUG("Server::responder() called");
+
+	if (formRequestErrorResponse(client)) return;
+	client.request->printRequest();
+
+	// replace writing a dummy response by the actual response
+	// request obj can be accessed by e.g. client.request->
+	
+	if (formCGIConfigAbsenceResponse(client, server)) return;
+	
+	if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
+	{
+		handleCGIResponse(client, server);
+	}
+	else
+	{
+		handleNonCGIResponse(client, server);
+	}
+	finalizeResponse(client);
+
 	LOG_INFO("Response sent and connection closed (socket fd: ", client.fd, ")");
 }
 

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 13:18:46 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/08 15:37:06 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,12 @@ Config* ServersManager::_webservConfig;
 
 void ServersManager::signalHandler(int signal)
 {
-	std::cout << std::endl << "Signal " << signal << " received." << std::endl;
+	std::cout << TEXT_MAGENTA << "\n[INFO] Shutting down the server(s)..." << RESET << std::endl;
+	LOG_DEBUG("Signal ", signal, " received.");
+
+	// Handle cleanup tasks or other actions here
+	
+	// ServersManager::getInstance()->poll_fds.clear();
 	delete _instance;
 	std::exit(signal); // Exit the program with the received signal as exit code
 }
@@ -31,13 +36,11 @@ ServersManager::ServersManager()
 	signal(SIGQUIT, ServersManager::signalHandler); /* ctrl + \ */
 
 	// Add servers
-	// int i = 0;
-	// for (std::pair<const std::string, ServerConfig>& serverConfigPair : _webservConfig->getServersConfigsMap())
-
-	std::cout << "ServersManager creating servers... Servers in config: " << _webservConfig->getServersConfigsMap().size() << std::endl;
+	LOG_DEBUG("ServersManager creating servers... Servers in config: ", _webservConfig->getServersConfigsMap().size());
 
 	// iterate according to keys because map is ordered and we can not use unordered map as the order is not guaranteed
 	for (auto& key : _webservConfig->getServersConfigsMapKeys())
+
 	{
 		std::vector<ServerConfig> serverConfigs = _webservConfig->getServersConfigsMap()[key];
 
@@ -57,16 +60,13 @@ ServersManager::ServersManager()
 				_servers.push_back(new Server(serverConfigs[0].ipAddress.c_str(), serverConfigs[0].port));
 				foundServer = _servers.back();
 			}
-			catch (const std::exception& e){
-				std::cerr << BG_RED << TEXT_WHITE;
-				std::cerr << "Failed to launch server: " << e.what() << RESET << std::endl;
+			catch (const std::exception& e)
+			{
+				LOG_DEBUG("Failed to launch server: ", e.what());
 			}
 		}
 		if (foundServer)
 			foundServer->setConfig(serverConfigs);
-
-		// std::cout << "Server config and location: " << servers[i]->getConfig()->locations[0].path << std::endl;
-		// i++;
 	}
 
 	// Add all server fds to pollfd vector
@@ -76,15 +76,15 @@ ServersManager::ServersManager()
 	if (_servers.empty())
 	{
 		delete _instance;
-		std::cout << "No valid servers" << std::endl;
+		LOG_ERROR("No valid servers");
 		std::exit(EXIT_FAILURE);
 	}
-	std::cout << "ServersManager created " << _servers.size() << " servers" << std::endl;
+	LOG_INFO("ServersManager created ", _servers.size(), " servers");
 }
 
 ServersManager::~ServersManager()
 {
-	std::cout << _servers.size() << " servers will be deleted" << std::endl;
+	LOG_DEBUG(_servers.size(), " server(s) will be deleted");
 	for (Server *server : _servers)
 	{
 		delete server;
@@ -111,7 +111,7 @@ void ServersManager::run()
 {
 	while (true)
 	{
-		DEBUG("poll() waiting for an fd to be ready...");
+		LOG_DEBUG("poll() waiting for an fd to be ready...");
 		int ready = poll(_fds.data(), _fds.size(), -1);
 		if (ready == -1)
 			throw ServerException("poll() error");
@@ -151,6 +151,7 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 		{
 			if (pfdReadyForRead.fd == client.fd)
 			{
+				// client.request = server->receiveRequest(pfdReadyForRead.fd);
 				server->handler(server, client);
 				pfdReadyForRead.events = POLLOUT;
 				fdFound = true;

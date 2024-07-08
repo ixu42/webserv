@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:46 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/06 22:51:08 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/08 12:47:39 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,12 @@
 
 Socket::Socket() : _sockfd(-1)
 {
-	DEBUG("Socket constructor called");
+	LOG_DEBUG("Socket constructor called");
 }
 
 Socket::~Socket()
 {
-	DEBUG("Socket destructor called");
+	LOG_DEBUG("Socket destructor called");
 
 	if (isValidSocketFd())
 		close(_sockfd);
@@ -27,7 +27,7 @@ Socket::~Socket()
 
 bool	Socket::create()
 {
-	DEBUG("Socket::create() called");
+	LOG_DEBUG("Socket::create() called");
 
 	_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (!isValidSocketFd())
@@ -40,7 +40,7 @@ bool	Socket::create()
 
 bool	Socket::bindAddress(struct addrinfo* res)
 {
-	DEBUG("Socket::bindAddress() called");
+	LOG_DEBUG("Socket::bindAddress() called");
 
 	if (!isValidSocketFd())
 		return false;
@@ -84,7 +84,7 @@ bool	Socket::bindAddress(struct addrinfo* res)
 
 bool	Socket::listenForConnections(int backlog)
 {
-	DEBUG("Socket::listenForConnections() called");
+	LOG_DEBUG("Socket::listenForConnections() called");
 
 	if (!isValidSocketFd())
 		return false;
@@ -101,7 +101,7 @@ bool	Socket::listenForConnections(int backlog)
 
 int	Socket::acceptConnection(struct sockaddr_in addr)
 {
-	DEBUG("Socket::acceptConnection() called");
+	LOG_DEBUG("Socket::acceptConnection() called");
 
 	if (!isValidSocketFd())
 		return false;
@@ -125,7 +125,7 @@ int	Socket::acceptConnection(struct sockaddr_in addr)
 
 int	Socket::getSockfd()
 {
-	DEBUG("Socket::getSocketFd() called");
+	LOG_DEBUG("Socket::getSocketFd() called");
 	return _sockfd;
 }
 
@@ -138,7 +138,7 @@ bool	Socket::isValidSocketFd()
 
 void	Socket::printError(const std::string& msg)
 {
-	std::cerr << msg << strerror(errno) << std::endl;
+	LOG_DEBUG(msg, strerror(errno));
 	if (isValidSocketFd())
 		close(_sockfd);
 }

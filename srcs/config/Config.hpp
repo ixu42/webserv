@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:20 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 13:17:11 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/08 15:36:26 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include "../utils/ServerException.hpp"
 #include "../utils/Colors.hpp"
 #include "../utils/Utility.hpp"
+#include "../utils/logUtils.hpp"
 #include "ConfigValidator.hpp"
 
 #include <iostream>

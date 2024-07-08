@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 16:20:59 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 18:27:52 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,32 +14,15 @@
 
 std::vector<Server*> ServersManager::_servers;
 ServersManager* ServersManager::_instance = nullptr;
-Config* ServersManager::_webservConfig;
-
-void ServersManager::signalHandler(int signal)
-{
-	LOG_DEBUG("Signal ", signal, " received.");
-
-	// Handle cleanup tasks or other actions here
-	
-	// ServersManager::getInstance()->poll_fds.clear();
-	delete _instance;
-	throw SignalException(std::to_string(signal));
-}
+Config* ServersManager::_webservConfig = nullptr;
 
 ServersManager::ServersManager()
 {
-	// Handle ctrl+c
-	signal(SIGINT, ServersManager::signalHandler); /* ctrl + c */
-	signal(SIGTSTP, ServersManager::signalHandler); /* ctrl + z */
-	signal(SIGQUIT, ServersManager::signalHandler); /* ctrl + \ */
-
 	// Add servers
 	LOG_DEBUG("ServersManager creating servers... Servers in config: ", _webservConfig->getServersConfigsMap().size());
 
 	// iterate according to keys because map is ordered and we can not use unordered map as the order is not guaranteed
 	for (auto& key : _webservConfig->getServersConfigsMapKeys())
-
 	{
 		std::vector<ServerConfig> serverConfigs = _webservConfig->getServersConfigsMap()[key];
 

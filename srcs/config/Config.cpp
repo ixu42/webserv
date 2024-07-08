@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/07 23:13:23 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/08 14:48:30 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,57 +28,52 @@ Config::Config(std::string filePath)
 
 void Config::printConfig()
 {
-	std::cout << TEXT_YELLOW;
-	std::cout << "=== Printing parsed config ===" << std::endl;
+	LOG_DEBUG(TEXT_YELLOW, "=== Printing parsed config ===", RESET);
 	int i = 0;
 	for (auto& serversConfigs : _serversConfigsMap) // also should go through the map of configs
 	{
 		int j = 0;
-		std::cout << BG_YELLOW << TEXT_BLACK << TEXT_BOLD << "Server #" << i << " " << serversConfigs.first << RESET << std::endl;
+		LOG_DEBUG(BG_YELLOW, TEXT_BLACK, TEXT_BOLD, "Server #", i, RESET);
 		for (ServerConfig server : serversConfigs.second)
 		{
-			std::cout << TEXT_BOLD << TEXT_UNDERLINE << TEXT_YELLOW;;
-			std::cout << "Named Server #" << j << RESET << std::endl;
-			std::cout << TEXT_YELLOW;
-			std::cout << "\tipAddress: " << server.ipAddress << std::endl;
-			std::cout << "\tport: " << server.port << std::endl;
-			std::cout << "\tserverName: " << server.serverName << std::endl;
-			std::cout << "\tclientMaxBodySize: " << server.clientMaxBodySize << std::endl;
-			for (auto error : server.errorPages)
-				std::cout << "\tdefaultError: " << error.first << " " << error.second << std::endl;
-			for (auto error : server.errorPages)
-				std::cout << "\terror: " << error.first << " " << error.second << std::endl;
-			for (auto cgi : server.cgis)
-				std::cout << "\tcgi: " << cgi.first << " " << std::boolalpha << cgi.second << std::endl;
-			for (auto location : server.locations)
+			LOG_DEBUG(TEXT_BOLD, TEXT_UNDERLINE, TEXT_YELLOW,"Named Server #", j, RESET);
+			LOG_DEBUG(TEXT_YELLOW, "\tipAddress: ", server.ipAddress, RESET);
+			LOG_DEBUG(TEXT_YELLOW, "\tport: ", server.port, RESET);
+			LOG_DEBUG(TEXT_YELLOW, "\tserverName: ", server.serverName, RESET);
+			LOG_DEBUG(TEXT_YELLOW, "\tclientMaxBodySize: ", server.clientMaxBodySize, RESET);
+			for (auto& error : server.defaultErrorPages)
+				LOG_DEBUG(TEXT_YELLOW, "\tdefaultError: ", error.first, " ", error.second, RESET);
+			for (auto& error : server.errorPages)
+				LOG_DEBUG(TEXT_YELLOW, "\terror: ", error.first, " ", error.second, RESET);
+			for (auto& cgi : server.cgis)
+				LOG_DEBUG(TEXT_YELLOW, "\tcgi: ", cgi.first, " ", std::boolalpha, cgi.second, RESET);
+			for (auto& location : server.locations)
 			{
-				std::cout << TEXT_UNDERLINE;
-				std::cout << "\tLocation: " << location.path << std::endl;
-				std::cout << RESET_UNDERLINE;
-				std::cout << "\t\tredirect: " << location.redirect << std::endl;
-				std::cout << "\t\troot: " << location.root << std::endl;
-				std::cout << "\t\tuploadPath: " << location.uploadPath << std::endl;
-				std::cout << "\t\tautoindex: " << std::boolalpha << location.autoindex << std::endl;
-				std::cout << "\t\tindex: " << location.index << std::endl;
+				LOG_DEBUG(TEXT_YELLOW, TEXT_UNDERLINE, "\tLocation: ", location.path, RESET_UNDERLINE, RESET);
+				LOG_DEBUG(TEXT_YELLOW, "\t\tredirect: ", location.redirect, RESET);
+				LOG_DEBUG(TEXT_YELLOW, "\t\troot: ", location.root, RESET);
+				LOG_DEBUG(TEXT_YELLOW, "\t\tuploadPath: ", location.uploadPath, RESET);
+				LOG_DEBUG(TEXT_YELLOW, "\t\tautoindex: ", std::boolalpha, location.autoindex);
+				LOG_DEBUG(TEXT_YELLOW, "\t\tindex: ", location.index, RESET);
 				for (auto& method : location.methods)
 				{
 					if (method.second)
-						std::cout << "\tmethod: " << method.first << std::endl;
+						LOG_DEBUG(TEXT_YELLOW, "\t\tmethod: ", method.first, RESET);
 				}
 			}
 			j++;
 		}
 		i++;
 	}
-	std::cout << RESET;
 }
 
 std::vector<std::string> Config::filterOutInvalidServerStrings(std::vector<std::string> serverStrings)
 {
+	int j = 0;
 	// for (std::string server : serverStrings)
 	for (size_t i = 0; i < serverStrings.size();)
 	{
-		std::cout << "Filtering server #" << i << std::endl;
+		LOG_DEBUG("Filtering server #", i);
 		std::string generalConfig;
 		if (serverStrings[i].empty())
 		{
@@ -106,11 +101,13 @@ std::vector<std::string> Config::filterOutInvalidServerStrings(std::vector<std::
 		if (configErrorsFound != 0)
 		{
 			// decrease servers vector because config is faulty
-			std::cout << "This server config has " << configErrorsFound << " config errors and will be ignored" << std::endl;
+			LOG_WARNING("Server config (server #", j, ") has ", configErrorsFound, " config errors and will be ignored");
 			// _servers.resize(_servers.size() - 1);
 			serverStrings.erase(serverStrings.begin() + i);
+			j++;
 			continue;
 		}
+		j++;
 		i++;
 	}
 	return serverStrings;
@@ -145,7 +142,7 @@ std::string findIpPortKey(std::string generalConfig)
 
 void Config::parse()
 {
-	std::cout << "=== Parsing the config ===" << std::endl;
+	LOG_DEBUG("=== Parsing the config ===");
 
 	/* Check if config has something above the first [server]*/
 	_configString = Utility::trim(_configString);
@@ -163,7 +160,7 @@ void Config::parse()
 
 	parseServers(serverStrings);
 
-	std::cout << "=== Parsing done ===" << std::endl;
+	LOG_INFO("Config file parsed");
 }
 
 void Config::parseServers(std::vector<std::string> serverStrings)
@@ -172,7 +169,7 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 	int i = 0;
 	for (std::string server : serverStrings)
 	{
-		std::cout << "Parsing server #" << i << std::endl;
+		LOG_DEBUG("Parsing server #", i);
 		ServerConfig serverConfig;
 		std::string generalConfig;
 		

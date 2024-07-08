@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/07 14:53:16 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/08 11:59:28 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 #include "Server.hpp"
 #include "client.hpp"
 #include "../response/Response.hpp"
-#include "../utils/debug.hpp"
+#include "../utils/logUtils.hpp"
 
 #include <unistd.h>
 #include <sys/types.h>

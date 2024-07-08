@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/08 11:12:18 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/08 14:48:13 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ struct Pipe {
 #include "CGIHandler.hpp"
 #include "../response/Response.hpp"
 #include "../utils/Utility.hpp"
-#include "../utils/debug.hpp"
+#include "../utils/logUtils.hpp"
 #include "../request/Request.hpp"
 #include "../utils/ServerException.hpp"
 #include "client.hpp"

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:53 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/06 22:22:31 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/08 10:45:06 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 #include <netinet/in.h> // struct sockaddr_in, struct in_addr
 #include <string>
-#include "../utils/debug.hpp" // DEBUG()
+#include "../utils/logUtils.hpp"
 #include <sys/socket.h> // socket(), bind(), listen()
 #include <errno.h> // errno
 #include <cstring> // strerror()

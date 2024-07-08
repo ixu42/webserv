@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/04 19:40:38 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/08 13:45:46 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include "config/Config.hpp"
 #include "utils/ServerException.hpp"
 #include "utils/Colors.hpp"
+#include "utils/logUtils.hpp"
 #include <iostream>
 
 int main(int argc, char *argv[])
@@ -23,15 +24,14 @@ int main(int argc, char *argv[])
 
 	if (argc == 1)
 	{
-		std::cout << TEXT_YELLOW << "No file provided." << std::endl;
-		std::cout << "Default config will be used from default/config.conf" << RESET << std::endl;
+		LOG_INFO("No file provided. Default config will be used from default/config.conf");
 	}
 	else if (argc == 2)
 		configFile = argv[1];
 	else
 	{
-		std::cout << TEXT_YELLOW << "Too many arguments." << std::endl;
-		std::cout << "Usage: ./webserv <config>" << RESET << std::endl;
+		LOG_ERROR("Too many arguments");
+		LOG_INFO("Usage: ./webserv <config>");
 		return EXIT_FAILURE;
 	}
 
@@ -43,17 +43,12 @@ int main(int argc, char *argv[])
 	}
 	catch(const ServerException& e)
 	{
-		std::cerr << BG_RED << TEXT_WHITE;
-		std::cerr << "Program close with error: " << e.what() << '\n';
-		std::cerr << RESET;
+		LOG_ERROR("Server close with error: ", e.what());
 		return EXIT_FAILURE;
 	}
 	catch(const std::exception& e)
 	{
-		std::cerr << BG_RED << TEXT_WHITE;
-		std::cerr << "Program close with exception: " << e.what() << '\n';
-		std::cerr << RESET;
+		LOG_ERROR("Server close with exception: ", e.what());
 		return EXIT_FAILURE;
 	}
 }
-

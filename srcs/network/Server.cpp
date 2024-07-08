@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/08 14:48:02 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 16:51:33 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -303,7 +303,6 @@ void	Server::responder(t_client& client, Server &server)
 	if (client.response)
 	{
 		std::string responseString = Response::buildResponse(*client.response);
-		// write(client.fd, responseString.c_str(), responseString.length());
 		sendResponse(responseString, client);
 		delete client.response;
 		client.response = nullptr;
@@ -311,8 +310,6 @@ void	Server::responder(t_client& client, Server &server)
 		removeFromClients(client);
 		return;
 	}
-
-	std::string response;
 	
 	// uncomment the following line for checking content of request
 	client.request->printRequest();
@@ -320,9 +317,20 @@ void	Server::responder(t_client& client, Server &server)
 	// replace writing a dummy response by the actual response
 	// request obj can be accessed by e.g. client.request->
 	
+	if (!server.findServerConfig(client.request)->cgis["php"] && !server.findServerConfig(client.request)->cgis["py"])
+	{
+		client.response = new Response(404);
+		std::string responseString = Response::buildResponse(*client.response);
+		sendResponse(responseString, client);
+		delete client.response;
+		client.response = nullptr;
+		close(client.fd);
+		removeFromClients(client);
+		return;
+	}
+	
 	if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
 	{
-		// resp.setCGIflag(true); // wtf is this?
 		try
 		{
 			client.response = new Response();
@@ -417,7 +425,7 @@ void	Server::responder(t_client& client, Server &server)
 		}
 	}
 
-	response = Response::buildResponse(*client.response);
+	std::string response = Response::buildResponse(*client.response);
 
 	sendResponse(response, client);
 

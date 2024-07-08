@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 15:37:38 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/08 15:42:44 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -235,14 +235,14 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 		_serversConfigsMapKeys.push_back(findIpPortKey(generalConfig));
 		i++;
 	}
-	std::cout << "=== Server in map ===" << std::endl;
+	LOG_DEBUG("=== Server in map ===");
 	for (auto& key : _serversConfigsMapKeys)
 	{
 		auto& serverConfigs = _serversConfigsMap[key];
-		std::cout << "Server: " << key << std::endl;
+		LOG_DEBUG("Server: ", key);
 		for (ServerConfig serverConfig : serverConfigs)
 		{
-			std::cout << "ServerName: " << serverConfig.serverName << std::endl;
+			LOG_DEBUG("ServerName: ", serverConfig.serverName);
 		}
 	}
 }

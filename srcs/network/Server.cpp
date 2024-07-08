@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/05 19:24:49 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 11:09:04 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,30 +17,24 @@ void	Server::initServer(const char* ipAddr, int port)
 	_port = port;
 	std::string str(ipAddr);
 	_ipAddr = str;
+	
+	_serverSocket.create();
 
-	std::memset((char*)&_address, 0, sizeof(_address));
-	_address.sin_family = AF_INET;
-	_address.sin_port = htons(port);
-	if (ipAddr == nullptr || ipAddr[0] == '\0')
-		_address.sin_addr.s_addr = INADDR_ANY;
-	else
-	{
-		int ret = inet_pton(AF_INET, ipAddr, &_address.sin_addr);
-		if (ret <= 0)
-		{
-			std::cerr << "inet_pton() error\n";
-			close(_serverSocket.getSockfd());
-			exit(EXIT_FAILURE);
-		}
+	memset(&_hints, 0, sizeof(_hints));
+	_hints.ai_family = AF_INET;			 	// Use AF_INET6 for IPv6
+	_hints.ai_socktype = SOCK_STREAM;
+	_hints.ai_flags = AI_PASSIVE;			// For wildcard IP address	
+	int status = getaddrinfo(nullptr, std::to_string(port).c_str(), &_hints, &_res);
+	if (status != 0) {
+		std::cerr << "getaddrinfo error: " << gai_strerror(status) << std::endl;
+		throw ServerException("getaddrinfo error");
 	}
 
-	if (!_serverSocket.create() ||
-		!_serverSocket.bindAddress(_address) ||
-		!_serverSocket.listenForConnections(10))
-	{
-		std::cerr << "Failed to construct server\n";
-		exit(EXIT_FAILURE);
-	}
+	_serverSocket.bindAddress(_res);
+	freeaddrinfo(_res);
+
+	_serverSocket.listenForConnections(10);
+
 }
 
 Server::Server() : _serverSocket(Socket())
@@ -79,7 +73,7 @@ int	Server::accepter()
 		return -1;
 	LOG_INFO("Connection established with client (socket fd: ", clientSockfd, ").");
 
-	_clients.push_back((t_client){clientSockfd, nullptr});
+	_clients.push_back((t_client){clientSockfd, nullptr, nullptr});
 	return clientSockfd;
 }
 
@@ -99,6 +93,39 @@ int findContentLength(std::string request)
 	return -1;
 }
 
+/* When headers and start line are read in receiveRequest, maxClientBodySize can be found */
+size_t Server::findMaxClientBodyBytes(Request request)
+{
+	 // 104857600 bytes; // = 100M
+
+	ServerConfig* serverConfig = findServerConfig(&request);
+	std::string sizeString = serverConfig->clientMaxBodySize;
+
+	// if (sizeString.empty())
+	// 	return 0;
+
+	// Parse the numeric part of the string
+	size_t multiplier = 1;
+	int numericValue = std::stoi(sizeString);
+
+	// Determine multiplier based on the suffix
+	char suffix = std::toupper(sizeString.back());
+	switch (suffix) {
+		case 'G':
+			multiplier *= 1024;
+		case 'M':
+			multiplier *= 1024;
+		case 'K':
+			multiplier *= 1024;
+		case 'B':
+			break;
+		default:
+			break;
+	}
+
+	return static_cast<std::size_t>(numericValue * multiplier);
+}
+
 Request* Server::receiveRequest(int clientSockfd)
 {
 	LOG_DEBUG("Server::receiveRequest called");
@@ -107,9 +134,12 @@ Request* Server::receiveRequest(int clientSockfd)
 	int bytesRead;
 	std::string request;
 	int emptyLinePos = -1;
+	int emptyLinesSize = 0;
 
 	bool isHeadersRead = false;
 	std::size_t contentLengthNum = std::string::npos;
+
+	std::size_t maxClientBodyBytes = std::numeric_limits<std::size_t>::max();
 	while (1)
 	{
 		bytesRead = read(clientSockfd, buffer, bufferSize);
@@ -130,14 +160,24 @@ Request* Server::receiveRequest(int clientSockfd)
 		if (!isHeadersRead && (request.find("\r\n\r\n") != std::string::npos || request.find("\n\n") != std::string::npos))
 		{
 			emptyLinePos = request.find("\r\n\r\n") ? request.find("\r\n\r\n") : request.find("\n\n");
+			emptyLinesSize = request.find("\r\n\r\n") ? 4 : 2;
 			isHeadersRead = true;
 			contentLengthNum = findContentLength(request);
 			if (contentLengthNum == std::string::npos)
 				break;
+
+			// Find maxClientBodySize
+			maxClientBodyBytes = findMaxClientBodyBytes(Request(request));
 		}
+
 		if (isHeadersRead && contentLengthNum != -std::string::npos)
 		{
-			if (request.length() - emptyLinePos - 4 >= contentLengthNum)
+			size_t currRequestBodyBytes = request.length() - emptyLinePos - emptyLinesSize;
+
+			if (currRequestBodyBytes > maxClientBodyBytes)
+				throw ResponseError(407);
+
+			if (currRequestBodyBytes >= contentLengthNum)
 				break;
 		}
 	}
@@ -148,17 +188,203 @@ Request* Server::receiveRequest(int clientSockfd)
 	return new Request(request);
 }
 
-void	Server::responder(t_client& client)
+void	Server::handler(Server*& server, t_client& client)
+{
+	try 
+	{
+		client.request = server->receiveRequest(client.fd);
+	}
+	catch (ResponseError& e)
+	{
+		std::cerr << BG_RED << TEXT_WHITE << "Request can not be handled: " << e.what() << ": " << e.getCode() << RESET << std::endl;
+	}
+}
+
+void Server::sendResponse(std::string& response, t_client& client)
+{
+	size_t totalBytesWritten = 0;
+	size_t bytesToWrite = response.length();
+	const char* buffer = response.c_str();
+
+	while (totalBytesWritten < bytesToWrite)
+	{
+		ssize_t bytesWritten = write(client.fd, buffer + totalBytesWritten, bytesToWrite - totalBytesWritten);
+		if (bytesWritten == -1) // We can not use EAGAIN or EWOULDBLOCK here
+			continue;
+		else if (bytesWritten == 0) // Handle case where write returns 0 (should not happen with regular sockets)
+			break;
+		else {
+			totalBytesWritten += bytesWritten;
+		}
+		std::cout << TEXT_GREEN << "Bytes written: " << bytesWritten  << RESET << std::endl;
+	}
+	std::cout << TEXT_GREEN << "response.length(): " << response.length()  << RESET << std::endl;
+}
+
+/**
+ * Creates dynamic body for Response using, current location and html template
+ * html template should have 
+ */
+Response Server::createDirListResponse(Location& location, std::string requestPath)
+{
+	std::string pathShortCode = "[path]";
+	std::string bodyShortCode = "[body]";
+	Response listingResponse = Response();
+	std::string fileString = Utility::readFile(location.defaultListingTemplate);
+	std::stringstream htmlStream;
+
+
+	try
+	{
+		htmlStream << "<ul>\n";
+		// int count = 0;
+		// Iterate over all the entries in the directory
+		for (const auto& entry : std::filesystem::directory_iterator(location.root)) {
+			// count++;
+			// std::cout << "Couting lines: " << count << std::endl;
+
+			// Check if the entry is a regular file
+			if (entry.is_regular_file()) {
+				std::string filename = entry.path().filename().string();
+				htmlStream << "<li><a href=\"" << filename << "\">" << filename << "</a></li>\n";
+			}
+			// You can also check for directories, symlinks, etc., using similar methods
+			// For directories: if (entry.is_directory())
+			// For symlinks: if (entry.is_symlink())
+		}
+		htmlStream << "</ul>\n";
+	}
+	catch (const std::filesystem::filesystem_error& ex)
+	{
+		std::cerr << "Error accessing directory: " << ex.what() << "\n";
+		throw ResponseError(403);
+	}
+
+	// Replace [body]
+	size_t replaceStringPos = fileString.find(bodyShortCode);
+	if (replaceStringPos != std::string::npos)
+		fileString.replace(replaceStringPos,  bodyShortCode.length(), htmlStream.str());
+
+	// Replace [title]
+	while ((replaceStringPos = fileString.find(pathShortCode)) != std::string::npos)
+		fileString.replace(replaceStringPos, pathShortCode.length(), requestPath);
+
+
+	listingResponse.setBody(fileString);
+	listingResponse.setTypeFromFormat("html");
+	listingResponse.setStatusFromCode(200);
+	return listingResponse;
+}
+
+void	Server::responder(t_client& client, Server &server)
 {
 	LOG_DEBUG("Server::responder() called");
 
+	/* If response was handled previously in handler (e.g. in receiveRequest) */
+	if (client.response)
+	{
+		std::string responseString = Response::buildResponse(*client.response);
+		// write(client.fd, responseString.c_str(), responseString.length());
+		sendResponse(responseString, client);
+		delete client.response;
+		client.response = nullptr;
+		return;
+	}
+
+	Response resp;
+	std::string response;
+	
 	// uncomment the following line for checking content of request
 	client.request->printRequest();
 
 	// replace writing a dummy response by the actual response
 	// request obj can be accessed by e.g. client.request->
-	const std::string& response = getResponse();
-	write(client.fd, response.c_str(), response.length());
+	
+	if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
+	{
+		// resp.setCGIflag(true); // wtf is this?
+		try {
+			CGIServer::handleCGI(*(client.request), server, resp);
+		} catch (const ServerException& e) {
+			std::cerr << BG_RED << e.what() << RESET_BG << std::endl;
+		}
+	}
+	else
+	{
+		try
+		{
+			Location foundLocation = server.findLocation(client.request);
+			std::cout << TEXT_GREEN << "Location: " << foundLocation.path << RESET << std::endl;
+
+			/* Check if method is allowed */
+			// client.request->printRequest();
+			if (!foundLocation.methods[Utility::strToLower(client.request->getStartLine()["method"])])
+			{
+				std::string allowedMethods;
+				for (auto& [methodName, methodBool] : foundLocation.methods)
+				{
+					if (methodBool)
+						allowedMethods += allowedMethods.empty() ? methodName : ", " + methodName;
+				}
+				throw ResponseError(405, {{"Allowed", allowedMethods}});
+			}
+
+			/* Handle redirect */
+			if (foundLocation.redirect != "")
+			{
+			// std::cout << TEXT_GREEN << "Redirect found: " << foundLocation.redirect << RESET << std::endl;
+				size_t requestUriPos = foundLocation.redirect.find("$request_uri");
+				std::string redirectUrl = foundLocation.redirect.substr(0, requestUriPos);
+				std::string pagePath = client.request->getStartLine()["path"].substr(foundLocation.path.length());
+
+				if (requestUriPos != std::string::npos)
+					redirectUrl.append(pagePath);
+
+				std::cout << "Redirect URL: " << redirectUrl << std::endl;
+				std::cout << "Page path: " << pagePath << std::endl;
+				resp = Response(307, {{"Location", redirectUrl}});
+			}
+			else
+			{
+				/* Handle static files */
+				std::string requestPath = client.request->getStartLine()["path"];
+				std::string filePath = foundLocation.root + requestPath.substr(foundLocation.path.length());
+				Response locationResp;
+
+				// If path ends with /, check for index file and directory listing, otherwise throw 403
+				if (requestPath.back() == '/')
+				{
+					std::ifstream indexFile;
+					indexFile.open(filePath + foundLocation.index);
+					if (indexFile.is_open())
+					{
+						filePath += foundLocation.index;
+						indexFile.close();
+					}
+					else if (foundLocation.directoryListing)
+						locationResp = createDirListResponse(foundLocation, requestPath);
+					else
+						throw ResponseError(403);
+				}
+				resp = locationResp.getStatus().empty() ? Response(200, filePath) : locationResp; // Checks if location response was formed, otherwise creates Response from filePath
+			}
+		}
+		catch (ResponseError& e)
+		{
+			std::cerr << BG_RED << TEXT_WHITE << "Responder caught an error: " << e.what() << ": " << e.getCode() << RESET << std::endl;
+			resp = Response(e.getCode(), e.getHeaders());
+						// resp = Response(e.getCode(), "pages/" + std::to_string(e.getCode()) + ".html");
+		}
+		catch (const std::exception& e)
+		{
+			std::cerr << BG_RED << TEXT_WHITE << "Responder caught an exception: " << e.what() << RESET << std::endl;
+			resp = Response(500);
+		}
+	}
+
+	response = Response::buildResponse(resp);
+
+	sendResponse(response, client);
 
 	delete client.request;
 	client.request = nullptr;
@@ -183,22 +409,18 @@ void	Server::removeFromClients(t_client& client)
 		}
 	}
 }
-
-const std::string	Server::getResponse()
+/* Dummy response */
+/* const std::string	Server::getResponse()
 {
-	/* Dummy response start */
 	std::string response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\n";
 	// std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world\r\n\t</h1>\r\n</body>\r\n</html>";
 	std::string body = "<html lang=\"en\">\r\n<head>\r\n\t<meta charset=\"UTF-8\">\r\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n\t<title>WebServ Response</title>\r\n</head>\r\n<body>\r\n\t<h1>\r\n\t\tHello world " + std::to_string(time(NULL)) + " " + whoAmI() + "\r\n\t</h1>\r\n</body>\r\n</html>";
 	std::string contentLength = "Content-Length: " + std::to_string(body.length()) + "\r\n";
 	// std::cout << contentLength << std::endl;
 	response = response + contentLength + "\r\n" + body + "\r\n";
-	// /* Dummy response end */
-
-
 
 	return response;
-}
+} */
 
 
 std::string Server::whoAmI() const
@@ -206,14 +428,106 @@ std::string Server::whoAmI() const
 	return _ipAddr + ":" + std::to_string(_port);
 }
 
+/** If no match found, the first config will be used */
+ServerConfig* Server::findServerConfig(Request* req)
+{
+	// If request host is an ip address:port or if the ip is not specified for current server, the first config for the server is used
+	if(!req)
+		throw ResponseError(400);
+	if (req->getHeaders()["host"].empty())
+		throw ResponseError(400); // Bad request
+
+	std::vector<std::string> hostSplit = Utility::splitString(req->getHeaders()["host"], ":");
+
+	std::string reqHost = Utility::trim(hostSplit[0]);
+	std::string reqPort = Utility::trim(hostSplit[1]);
+
+	if (reqPort.empty())
+		reqPort = "80";
+
+	if (whoAmI() == req->getHeaders()["host"] ||
+		(_ipAddr.empty() && std::to_string(_port) == reqPort)) // Also additional check can be needed for the port 80. The port might be not specified in the request. Check with sudo ./webserv
+	{
+		if (!_configs.empty())
+			return &_configs[0];
+	}
+
+	// If request is a servername, find the correct servername
+	if (!reqHost.empty())
+	{
+		for (ServerConfig& config : _configs)
+		{
+			if (config.serverName == reqHost)
+				return &config;
+		}
+	}
+
+	if (_configs.empty())
+		throw ServerException("Program has no configs");
+
+	return &_configs[0];
+}
+
+
+Location Server::findLocation(Request* req)
+{
+	std::cout << "== Finding server for current location ==" << std::endl;
+	if (!req)
+		throw ResponseError(400);
+
+	ServerConfig* namedServerConfig = findServerConfig(req);
+	// This block might be redundant as we always have a server config???
+	if (!namedServerConfig)
+	{
+		throw ResponseError(404);
+	}
+	if (namedServerConfig->locations.empty())
+	{
+		std::cerr << "No locations found for server: " << whoAmI() << std::endl;
+		throw ResponseError(404);
+	}
+
+	std::cout << "== Server found. Finding location... ==" << std::endl;
+	// Find the longest matching location
+	Location foundLocation;
+	size_t locationLength = 0;
+	std::string requestPath = req->getStartLine()["path"];
+
+	std::cout << "Let's find location for request path: " << requestPath << std::endl;
+	std::cout << "We have locations to check: " << namedServerConfig->locations.size() << std::endl;
+	for (Location& location : namedServerConfig->locations)
+	{
+		std::cout << "Path: " << location.path << " RequestPath: " << requestPath << std::endl;
+		if (location.path == requestPath)
+		{
+			std::cout << "Location found, perfect match: " << location.path << std::endl;
+			foundLocation = location;
+			break;
+		}
+		else if (requestPath.rfind(location.path, 0) == 0 && location.path[location.path.length() - 1] == '/')
+		{
+			std::cout << "Location found: " << location.path << std::endl;
+			if (location.path.length() > locationLength)
+			{
+				locationLength = location.path.length();
+				foundLocation = location;
+			}
+		}
+
+		// std::cout << "Server config and location: " << location.path << std::endl;
+	}
+	return foundLocation;
+}
+
+
 /**
  * Getters
 */
 
-ServerConfig* Server::getConfig()
-{
-	return _config;
-}
+// std::vector<ServerConfig> Server::getConfig()
+// {
+// 	return _configs;
+// }
 
 Pipe& Server::getPipe()
 {
@@ -230,15 +544,23 @@ std::vector<t_client>& Server::getClients()
 	return _clients;
 }
 
+std::string Server::getIpAddress()
+{
+	return _ipAddr;
+}
+
+int Server::getPort()
+{
+	return _port;
+}
+
 /**
  * Setters
  */
 
-void Server::setConfig(ServerConfig* serverConfig)
+void Server::setConfig(std::vector<ServerConfig> serverConfigs)
 {
-	if (serverConfig == nullptr)
-		return ;
-	_config = serverConfig;
+	_configs = serverConfigs;
 }
 
 
@@ -328,49 +650,6 @@ Server::Server(std::string ipAddress, int port)
 // }
 
 
-
-
-// Location* Server::findLocation(Request* req)
-// {
-// 	(void)req;
-// 	std::cout << "== Finding location for current request ==" << std::endl;
-// 	// int i = 0;
-// 	std::cout << "Locations vector size: " << this->config->locations.size() << std::endl;
-// 	if (this->config->locations.empty())
-// 		return nullptr;
-// 		// throw ServerException("No location specified in the server config");
-
-// 	Location* foundLocation = nullptr;
-// 	size_t locationLength = 0;
-// 	std::string requestPath = req->getStartLine()["path"];
-
-// 	std::cout << "Let's find location for request path: " << requestPath << std::endl;
-// 	for (Location& location : this->config->locations)
-// 	{
-// 		std::cout << "Path: " << location.path << " RequestPath: " << requestPath << std::endl;
-// 		if (location.path == requestPath)
-// 		{
-// 			std::cout << "Location found, perfect match: " << location.path << std::endl;
-// 			foundLocation = &location;
-// 			break;
-// 		}
-// 		else if (requestPath.rfind(location.path, 0) == 0 && location.path[location.path.length() - 1] == '/')
-// 		{
-// 			std::cout << "Location found: " << location.path << std::endl;
-// 			if (location.path.length() > locationLength)
-// 			{
-// 				locationLength = location.path.length();
-// 				foundLocation = &location;
-// 			}
-// 		}
-
-// 		// std::cout << "Server config and location: " << location.path << std::endl;
-// 	}
-// 	return foundLocation;
-// }
-
-
-
 // 	std::cout << "=== Request read ===" << std::endl;
 // 	std::cout << TEXT_YELLOW << request << RESET << std::endl;
 
@@ -391,42 +670,42 @@ Server::Server(std::string ipAddress, int port)
 
 // 	Request req = receiveRequest();
 
-// 	// std::cout << "Locations vector size after request generated: " << this->config->locations.size() << std::endl;
-// 	// for (Location location : this->config->locations)
-// 	// {
-// 	// 	std::cout << "Server config and location from handleRequest: " << location.path << std::endl;
-// 	// }
-// 	Location* foundLocation = findLocation(&req);
-// 	if (foundLocation == nullptr)
-// 	{
-// 		// throw ServerException("Location not found");
-// 		std::cout << nullptr << std::endl;
-// 		response = "HTTP/1.1 404 Not Found\r\nServer: webserv\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
-// 		// response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
-// 	}
-// 	else
-// 	{
-// 		std::cout << "Great this is your location: " << foundLocation->path << std::endl;
-// 		// Handling redirect
-// 		if (foundLocation->redirect != "")
-// 		{
-// 			std::string redirectUrl = foundLocation->redirect;
+	// std::cout << "Locations vector size after request generated: " << this->config->locations.size() << std::endl;
+	// for (Location location : this->config->locations)
+	// {
+	// 	std::cout << "Server config and location from handleRequest: " << location.path << std::endl;
+	// }
+	// Location* foundLocation = findLocation(&req);
+	// if (foundLocation == nullptr)
+	// {
+	// 	// throw ServerException("Location not found");
+	// 	std::cout << nullptr << std::endl;
+	// 	response = "HTTP/1.1 404 Not Found\r\nServer: webserv\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
+	// 	// response = "HTTP/1.1 200 OK\r\nServer: webserv\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
+	// }
+	// else
+	// {
+	// 	std::cout << "Great this is your location: " << foundLocation.path << std::endl;
+	// 	// Handling redirect
+	// 	if (foundLocation.redirect != "")
+	// 	{
+	// 		std::string redirectUrl = foundLocation.redirect;
 
-// 			size_t requestUriPos = foundLocation->redirect.find("$request_uri");
+	// 		size_t requestUriPos = foundLocation.redirect.find("$request_uri");
 
-// 			std::string pagePath = req.getStartLine()["path"];
-// 			pagePath.replace(0, foundLocation->path.length(), "");
+	// 		std::string pagePath = req.getStartLine()["path"];
+	// 		pagePath.replace(0, foundLocation.path.length(), "");
 
-// 			redirectUrl = redirectUrl.substr(0, requestUriPos);
+	// 		redirectUrl = redirectUrl.substr(0, requestUriPos);
 
-// 			if (requestUriPos != std::string::npos)
-// 				redirectUrl.append(pagePath);
+	// 		if (requestUriPos != std::string::npos)
+	// 			redirectUrl.append(pagePath);
 
-// 			std::cout << "Redirect URL: " << redirectUrl << std::endl;
-// 			std::cout << "Page path: " << pagePath << std::endl;
-// 			response = "HTTP/1.1 307 Temporary Redirect\r\nServer: webserv\r\nLocation: " + redirectUrl + "\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
-// 		}
-// 	}
+	// 		std::cout << "Redirect URL: " << redirectUrl << std::endl;
+	// 		std::cout << "Page path: " << pagePath << std::endl;
+	// 		response = "HTTP/1.1 307 Temporary Redirect\r\nServer: webserv\r\nLocation: " + redirectUrl + "\r\nContent-Type: text/html\r\nContent-Length: 0\r\n\r\n";
+	// 	}
+	// }
 
 // 	// Testing request
 // 	std::cout << TEXT_CYAN;

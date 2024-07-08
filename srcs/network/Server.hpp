@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/05 11:51:20 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 10:45:46 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,25 +20,39 @@ struct Pipe {
 };
 
 #include "Socket.hpp"
+#include "CGIHandler.hpp"
+#include "../response/Response.hpp"
 #include "../utils/Utility.hpp"
 #include "../utils/logUtils.hpp"
 #include "../request/Request.hpp"
+#include "../utils/ServerException.hpp"
 #include "client.hpp"
 #include <vector>
 #include <string>
 #include <cstring> // memset()
-#include <arpa/inet.h> // htons(), inet_pton()
+// #include <arpa/inet.h> // htons(), inet_pton()
 #include <signal.h> // signal()
 #include <poll.h> // poll()
 #include <unistd.h> // read(), write(), close()
+
+#include <limits> // for max size_t
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+
+#include <fstream> //open file
+
+#include <filesystem> // for createDirListResp()
 
 class Server
 {
 	private:
 		Socket						_serverSocket;
-		struct sockaddr_in			_address;
+		struct addrinfo				_hints;
+		struct addrinfo*			_res;
 		std::vector<t_client>		_clients;
-		ServerConfig*				_config = nullptr;
+		std::vector<ServerConfig>	_configs;
 		Pipe						_CGIpipes;
 
 		int							_port;
@@ -49,22 +63,33 @@ class Server
 		Server(const char* ipAddr, int port);
 		~Server();
 
-		void						setConfig(ServerConfig* serverConfig);
-		ServerConfig*				getConfig();
+		// void						setConfig(ServerConfig* serverConfig);
+		void						setConfig(std::vector<ServerConfig> serverConfigs);
+		// std::vector<ServerConfig>	getConfig();
 		int							getServerSockfd();
 		Pipe&						getPipe();
 		std::vector<t_client>&		getClients();
+		std::string					getIpAddress();
+		int							getPort();
 		std::string					whoAmI() const;
 
 		int							accepter();
+		void						handler(Server*& server, t_client& client);
+		void						responder(t_client& client, Server &server);
+
 		Request*					receiveRequest(int clientSockfd);
-		void						responder(t_client& client);
+		void						sendResponse(std::string& response, t_client& client);
+		Location					findLocation(Request* req);
+
+		Response					createDirListResponse(Location& location, std::string requestPath);
 
 	private:
 		void						initServer(const char* ipAddr, int port);
 		void						removeFromClients(t_client& client);
 		const std::string			getResponse();
-		
+
+		ServerConfig*				findServerConfig(Request* req);
+		size_t						findMaxClientBodyBytes(Request request);
 };
 
 // #pragma once

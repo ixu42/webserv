@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/05 11:52:40 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 10:46:02 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,18 +32,22 @@
 #define PYTHON_INTERPRETER "/usr/bin/python3"
 #define PHP_INTERPRETER "/usr/bin/php"
 
+class Server;
+
 class CGIServer {
 	private:
-		static			std::string determineInterpreter(const std::string& filePath);
-		static			std::vector<std::string> setEnvironmentVariables(Request& request);
-		static void		handleProcesses(Request& request, Server& server, Response& response,
-							const std::string& interpreter, const std::vector<std::string>& envVars);
-		static void		handleChildProcess(Server& server, const std::string& interpreter, const std::string& filePath,
-							const std::vector<std::string>& envVars);
-		static void		handleParentProcess(Server& server, Response& response, const std::string& method,
-							const std::string& body);
+		static				std::string determineInterpreter(const std::string& filePath, Response& response);
+		static				std::vector<std::string> setEnvironmentVariables(Request& request);
+		static void			handleProcesses(Request& request, Server& server, Response& response,
+								const std::string& interpreter, const std::vector<std::string>& envVars);
+		static void			handleChildProcess(Response& response, Server& server, const std::string& interpreter,
+								const std::string& filePath, const std::vector<std::string>& envVars);
+		static void			handleParentProcess(Server& server, Response& response, const std::string& method,
+								const std::string& body);
+		static std::string	readErrorPage(const std::string& errorPagePath);
 
 	public:
-		CGIServer()		= delete;
-		static void		handleCGI(Request& request, Server& server, Response& response);
+		CGIServer()			= delete;
+		static void			setResponse(Response& response, std::string status, std::string type, std::string page);
+		static void			handleCGI(Request& request, Server& server, Response& response);
 };

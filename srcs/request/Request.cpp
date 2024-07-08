@@ -6,32 +6,24 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/05 18:42:06 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 10:55:10 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Request.hpp"
 
-// std::string request = "GET / HTTP/1.1\nHost: localhost:8080\nConnection: keep-alive\nCache-Control: max-age=0";
-
-// std::vector<std::string> splitString(std::string request, std::string delimiter = "\n")
-// {
-// 	std::stringstream test(request);
-// 	std::string segment;
-// 	std::vector<std::string> seglist;
-
-// 	while(std::getline(test, segment, delimiter[0]))
-// 	{
-// 		seglist.push_back(segment);
-// 	}
-
-// 	return seglist;
-// }
+#include <string>
+#include <vector>
+#include <sstream>
 
 Request::Request()
 {
 	LOG_DEBUG("Request default constructor called");
-} 
+	_startLine["method"] = "";
+	_startLine["path"] = "";
+	_startLine["version"] = "";
+	_startLine["query"] = "";
+}
 
 Request::Request(std::string request)
 {
@@ -41,6 +33,8 @@ Request::Request(std::string request)
 void Request::parse(std::string request)
 {
 	int emptyLinePosition = request.find("\r\n\r\n");
+	if (emptyLinePosition == -1)
+		emptyLinePosition = request.find("\n\n");
 	// std::cout << "Empty line position: " << emptyLinePosition << std::endl;
 
 	if (emptyLinePosition != -1)
@@ -77,8 +71,67 @@ void Request::parse(std::string request)
 
 		// Parse the body
 		_body = Utility::trim(body);
+		// Unchunk the body if necessary
+		if (_headers.find("transfer-encoding") != _headers.end() && Utility::strToLower(_headers["transfer-encoding"]) == "chunked")
+		{
+			_body = unchunkBody(body);
+		}
 	}
 }
+
+/*
+In HTTP/1.1, chunked transfer encoding strictly requires the use of \r\n
+(carriage return and line feed) to delimit the chunk size and the actual
+data. This specification is defined in the HTTP/1.1 standard (RFC 7230,
+Section 4.1). Using just \n (line feed) would not conform to the standard
+and could result in improper parsing by HTTP clients and servers.
+*/
+
+size_t Request::hexStringToSizeT(const std::string &hexStr)
+{
+	std::istringstream iss(hexStr);
+	size_t size;
+	iss >> std::hex >> size;
+	return size;
+}
+
+std::string Request::unchunkBody(std::string& string)
+{
+	std::string unchunkedData;
+	std::istringstream stream(string);
+
+	while (true)
+	{
+		std::string chunkSizeStr = Utility::readLine(stream);
+		size_t chunkSize = hexStringToSizeT(chunkSizeStr);
+		if (chunkSize == 0) {
+			break;
+		}
+
+		// Read the chunk data using substr
+		std::string chunkData;
+		chunkData.reserve(chunkSize);
+
+		for (size_t i = 0; i < chunkSize; ++i) {
+			char c;
+			stream.get(c);
+			chunkData += c;
+		}
+
+		unchunkedData += chunkData;
+
+		// Read the trailing \r\n after chunk data
+		std::string crlf;
+		std::getline(stream, crlf);
+	}
+
+	return unchunkedData;
+}
+
+
+/**
+ * Getters
+ */
 
 Request::QueryStringParameters Request::getStartLine()
 {

@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:53 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/05 12:00:22 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 10:45:06 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,14 @@
 #include <cstring> // strerror()
 #include <unistd.h> // close()
 #include <fcntl.h> // fcntl()
+#include <arpa/inet.h> // inet_ntoa()
+
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+
+#include "../utils/ServerException.hpp"
 
 class Socket
 {
@@ -32,7 +40,7 @@ class Socket
 
 		int		getSockfd();
 		bool	create();
-		bool	bindAddress(struct sockaddr_in addr);
+		bool	bindAddress(struct addrinfo* res);
 		bool	listenForConnections(int backlog);
 		int		acceptConnection(struct sockaddr_in addr);
 

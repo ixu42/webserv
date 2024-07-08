@@ -6,13 +6,13 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/05 19:25:10 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 11:38:10 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ServersManager.hpp"
 
-std::vector<Server *> ServersManager::_servers;
+std::vector<Server*> ServersManager::_servers;
 ServersManager* ServersManager::_instance = nullptr;
 Config* ServersManager::_webservConfig;
 
@@ -25,27 +25,43 @@ void ServersManager::signalHandler(int signal)
 	
 	// ServersManager::getInstance()->poll_fds.clear();
 	delete _instance;
-	// servers.clear();
-
 	std::exit(signal); // Exit the program with the received signal as exit code
 }
 
 ServersManager::ServersManager()
 {
 	// Handle ctrl+c
-	signal(SIGINT, ServersManager::signalHandler);
+	signal(SIGINT, ServersManager::signalHandler); /* ctrl + c */
+	signal(SIGTSTP, ServersManager::signalHandler); /* ctrl + z */
+	signal(SIGQUIT, ServersManager::signalHandler); /* ctrl + \ */
 
 	// Add servers
-	int i = 0;
-	for (ServerConfig& serverConfig : _webservConfig->getServers())
+	LOG_DEBUG("ServersManager creating servers... Servers in config: ", _webservConfig->getServersConfigsMap().size());
+	for (auto& [ipPortKey, serverConfigs] : _webservConfig->getServersConfigsMap())
 	{
-
-		LOG_DEBUG("serverConfig.port: ", serverConfig.port);
-		_servers.push_back(new Server(serverConfig.ipAddress.c_str(), serverConfig.port));
-		_servers[i]->setConfig(&serverConfig);
-		_servers[i]->getConfig();
-		// std::cout << "Server config and location: " << servers[i]->getConfig()->locations[0].path << std::endl;
-		i++;
+		Server* foundServer = nullptr;
+		for (auto& server : _servers)
+		{
+			if (server->getIpAddress() == serverConfigs[0].ipAddress && server->getPort() == serverConfigs[0].port)
+			{
+				foundServer = server;
+				break ;
+			}
+		}
+		if (!foundServer)
+		{
+			try
+			{
+				_servers.push_back(new Server(serverConfigs[0].ipAddress.c_str(), serverConfigs[0].port));
+				foundServer = _servers.back();
+			}
+			catch (const std::exception& e)
+			{
+				LOG_ERROR("Failed to launch server: ", e.what());
+			}
+		}
+		if (foundServer)
+			foundServer->setConfig(serverConfigs);
 	}
 
 	// Add all server fds to pollfd vector
@@ -71,7 +87,7 @@ ServersManager::~ServersManager()
 	delete _webservConfig;
 }
 
-void ServersManager::initConfig(char *fileNameString)
+void ServersManager::initConfig(const char *fileNameString)
 {
 	_webservConfig = new Config(fileNameString);
 }
@@ -79,7 +95,7 @@ void ServersManager::initConfig(char *fileNameString)
 ServersManager* ServersManager::getInstance()
 {
 	if (_webservConfig == nullptr)
-		_webservConfig = new Config(DEFAULT_CONFIG); // if config is not initialized with iniConfig, DEFAULT_CONFIG will be used
+		_webservConfig = new Config(DEFAULT_CONFIG); // if config is not initialized with initConfig, DEFAULT_CONFIG will be used
 	if (_instance == nullptr)
 		_instance = new ServersManager();
 		
@@ -130,15 +146,8 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 		{
 			if (pfdReadyForRead.fd == client.fd)
 			{
-				// Request req = server->receiveRequest(pfdReadyForRead.fd);
-				// if (req.getStartLine()["path"].find("cgi-bin") != std::string::npos)
-				// {
-				// 	Response resp;
-				// 	CGIServer::handleCGI(req, *server, resp);
-				// 	std::cout << resp.getBody() << std::endl;
-				// }
-				client.request = server->receiveRequest(pfdReadyForRead.fd);
-				// server->handler();
+				// client.request = server->receiveRequest(pfdReadyForRead.fd);
+				server->handler(server, client);
 				pfdReadyForRead.events = POLLOUT;
 				fdFound = true;
 				break ;
@@ -159,7 +168,7 @@ void	ServersManager::handleWrite(int fdReadyForWrite)
 		{
 			if (fdReadyForWrite == client.fd)
 			{
-				server->responder(client);
+				server->responder(client, *server);
 				removeFromPollfd(fdReadyForWrite);
 				fdFound = true;
 				break ;

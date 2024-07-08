@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/05 11:52:36 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 10:45:26 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,9 @@
 #include <csignal>
 #include "../utils/logUtils.hpp"
 
-#define DEFAULT_CONFIG "config/default.conf"
+#include <exception>
+
+#define DEFAULT_CONFIG "default/config.conf"
 
 /* Can be only instatiated once */
 class ServersManager
@@ -48,5 +50,5 @@ class ServersManager
 		static ServersManager*		getInstance();
 
 		void						run();
-		static void					initConfig(char *fileNameString);
+		static void					initConfig(const char *fileNameString);
 };

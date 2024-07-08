@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/05 12:00:33 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 11:13:10 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,14 +15,35 @@
 void CGIServer::handleCGI(Request& request, Server& server, Response& response)
 {
 	LOG_DEBUG("\n===handleCGI function started===");
-	std::string interpreter = determineInterpreter(request.getStartLine()["path"]);
+	std::string interpreter = determineInterpreter(request.getStartLine()["path"], response);
 	std::vector<std::string> envVars = setEnvironmentVariables(request);
 	LOG_DEBUG("===Enviroment has been set===");
 	handleProcesses(request, server, response, interpreter, envVars);
 	LOG_DEBUG("===handleCGI function ended===");
 }
 
-std::string CGIServer::determineInterpreter(const std::string& filePath)
+void CGIServer::setResponse(Response& response, std::string status,
+	std::string type, std::string page)
+{
+	response.setStatus(status);
+	response.setType(type);
+	response.setBody(readErrorPage(page));
+}
+
+std::string CGIServer::readErrorPage(const std::string& errorPagePath)
+{
+	std::ifstream file(errorPagePath);
+	
+	if (!file)
+	{
+		return "<html><body><h1>404 Not Found</h1></body></html>";
+	}
+	
+	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+	return content;
+}
+
+std::string CGIServer::determineInterpreter(const std::string& filePath, Response& response)
 {
 	if (filePath.substr(filePath.find_last_of(".") + 1) == "py")
 	{
@@ -36,6 +57,7 @@ std::string CGIServer::determineInterpreter(const std::string& filePath)
 	}
 	else
 	{
+		setResponse(response, "404 Page Not Found", "text/html", "pages/404.html");
 		throw ServerException("Unsupported type passed to CGIHandler");
 	}
 }
@@ -57,12 +79,16 @@ std::vector<std::string> CGIServer::setEnvironmentVariables(Request& request)
 	return env;
 }
 
-void CGIServer::handleChildProcess(Server& server, const std::string& interpreter,
-	const std::string& filePath,const std::vector<std::string>& envVars)
+void CGIServer::handleChildProcess(Response& response, Server& server, const std::string& interpreter,
+	const std::string& filePath, const std::vector<std::string>& envVars)
 {
 	LOG_DEBUG("===Duplicating stdin and stdout===");
-	dup2(server.getPipe().input[IN], STDIN_FILENO);
-	dup2(server.getPipe().output[OUT], STDOUT_FILENO);
+	if (dup2(server.getPipe().input[IN], STDIN_FILENO) < 0 ||
+		dup2(server.getPipe().output[OUT], STDOUT_FILENO) < 0)
+	{
+		setResponse(response, "500 Internal Server error", "text/html", "pages/500.html");
+		throw ServerException("Duplication error occured in CGIHandler module");
+	}
 
 	close(server.getPipe().input[OUT]);
 	close(server.getPipe().output[IN]);
@@ -83,6 +109,7 @@ void CGIServer::handleChildProcess(Server& server, const std::string& interprete
 
 	LOG_DEBUG("===About to start execve===");
 	execve(interpreter.c_str(), args.data(), envp.data());
+	setResponse(response, "500 Internal Server error", "text/html", "pages/500.html");
 	throw ServerException("Error occured while execve() function was called");
 }
 
@@ -107,7 +134,11 @@ void CGIServer::handleParentProcess(Server& server, Response& response, const st
 		LOG_DEBUG("Populating response body");
 		response.appendToBody(buffer, bytesRead);
 	}
-	std::cerr << response.getBody() << std::endl;
+	if (bytesRead < 0)
+	{
+		setResponse(response, "500 Internal Server error", "text/html", "pages/500.html");
+		throw ServerException("Error occured while read() from pipe to form the response body");
+	}
 	close(server.getPipe().output[IN]);
 }
 
@@ -127,7 +158,8 @@ void CGIServer::handleProcesses(Request& request, Server& server, Response& resp
 	else if (pid == 0)
 	{
 		LOG_DEBUG("===Child started===");
-		handleChildProcess(server, interpreter, request.getStartLine()["path"].erase(0, 1), envVars);
+		handleChildProcess(response, server, interpreter,
+			request.getStartLine()["path"].erase(0, 1), envVars);
 	}
 	else
 	{

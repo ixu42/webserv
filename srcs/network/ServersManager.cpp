@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 11:02:23 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/08 13:18:46 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,8 +35,12 @@ ServersManager::ServersManager()
 	// for (std::pair<const std::string, ServerConfig>& serverConfigPair : _webservConfig->getServersConfigsMap())
 
 	std::cout << "ServersManager creating servers... Servers in config: " << _webservConfig->getServersConfigsMap().size() << std::endl;
-	for (auto& [ipPortKey, serverConfigs] : _webservConfig->getServersConfigsMap())
+
+	// iterate according to keys because map is ordered and we can not use unordered map as the order is not guaranteed
+	for (auto& key : _webservConfig->getServersConfigsMapKeys())
 	{
+		std::vector<ServerConfig> serverConfigs = _webservConfig->getServersConfigsMap()[key];
+
 		Server* foundServer = nullptr;
 		for (auto& server : _servers)
 		{

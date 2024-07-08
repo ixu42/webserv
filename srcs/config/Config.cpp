@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/07 23:13:23 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/08 13:17:26 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,11 +31,12 @@ void Config::printConfig()
 	std::cout << TEXT_YELLOW;
 	std::cout << "=== Printing parsed config ===" << std::endl;
 	int i = 0;
-	for (auto& serversConfigs : _serversConfigsMap) // also should go through the map of configs
+	for (auto& key : _serversConfigsMapKeys) // also should go through the map of configs
 	{
+		std::vector<ServerConfig> serversConfigs = _serversConfigsMap[key];
 		int j = 0;
-		std::cout << BG_YELLOW << TEXT_BLACK << TEXT_BOLD << "Server #" << i << " " << serversConfigs.first << RESET << std::endl;
-		for (ServerConfig server : serversConfigs.second)
+		std::cout << BG_YELLOW << TEXT_BLACK << TEXT_BOLD << "Server #" << i << " " << key << RESET << std::endl;
+		for (ServerConfig server : serversConfigs)
 		{
 			std::cout << TEXT_BOLD << TEXT_UNDERLINE << TEXT_YELLOW;;
 			std::cout << "Named Server #" << j << RESET << std::endl;
@@ -234,7 +235,18 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 
 		parseLocations(serverConfig, locationStrings);
 		_serversConfigsMap[findIpPortKey(generalConfig)].push_back(serverConfig);
+		_serversConfigsMapKeys.push_back(findIpPortKey(generalConfig));
 		i++;
+	}
+	std::cout << "=== Server in map ===" << std::endl;
+	for (auto& key : _serversConfigsMapKeys)
+	{
+		auto& serverConfigs = _serversConfigsMap[key];
+		std::cout << "Server: " << key << std::endl;
+		for (ServerConfig serverConfig : serverConfigs)
+		{
+			std::cout << "ServerName: " << serverConfig.serverName << std::endl;
+		}
 	}
 }
 
@@ -288,4 +300,9 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 std::map<std::string, std::vector<ServerConfig>>& Config::getServersConfigsMap()
 {
 	return _serversConfigsMap;
+}
+
+std::list<std::string>& Config::getServersConfigsMapKeys()
+{
+	return _serversConfigsMapKeys;
 }

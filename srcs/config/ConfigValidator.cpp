@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:11 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 12:46:07 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 13:57:59 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -222,11 +222,11 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 
 
 /**
- * Validates: path, redirect index, root, methods, uploadPath, directoryListing
+ * Validates: path, redirect index, root, methods, uploadPath, autoindex
 */
 int ConfigValidator::validateLocationConfig(std::string locationString)
 {
-	std::regex linePattern(R"((path|redirect|index|root|methods|uploadPath|directoryListing)\s+[a-zA-Z0-9~\-_./,:$]+\s*)");
+	std::regex linePattern(R"((path|redirect|index|root|methods|uploadPath|autoindex)\s+[a-zA-Z0-9~\-_./,:$]+\s*)");
 	std::map<std::string, std::regex> patterns = {
 		{"path", std::regex(R"(\s*path\s+\/([a-zA-Z0-9_\-~.]+\/?)*([a-zA-Z0-9_\-~.]+\.[a-zA-Z0-9_\-~.]+)?\s*)")},
 		{"index", std::regex(R"(\s*index\s+([^,\s]+(?:\.html|\.htm))\s*)")},
@@ -234,7 +234,7 @@ int ConfigValidator::validateLocationConfig(std::string locationString)
 		{"root", std::regex(R"(\s*root\s+\/([a-zA-Z0-9-_~.]*\/)*\s*)")},
 		{"uploadPath", std::regex(R"(\s*uploadPath\s+\/([a-zA-Z0-9-_~.]*\/)*\s*)")},
 		{"methods", std::regex(R"(\s*methods\s+(get|post|delete)(,(get|post|delete)){0,2}\s*)")},
-		{"directoryListing", std::regex(R"(\s*directoryListing\s+(on|off)\s*)")},
+		{"autoindex", std::regex(R"(\s*autoindex\s+(on|off)\s*)")},
 	};
 
 	int locationStringErrorsCount = 0;

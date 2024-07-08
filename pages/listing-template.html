@@ -1,29 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Index of [path]</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
-            background-color: #f0f0f0;
-        }
-        h1 {
-            font-size: 50px;
-        }
-        h2 {
-            font-size: 35px;
-        }
-        p {
-            font-size: 20px;
-        }
-    </style>
-</head>
-<body>
-    <h1>Index of [path]</h1>
-    [body]
-</body>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Index of [path]</title>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				/* text-align: center; */
+				padding: 50px;
+				background-color: #f0f0f0;
+			}
+			h1 {
+				font-size: 50px;
+			}
+			h2 {
+				font-size: 35px;
+			}
+			p {
+				font-size: 20px;
+			}
+			.file-list {
+				display: table;
+				width: 70%;
+				font-family: 'Courier New', Courier, monospace;
+				font-weight: bold;
+			}
+			.file-row {
+				display: table-row;
+			}
+			.file-cell {
+				display: table-cell;
+				padding: 8px;
+				/* border-bottom: 1px solid #ddd; */
+			}
+			.file-cell.name {
+				width: 50%;
+			}
+			.file-cell.date,
+			.file-cell.size {
+				width: 25%;
+			}
+			.file-cell.size {
+				text-align: right;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Index of [path]</h1>
+		<hr />
+		[body]
+		<hr />
+	</body>
 </html>

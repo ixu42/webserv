@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 12:46:30 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 14:39:45 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,7 @@ void Config::printConfig()
 				LOG_DEBUG(TEXT_YELLOW, "\t\tredirect: ", location.redirect, RESET);
 				LOG_DEBUG(TEXT_YELLOW, "\t\troot: ", location.root, RESET);
 				LOG_DEBUG(TEXT_YELLOW, "\t\tuploadPath: ", location.uploadPath, RESET);
-				LOG_DEBUG(TEXT_YELLOW, "\t\tdirectoryListing: ", std::boolalpha, location.directoryListing, RESET);
+				LOG_DEBUG(TEXT_YELLOW, "\t\tautoindex: ", std::boolalpha, location.autoindex);
 				LOG_DEBUG(TEXT_YELLOW, "\t\tindex: ", location.index, RESET);
 				for (auto& method : location.methods)
 				{
@@ -267,8 +267,8 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 					serverConfig.locations[j].root = value;
 				else if (key == "uploadPath")
 					serverConfig.locations[j].uploadPath = value;
-				else if (key == "directoryListing" && value == "on")
-						serverConfig.locations[j].directoryListing = true;
+				else if (key == "autoindex" && value == "on")
+						serverConfig.locations[j].autoindex = true;
 				else if (key == "index")
 						serverConfig.locations[j].index = value;
 				else if (key == "methods")

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/08 00:21:03 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/08 11:12:18 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,7 +84,7 @@ class Server
 		void						sendResponse(std::string& response, t_client& client);
 		Location					findLocation(Request* req);
 
-		Response					createDirListResponse(Location& location, std::string requestPath);
+		Response*					createDirListResponse(Location& location, std::string requestPath);
 
 	private:
 		void						initServer(const char* ipAddr, int port);

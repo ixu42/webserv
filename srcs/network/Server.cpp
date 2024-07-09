@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/09 16:03:07 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/09 19:03:18 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ Server::Server() : _serverSocket(Socket())
 Server::Server(const char* ipAddr, int port) : _serverSocket(Socket())
 {
 	LOG_DEBUG("Server parameterized constructor called");
+	LOG_DEBUG("Server (port: ", port, ", ipAddr: ", ipAddr, ") created");
 
 	initServer(ipAddr, port);
 }

@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/08 18:19:15 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/09 21:38:19 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,11 +17,15 @@
 #include "utils/Colors.hpp"
 #include "utils/logUtils.hpp"
 #include <iostream>
+#include "utils/signal.hpp"
+
+std::atomic<bool> g_signalReceived(false);
 
 static void signalHandler(int signal)
 {
 	LOG_DEBUG("Signal ", signal, " received");
-	throw SignalException(std::to_string(signal));
+	g_signalReceived.store(true);
+	std::cout << TEXT_MAGENTA << "\n[INFO] Shutting down the server(s)..." << RESET << std::endl;
 }
 
 int main(int argc, char *argv[])
@@ -53,13 +57,7 @@ int main(int argc, char *argv[])
 		ServersManager* manager = ServersManager::getInstance();
 		serverManagerInstanceCreated = true;
 		manager->run();
-	}
-	catch(const SignalException& e)
-	{
-		std::cout << TEXT_MAGENTA << "\n[INFO] Server shutdown by signal " << e.what() << RESET << std::endl;
-		if (serverManagerInstanceCreated)
-			delete ServersManager::getInstance();
-		return std::stoi(e.what(), 0, 10);
+		delete manager->getInstance();
 	}
 	catch(const ServerException& e)
 	{

@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/09 15:12:06 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/09 15:13:47 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,6 +61,8 @@ Server::~Server()
 		close(client.fd);
 		if (client.request)
 			delete client.request;
+		if (client.response)
+			delete client.response;
 	}
 }
 
@@ -281,6 +283,7 @@ Response* Server::createDirListResponse(Location& location, std::string requestP
 	catch (const fs::filesystem_error& e)
 	{
 		LOG_ERROR("Error accessing directory: ", e.what());
+		delete listingResponse;
 		throw ResponseError(403);
 	}
 

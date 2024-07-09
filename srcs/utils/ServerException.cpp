@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerException.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/04 00:51:19 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/09 16:02:37 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/09 21:35:33 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,13 +15,6 @@
 ServerException::ServerException(const std::string message) : _message(message) {}
 
 const char* ServerException::what() const noexcept
-{
-	return _message.c_str();
-}
-
-SignalException::SignalException(const std::string& message) : _message(message) {}
-
-const char* SignalException::what() const noexcept
 {
 	return _message.c_str();
 }

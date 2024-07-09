@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 18:28:01 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/09 21:38:40 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,10 @@
 #include <poll.h>
 #include <csignal>
 #include <string>
+#include <errno.h>
 
 #include <exception>
+#include "../utils/signal.hpp"
 
 #define DEFAULT_CONFIG "default/config.conf"
 

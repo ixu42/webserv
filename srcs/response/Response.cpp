@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 16:51:18 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/09 16:01:30 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,11 +133,6 @@ std::string& Response::getType()
 	return _type;
 }
 
-bool& Response::getCGIflag()
-{
-	return _CGIflag;
-}
-
 int Response::getContentLength() const 
 {
 	return _contentLength;
@@ -173,11 +168,6 @@ void Response::setTypeFromFormat(std::string format)
 	{
 		_type = mimeTypes.at("default");
 	}
-}
-
-void Response::setCGIflag(bool CGIflag)
-{
-	_CGIflag = CGIflag;
 }
 
 void Response::setContentLength(int contentLength)

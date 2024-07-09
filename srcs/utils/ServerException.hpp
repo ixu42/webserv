@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:43 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 17:18:19 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/09 16:02:54 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,17 @@ class ServerException : public std::exception
 
 	public:
 		explicit ServerException(const std::string message);
+
+		const char* what() const noexcept override;
+};
+
+class SignalException : public std::exception
+{
+	private:
+		std::string _message;
+
+	public:
+		explicit SignalException(const std::string& message);
 
 		const char* what() const noexcept override;
 };

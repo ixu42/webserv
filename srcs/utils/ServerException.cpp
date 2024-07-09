@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/04 00:51:19 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 17:18:00 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/09 16:02:37 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,13 @@
 ServerException::ServerException(const std::string message) : _message(message) {}
 
 const char* ServerException::what() const noexcept
+{
+	return _message.c_str();
+}
+
+SignalException::SignalException(const std::string& message) : _message(message) {}
+
+const char* SignalException::what() const noexcept
 {
 	return _message.c_str();
 }

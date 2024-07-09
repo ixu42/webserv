@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 10:45:26 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/08 18:28:01 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,11 +15,12 @@
 #include "Server.hpp"
 #include "../config/Config.hpp"
 #include "../response/Response.hpp"
+#include "../utils/logUtils.hpp"
 #include "CGIHandler.hpp"
 #include <vector>
 #include <poll.h>
 #include <csignal>
-#include "../utils/logUtils.hpp"
+#include <string>
 
 #include <exception>
 
@@ -38,9 +39,7 @@ class ServersManager
 		// ServersManager(Config& webservConfig);
 		ServersManager(const ServersManager&) = delete;
 		ServersManager& operator=(const ServersManager&) = delete;
-		
 
-		static void					signalHandler(int signal);
 		void						handleRead(struct pollfd& pfdReadyForRead);
 		void						handleWrite(int fdReadyForWrite);
 		void						removeFromPollfd(int fd);

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:51 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 17:39:02 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/09 16:02:06 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,12 +21,11 @@
 	class Response
 	{
 		private:
-			bool								_CGIflag = false; // wtf??
-			std::string							_body;
-			std::string							_status;
-			std::string							_type;
-			std::map<std::string, std::string>	_headers;
-			int									_contentLength = 0;
+			std::string	_body;
+			std::string	_status;
+			std::string	_type;
+			std::map<std::string, std::string> _headers;
+			int			_contentLength = 0;
 
 		public:
 			Response();

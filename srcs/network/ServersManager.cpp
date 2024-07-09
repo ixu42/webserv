@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 15:37:06 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/08 18:27:52 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,33 +14,15 @@
 
 std::vector<Server*> ServersManager::_servers;
 ServersManager* ServersManager::_instance = nullptr;
-Config* ServersManager::_webservConfig;
-
-void ServersManager::signalHandler(int signal)
-{
-	std::cout << TEXT_MAGENTA << "\n[INFO] Shutting down the server(s)..." << RESET << std::endl;
-	LOG_DEBUG("Signal ", signal, " received.");
-
-	// Handle cleanup tasks or other actions here
-	
-	// ServersManager::getInstance()->poll_fds.clear();
-	delete _instance;
-	std::exit(signal); // Exit the program with the received signal as exit code
-}
+Config* ServersManager::_webservConfig = nullptr;
 
 ServersManager::ServersManager()
 {
-	// Handle ctrl+c
-	signal(SIGINT, ServersManager::signalHandler); /* ctrl + c */
-	signal(SIGTSTP, ServersManager::signalHandler); /* ctrl + z */
-	signal(SIGQUIT, ServersManager::signalHandler); /* ctrl + \ */
-
 	// Add servers
 	LOG_DEBUG("ServersManager creating servers... Servers in config: ", _webservConfig->getServersConfigsMap().size());
 
 	// iterate according to keys because map is ordered and we can not use unordered map as the order is not guaranteed
 	for (auto& key : _webservConfig->getServersConfigsMapKeys())
-
 	{
 		std::vector<ServerConfig> serverConfigs = _webservConfig->getServersConfigsMap()[key];
 
@@ -76,8 +58,7 @@ ServersManager::ServersManager()
 	if (_servers.empty())
 	{
 		delete _instance;
-		LOG_ERROR("No valid servers");
-		std::exit(EXIT_FAILURE);
+		throw ServerException("No valid servers");
 	}
 	LOG_INFO("ServersManager created ", _servers.size(), " servers");
 }
@@ -103,7 +84,7 @@ ServersManager* ServersManager::getInstance()
 		_webservConfig = new Config(DEFAULT_CONFIG); // if config is not initialized with initConfig, DEFAULT_CONFIG will be used
 	if (_instance == nullptr)
 		_instance = new ServersManager();
-		
+
 	return _instance;
 }
 

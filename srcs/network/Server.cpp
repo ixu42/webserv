@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/09 15:13:47 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/09 15:59:13 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -308,7 +308,9 @@ bool	Server::formRequestErrorResponse(t_client& client)
 	{
 		std::string responseString = Response::buildResponse(*client.response);
 		sendResponse(responseString, client);
+		delete client.request;
 		delete client.response;
+		client.request = nullptr;
 		client.response = nullptr;
 		close(client.fd);
 		removeFromClients(client);
@@ -327,7 +329,9 @@ bool	Server::formCGIConfigAbsenceResponse(t_client& client, Server &server)
 		client.response = new Response(404);
 		std::string responseString = Response::buildResponse(*client.response);
 		sendResponse(responseString, client);
+		delete client.request;
 		delete client.response;
+		client.request = nullptr;
 		client.response = nullptr;
 		close(client.fd);
 		removeFromClients(client);

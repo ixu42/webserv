@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/09 16:03:36 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/09 19:48:25 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,4 +98,6 @@ class Server
 		
 		ServerConfig*				findServerConfig(Request* req);
 		size_t						findMaxClientBodyBytes(Request request);
+
+		Response*					createResponse(Request* request, int code, std::map<std::string, std::string> optionalHeaders = {});
 };

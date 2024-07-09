@@ -6,13 +6,14 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:51 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/09 16:02:06 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/09 19:54:04 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 	#pragma once
 
 	#include "../utils/Utility.hpp"
+	#include "../config/Config.hpp"
 	#include <map>
 	#include <string>
 	#include <sstream>
@@ -29,7 +30,7 @@
 
 		public:
 			Response();
-			Response(int code, std::map<std::string, std::string> optionalHeaders = {});
+			Response(int code, ServerConfig* serverConfig, std::map<std::string, std::string> optionalHeaders = {});
 			Response(int code, std::string filePath);
 
 			std::string& getBody();

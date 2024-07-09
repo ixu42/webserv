@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/09 16:03:07 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/09 21:54:11 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -197,6 +197,12 @@ void	Server::handler(Server*& server, t_client& client)
 	}
 }
 
+Response* Server::createResponse(Request* request, int code, 
+						std::map<std::string, std::string> optionalHeaders)
+{
+	return new Response(code, findServerConfig(request), optionalHeaders);
+}
+
 void Server::sendResponse(std::string& response, t_client& client)
 {
 	size_t totalBytesWritten = 0;
@@ -320,13 +326,14 @@ bool	Server::formRequestErrorResponse(t_client& client)
 	return false;
 }
 
-bool	Server::formCGIConfigAbsenceResponse(t_client& client, Server &server)
+bool	Server::formCGIConfigAbsenceResponse(t_client& client, Server& server)
 {
 	if (!server.findServerConfig(client.request)->cgis["php"]
 		&& !server.findServerConfig(client.request)->cgis["py"]
 		&& client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
 	{
-		client.response = new Response(404);
+		// client.response = new Response(404, {}, findServerConfig(client.request));
+		client.response = createResponse(client.request, 404);
 		std::string responseString = Response::buildResponse(*client.response);
 		sendResponse(responseString, client);
 		delete client.request;
@@ -341,7 +348,7 @@ bool	Server::formCGIConfigAbsenceResponse(t_client& client, Server &server)
 	return false;
 }
 
-void	Server::handleCGIResponse(t_client& client, Server &server)
+void	Server::handleCGIResponse(t_client& client, Server& server)
 {
 	try
 	{
@@ -352,13 +359,15 @@ void	Server::handleCGIResponse(t_client& client, Server &server)
 	{
 		delete client.response;
 		LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
-		client.response = new Response(e.getCode(), e.getHeaders());
+		// client.response = new Response(e.getCode(), e.getHeaders(), findServerConfig(client.request));
+		client.response = createResponse(client.request, e.getCode(), e.getHeaders());
 	}
 	catch (const std::exception& e)
 	{
 		delete client.response;
 		LOG_ERROR("Responder caught an exception: ", e.what());
-		client.response = new Response(500);
+		// client.response = new Response(500, {}, findServerConfig(client.request));
+		client.response = createResponse(client.request, 500);
 	}
 }
 
@@ -383,13 +392,15 @@ void	Server::handleNonCGIResponse(t_client& client, Server &server)
 	{
 		delete client.response;
 		LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
-		client.response = new Response(e.getCode(), e.getHeaders());
+		// client.response = new Response(e.getCode(), e.getHeaders(), findServerConfig(client.request));
+		client.response = createResponse(client.request, e.getCode(), e.getHeaders());
 	}
 	catch (const std::exception& e)
 	{
 		delete client.response;
 		LOG_ERROR("Responder caught an exception: ", e.what());
-		client.response = new Response(500);
+		// client.response = new Response(500, {}, findServerConfig(client.request));
+		client.response = createResponse(client.request, 500);
 	}
 }
 
@@ -418,7 +429,8 @@ void	Server::handleRedirect(t_client& client, Location& foundLocation)
 
 	LOG_DEBUG("Redirect URL: ", redirectUrl);
 	LOG_DEBUG("Page path: ", pagePath);
-	client.response = new Response(307, {{"Location", redirectUrl}});
+	// client.response = new Response(307, {{"Location", redirectUrl}}, findServerConfig(client.request));
+	client.response = createResponse(client.request, 307, {{"Location", redirectUrl}});
 }
 
 void	Server::handleStaticFiles(t_client& client, Location& foundLocation)
@@ -440,7 +452,7 @@ void	Server::handleStaticFiles(t_client& client, Location& foundLocation)
 		else if (foundLocation.autoindex)
 			locationResp = createDirListResponse(foundLocation, requestPath);
 		else
-			throw ResponseError(403);
+			throw ResponseError(404); // 
 	}
 	
 	// Checks if location response was formed, otherwise creates Response from filePath

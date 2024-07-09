@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:20 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 15:36:26 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/09 21:55:22 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,7 @@ struct ServerConfig
 
 		std::map<int, std::string>	defaultErrorPages = {
 															{400, "pages/400.html"},
+															{403, "pages/403.html"},
 															{404, "pages/404.html"},
 															{405, "pages/405.html"},
 															{413, "pages/413.html"},

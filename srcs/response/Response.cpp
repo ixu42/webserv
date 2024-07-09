@@ -6,11 +6,12 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/09 16:01:30 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/09 21:38:41 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Response.hpp"
+#include "../config/Config.hpp"
 
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
 static const std::string serverName = "webserv";
@@ -75,15 +76,12 @@ static const std::map<std::string, std::string> mimeTypes = {
 // Connection: Closed
 // Content-Type: text/html; charset=iso-8859-1
 
-// body
-// 200, 400, 403, 404, 405, 413, 500, 307
-
 Response::Response() {}
 
 /**
  * optionalHeaders: {{ "headerKey1": "headerValue1" }, { "headerKey2": "headerValue2}}
 */
-Response::Response(int code, std::map<std::string, std::string> optionalHeaders)
+Response::Response(int code, ServerConfig* serverConfig, std::map<std::string, std::string> optionalHeaders)
 {
 	setStatusFromCode(code);
 	if (optionalHeaders.size() > 0)
@@ -91,7 +89,14 @@ Response::Response(int code, std::map<std::string, std::string> optionalHeaders)
 
 	if (code >= 400 && code <= 599)
 	{
-		*this = Response(code, "pages/" + std::to_string(code) + ".html");
+		std::string errorPagePath = serverConfig->defaultErrorPages[404];
+		auto errorIt = serverConfig->errorPages.find(code);
+		auto defaultErrorIt = serverConfig->defaultErrorPages.find(code);
+		if (errorIt != serverConfig->errorPages.end())
+			errorPagePath = serverConfig->errorPages[code];
+		else if (defaultErrorIt != serverConfig->defaultErrorPages.end())
+			errorPagePath = serverConfig->defaultErrorPages[code];
+		*this = Response(code, errorPagePath);
 	}
 }
 

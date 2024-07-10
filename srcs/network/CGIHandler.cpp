@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/10 18:29:50 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/10 18:52:43 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 void CGIServer::handleCGI(t_client& client, Server& server)
 {
-	LOG_INFO("Running CGI");
+	LOG_INFO(TEXT_GREEN, "Running CGI", RESET);
 	LOG_DEBUG("handleCGI function started");
 	std::string interpreter = determineInterpreter(client.request->getStartLine()["path"]);
 	std::vector<std::string> envVars = setEnvironmentVariables(client.request);
@@ -29,7 +29,8 @@ std::string CGIServer::readErrorPage(const std::string& errorPagePath)
 	
 	if (!file)
 	{
-		throw ResponseError(404);
+		throw ResponseError(404, {}, "Exception has been thrown in readErrorPage() "
+			"method of CGIServer class");
 	}
 	
 	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
@@ -50,7 +51,8 @@ std::string CGIServer::determineInterpreter(const std::string& filePath)
 	}
 	else
 	{
-		throw ResponseError(404);
+		throw ResponseError(404, {}, "Exception has been thrown in determineInterpreter() "
+			"method of CGIServer class");
 	}
 }
 
@@ -78,7 +80,8 @@ void CGIServer::handleChildProcess(Server& server, const std::string& interprete
 	if (dup2(server.getPipe().input[IN], STDIN_FILENO) < 0 ||
 		dup2(server.getPipe().output[OUT], STDOUT_FILENO) < 0)
 	{
-		throw ResponseError(500);
+		throw ResponseError(500, {}, "Exception (dup2) has been thrown in handleChildProcess() "
+			"method of CGIServer class");
 	}
 
 	close(server.getPipe().input[OUT]);
@@ -100,7 +103,8 @@ void CGIServer::handleChildProcess(Server& server, const std::string& interprete
 
 	LOG_DEBUG("About to start execve");
 	execve(interpreter.c_str(), args.data(), envp.data());
-	throw ResponseError(500);
+	throw ResponseError(500, {}, "Exception (execve) has been thrown in handleChildProcess() "
+		"method of CGIServer class");
 }
 
 void CGIServer::handleParentProcess(Server& server, Response* response, const std::string& method,
@@ -127,7 +131,8 @@ void CGIServer::handleParentProcess(Server& server, Response* response, const st
 	}
 	if (bytesRead < 0)
 	{
-		throw ResponseError(500);
+		throw ResponseError(500, {}, "Exception has been thrown in handleParentProcess() "
+			"method of CGIServer class");
 	}
 	checkResponseHeaders(oss.str(), response);
 	close(server.getPipe().output[IN]);
@@ -138,13 +143,15 @@ void CGIServer::handleProcesses(t_client& client, Server& server,
 {
 	if (pipe(server.getPipe().input) == -1 || pipe(server.getPipe().output) == -1)
 	{
-		throw ResponseError(500);
+		throw ResponseError(500, {}, "Exception (pipe) has been thrown in handleParentProcess() "
+			"method of CGIServer class");
 	}
 
 	pid_t pid = fork();
 	if (pid == -1)
 	{
-		throw ResponseError(500);
+		throw ResponseError(500, {}, "Exception (fork) has been thrown in handleParentProcess() "
+			"method of CGIServer class");
 	}
 	else if (pid == 0)
 	{
@@ -158,7 +165,7 @@ void CGIServer::handleProcesses(t_client& client, Server& server,
 		handleParentProcess(server, client.response, client.request->getStartLine()["method"], client.request->getBody());
 		waitpid(pid, nullptr, 0);
 	}
-	LOG_INFO("CGI script executed");
+	LOG_INFO(TEXT_GREEN, "CGI script executed", RESET);
 }
 
 void CGIServer::checkResponseHeaders(const std::string& result, Response* response)

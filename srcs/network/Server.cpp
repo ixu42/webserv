@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/10 15:31:32 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/10 18:57:14 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,7 +173,8 @@ Request* Server::receiveRequest(int clientSockfd)
 			size_t currRequestBodyBytes = request.length() - emptyLinePos - emptyLinesSize;
 
 			if (currRequestBodyBytes > maxClientBodyBytes)
-				throw ResponseError(407);
+				throw ResponseError(407, {}, "Exception has been thrown in receiveRequest() "
+			"method of Server class");
 
 			if (currRequestBodyBytes >= contentLengthNum)
 				break;
@@ -291,7 +292,8 @@ Response* Server::createDirListResponse(Location& location, std::string requestP
 	{
 		LOG_ERROR("Error accessing directory: ", e.what());
 		delete listingResponse;
-		throw ResponseError(403);
+		throw ResponseError(403, {}, "Exception has been thrown in createDirListResponse() "
+			"method of Server class");
 	}
 
 	// Replace [body]
@@ -415,7 +417,8 @@ void	Server::checkIfAllowed(t_client& client, Location& foundLocation)
 			if (methodBool)
 				allowedMethods += allowedMethods.empty() ? methodName : ", " + methodName;
 		}
-		throw ResponseError(405, {{"Allowed", allowedMethods}});
+		throw ResponseError(405, {{"Allowed", allowedMethods}}, "Exception has been thrown in checkIfAllowed() "
+			"method of Server class");
 	}
 }
 
@@ -453,7 +456,8 @@ void	Server::handleStaticFiles(t_client& client, Location& foundLocation)
 		else if (foundLocation.autoindex)
 			locationResp = createDirListResponse(foundLocation, requestPath);
 		else
-			throw ResponseError(404); // 
+			throw ResponseError(404, {}, "Exception has been thrown in handleStaticFiles() "
+			"method of Server class"); // 
 	}
 	
 	// Checks if location response was formed, otherwise creates Response from filePath
@@ -526,9 +530,11 @@ ServerConfig* Server::findServerConfig(Request* req)
 {
 	// If request host is an ip address:port or if the ip is not specified for current server, the first config for the server is used
 	if(!req)
-		throw ResponseError(400);
+		throw ResponseError(400, {}, "Exception has been thrown in findServerConfig() "
+			"method of Server class");
 	if (req->getHeaders()["host"].empty())
-		throw ResponseError(400); // Bad request
+		throw ResponseError(400, {}, "Exception (empty host) has been thrown in findServerConfig() "
+			"method of Server class"); // Bad request
 
 	std::vector<std::string> hostSplit = Utility::splitString(req->getHeaders()["host"], ":");
 
@@ -567,18 +573,21 @@ Location Server::findLocation(Request* req)
 {
 	LOG_INFO("Searching for server for current location...");
 	if (!req)
-		throw ResponseError(400);
+		throw ResponseError(400, {}, "Exception (no request) has been thrown in findLocation() "
+			"method of Server class");
 
 	ServerConfig* namedServerConfig = findServerConfig(req);
 	// This block might be redundant as we always have a server config???
 	if (!namedServerConfig)
 	{
-		throw ResponseError(404);
+		throw ResponseError(404, {}, "Exception (no ServerConfig) has been thrown in findLocation() "
+			"method of Server class");
 	}
 	if (namedServerConfig->locations.empty())
 	{
 		LOG_ERROR("No locations found for server: ", whoAmI());
-		throw ResponseError(404);
+		throw ResponseError(404, {}, "Exception has been thrown in findLocation() "
+			"method of Server class");
 	}
 
 	LOG_INFO("Server found. Searching for location...");

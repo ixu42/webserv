@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 15:42:44 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/10 15:42:14 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,7 @@ void Config::printConfig()
 				LOG_DEBUG(TEXT_YELLOW, "\t\tredirect: ", location.redirect, RESET);
 				LOG_DEBUG(TEXT_YELLOW, "\t\troot: ", location.root, RESET);
 				LOG_DEBUG(TEXT_YELLOW, "\t\tuploadPath: ", location.uploadPath, RESET);
-				LOG_DEBUG(TEXT_YELLOW, "\t\tautoindex: ", std::boolalpha, location.autoindex);
+				LOG_DEBUG(TEXT_YELLOW, "\t\tautoindex: ", std::boolalpha, location.autoindex, RESET);
 				LOG_DEBUG(TEXT_YELLOW, "\t\tindex: ", location.index, RESET);
 				for (auto& method : location.methods)
 				{

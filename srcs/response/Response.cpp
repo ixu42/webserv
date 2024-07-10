@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/09 21:38:41 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/10 19:17:13 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,38 +89,56 @@ Response::Response(int code, ServerConfig* serverConfig, std::map<std::string, s
 
 	if (code >= 400 && code <= 599)
 	{
-		std::string errorPagePath = serverConfig->defaultErrorPages[404];
+		std::string errorPagePath = serverConfig->defaultErrorPages[404]; // fallback for not legit error codes
 		auto errorIt = serverConfig->errorPages.find(code);
 		auto defaultErrorIt = serverConfig->defaultErrorPages.find(code);
-		if (errorIt != serverConfig->errorPages.end())
+		// for (auto& [errorkey, errorpath] : serverConfig->errorPages)
+		// {
+		// 	std::cout << "error key: " << errorkey << ", errorpath:" << errorpath << std::endl;
+		// }
+		if (errorIt != serverConfig->errorPages.end() && access(errorIt->second.c_str(),R_OK) == 0)
+		{
+			// std::cout << TEXT_GREEN << "user page found for error" << std::endl;
 			errorPagePath = serverConfig->errorPages[code];
+		}
 		else if (defaultErrorIt != serverConfig->defaultErrorPages.end())
+		{
+			// std::cout << TEXT_GREEN << "default page found for error" << std::endl;
+		// else if (defaultErrorIt != serverConfig->defaultErrorPages.end())
 			errorPagePath = serverConfig->defaultErrorPages[code];
+		}
 		*this = Response(code, errorPagePath);
 	}
 }
 
 Response::Response(int code, std::string filePath)
 {
-	auto [file, size] = Utility::readBinaryFile(filePath);
+	std::string fileContent;
+	size_t size;
+	
+	if (access(filePath.c_str(), F_OK) == -1) // Fallback, in case default pages/404.html file is missing
+		fileContent = "<!DOCTYPE html><html><head><title>404 Not Found</title></head><body><h1>404 Not Found</h1><hr /><p>Last resort.</p><p>Nothing found.</p></body></html>"; 
+	else if (access(filePath.c_str(), R_OK) == -1) // Fallback, in case default pages/404.html file has no permission to read
+		fileContent = "<!DOCTYPE html><html><head><title>403 Forbidden</title></head><body><h1>403 Forbidden</h1><hr /><p>Last resort.</p><p>No permission.</p></body></html>"; 
+	size = fileContent.size();
+
 	setStatusFromCode(code);
 
+	if (access(filePath.c_str(), R_OK) == 0)
+	{
+		auto [binaryFile, binarySize] = Utility::readBinaryFile(filePath);
+		size = binarySize;
+		fileContent = std::string(binaryFile.begin(), binaryFile.end());
+
+		size_t dotPos = filePath.find_last_of(".");
+
+		if (dotPos != std::string::npos && mimeTypes.find(filePath.substr(filePath.find_last_of(".") + 1)) != mimeTypes.end())
+			setType(mimeTypes.at(filePath.substr(filePath.find_last_of(".") + 1)));
+		else
+			setType(mimeTypes.at("default"));
+	}
+	setBody(fileContent);
 	setContentLength(size);
-
-	std::string fileContent(file.begin(), file.end());
-
-	size_t dotPos = filePath.find_last_of(".");
-
-	if (dotPos != std::string::npos && mimeTypes.find(filePath.substr(filePath.find_last_of(".") + 1)) != mimeTypes.end())
-	{
-		setType(mimeTypes.at(filePath.substr(filePath.find_last_of(".") + 1)));
-		setBody(fileContent);
-	}
-	else
-	{
-		setType(mimeTypes.at("default"));
-		setBody(fileContent);
-	}
 }
 
 std::string& Response::getBody()

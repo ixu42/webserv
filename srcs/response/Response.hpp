@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:51 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/09 19:54:04 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/10 16:53:02 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 	#include <string>
 	#include <sstream>
 	#include <iostream>
+	#include <unistd.h> // for access()
 
 	class Response
 	{

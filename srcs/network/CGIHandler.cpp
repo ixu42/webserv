@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/10 18:52:43 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/10 20:28:53 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,6 +80,7 @@ void CGIServer::handleChildProcess(Server& server, const std::string& interprete
 	if (dup2(server.getPipe().input[IN], STDIN_FILENO) < 0 ||
 		dup2(server.getPipe().output[OUT], STDOUT_FILENO) < 0)
 	{
+		closeFds(server);
 		throw ResponseError(500, {}, "Exception (dup2) has been thrown in handleChildProcess() "
 			"method of CGIServer class");
 	}
@@ -103,21 +104,19 @@ void CGIServer::handleChildProcess(Server& server, const std::string& interprete
 
 	LOG_DEBUG("About to start execve");
 	execve(interpreter.c_str(), args.data(), envp.data());
+	close(server.getPipe().input[IN]);
+	close(server.getPipe().output[OUT]);
 	throw ResponseError(500, {}, "Exception (execve) has been thrown in handleChildProcess() "
 		"method of CGIServer class");
 }
 
-void CGIServer::handleParentProcess(Server& server, Response* response, const std::string& method,
-	const std::string& body)
+void CGIServer::handleParentProcess(Server& server, Response* response, const std::string& body)
 {
 	close(server.getPipe().input[IN]);
 	close(server.getPipe().output[OUT]);
 
-	if (method == "POST")
-	{
-		LOG_DEBUG("Writing body of the request inside the pipe");
-		write(server.getPipe().input[OUT], body.c_str(), body.size());
-	}
+	LOG_DEBUG("Writing body of the request inside the pipe");
+	write(server.getPipe().input[OUT], body.c_str(), body.size());
 	close(server.getPipe().input[OUT]);
 
 	char buffer[1024];
@@ -131,6 +130,7 @@ void CGIServer::handleParentProcess(Server& server, Response* response, const st
 	}
 	if (bytesRead < 0)
 	{
+		close(server.getPipe().output[IN]);
 		throw ResponseError(500, {}, "Exception has been thrown in handleParentProcess() "
 			"method of CGIServer class");
 	}
@@ -150,6 +150,7 @@ void CGIServer::handleProcesses(t_client& client, Server& server,
 	pid_t pid = fork();
 	if (pid == -1)
 	{
+		closeFds(server);
 		throw ResponseError(500, {}, "Exception (fork) has been thrown in handleParentProcess() "
 			"method of CGIServer class");
 	}
@@ -162,7 +163,7 @@ void CGIServer::handleProcesses(t_client& client, Server& server,
 	else
 	{
 		LOG_DEBUG("Parent started");
-		handleParentProcess(server, client.response, client.request->getStartLine()["method"], client.request->getBody());
+		handleParentProcess(server, client.response, client.request->getBody());
 		waitpid(pid, nullptr, 0);
 	}
 	LOG_INFO(TEXT_GREEN, "CGI script executed", RESET);
@@ -204,4 +205,12 @@ void CGIServer::checkResponseHeaders(const std::string& result, Response* respon
 	{
 		response->setBody(result);
 	}
+}
+
+void CGIServer::closeFds(Server& server)
+{
+	close(server.getPipe().output[IN]);
+	close(server.getPipe().output[OUT]);
+	close(server.getPipe().input[IN]);
+	close(server.getPipe().input[OUT]);
 }

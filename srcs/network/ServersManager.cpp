@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 18:27:52 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/09 21:11:26 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,15 @@ ServersManager::ServersManager()
 		throw ServerException("No valid servers");
 	}
 	LOG_INFO("ServersManager created ", _servers.size(), " servers");
+	for (Server*& server : _servers)
+	{
+		std::string ipAddr = server->getIpAddress();
+		if (ipAddr.empty())
+			ipAddr = "0.0.0.0";
+		LOG_INFO("Server ipAddr: ", ipAddr, ", port: ", server->getPort());		
+	}
 }
+		
 
 ServersManager::~ServersManager()
 {
@@ -90,13 +98,17 @@ ServersManager* ServersManager::getInstance()
 
 void ServersManager::run()
 {
-	while (true)
+	while (!g_signalReceived.load())
 	{
 		LOG_DEBUG("poll() waiting for an fd to be ready...");
 		int ready = poll(_fds.data(), _fds.size(), -1);
 		if (ready == -1)
-			throw ServerException("poll() error");
-
+		{
+			if (errno == EINTR)
+				continue ;
+			else
+				throw ServerException("poll() error");
+		}
 		for (struct pollfd& pfd : _fds)
 		{
 			if (pfd.revents & POLLIN)

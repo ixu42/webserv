@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/08 11:59:28 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/10 18:23:06 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@ class CGIServer {
 		static void			handleParentProcess(Server& server, Response* response, const std::string& method,
 								const std::string& body);
 		static std::string	readErrorPage(const std::string& errorPagePath);
+		static void			checkResponseHeaders(const std::string& result, Response* response);
 
 	public:
 		CGIServer()			= delete;

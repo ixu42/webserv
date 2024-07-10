@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/08 13:22:54 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/10 18:29:50 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,13 +14,13 @@
 
 void CGIServer::handleCGI(t_client& client, Server& server)
 {
-	LOG_DEBUG("\n===handleCGI function started===");
+	LOG_INFO("Running CGI");
+	LOG_DEBUG("handleCGI function started");
 	std::string interpreter = determineInterpreter(client.request->getStartLine()["path"]);
 	std::vector<std::string> envVars = setEnvironmentVariables(client.request);
-	LOG_DEBUG("===Enviroment has been set===");
+	LOG_DEBUG("Enviroment has been set");
 	handleProcesses(client, server, interpreter, envVars);
-	LOG_DEBUG("===handleCGI function ended===");
-
+	LOG_DEBUG("handleCGI function ended");
 }
 
 std::string CGIServer::readErrorPage(const std::string& errorPagePath)
@@ -40,12 +40,12 @@ std::string CGIServer::determineInterpreter(const std::string& filePath)
 {
 	if (filePath.substr(filePath.find_last_of(".") + 1) == "py")
 	{
-		LOG_DEBUG("===Python specificator found===");
+		LOG_DEBUG("Python specificator found");
 		return PYTHON_INTERPRETER;
 	}
 	else if (filePath.substr(filePath.find_last_of(".") + 1) == "php")
 	{
-		LOG_DEBUG("===PHP specificator found===");
+		LOG_DEBUG("PHP specificator found");
 		return PHP_INTERPRETER;
 	}
 	else
@@ -74,7 +74,7 @@ std::vector<std::string> CGIServer::setEnvironmentVariables(Request* request)
 void CGIServer::handleChildProcess(Server& server, const std::string& interpreter,
 	const std::string& filePath, const std::vector<std::string>& envVars)
 {
-	LOG_DEBUG("===Duplicating stdin and stdout===");
+	LOG_DEBUG("Duplicating stdin and stdout");
 	if (dup2(server.getPipe().input[IN], STDIN_FILENO) < 0 ||
 		dup2(server.getPipe().output[OUT], STDOUT_FILENO) < 0)
 	{
@@ -88,7 +88,7 @@ void CGIServer::handleChildProcess(Server& server, const std::string& interprete
 	args.push_back(const_cast<char*>(interpreter.c_str()));
 	args.push_back(const_cast<char*>(filePath.c_str()));
 	args.push_back(nullptr);
-	LOG_DEBUG("===Agruments set===");
+	LOG_DEBUG("Agruments set");
 
 	std::vector<char*> envp;
 	for (const auto& var : envVars)
@@ -96,9 +96,9 @@ void CGIServer::handleChildProcess(Server& server, const std::string& interprete
 		envp.push_back(const_cast<char*>(var.c_str()));
 	}
 	envp.push_back(nullptr);
-	LOG_DEBUG("===Environment casted===");
+	LOG_DEBUG("Environment casted");
 
-	LOG_DEBUG("===About to start execve===");
+	LOG_DEBUG("About to start execve");
 	execve(interpreter.c_str(), args.data(), envp.data());
 	throw ResponseError(500);
 }
@@ -111,23 +111,25 @@ void CGIServer::handleParentProcess(Server& server, Response* response, const st
 
 	if (method == "POST")
 	{
-		LOG_DEBUG("===Writing body of the request inside the pipe===");
+		LOG_DEBUG("Writing body of the request inside the pipe");
 		write(server.getPipe().input[OUT], body.c_str(), body.size());
 	}
 	close(server.getPipe().input[OUT]);
 
 	char buffer[1024];
 	ssize_t bytesRead;
+	std::ostringstream oss;
 
 	while ((bytesRead = read(server.getPipe().output[IN], buffer, sizeof(buffer))) > 0)
 	{
 		LOG_DEBUG("Populating response body");
-		response->appendToBody(buffer, bytesRead);
+		oss.write(buffer, bytesRead);
 	}
 	if (bytesRead < 0)
 	{
 		throw ResponseError(500);
 	}
+	checkResponseHeaders(oss.str(), response);
 	close(server.getPipe().output[IN]);
 }
 
@@ -146,14 +148,53 @@ void CGIServer::handleProcesses(t_client& client, Server& server,
 	}
 	else if (pid == 0)
 	{
-		LOG_DEBUG("===Child started===");
+		LOG_DEBUG("Child started");
 		handleChildProcess(server, interpreter,
 			client.request->getStartLine()["path"].erase(0, 1), envVars);
 	}
 	else
 	{
-		LOG_DEBUG("===Parent started===");
+		LOG_DEBUG("Parent started");
 		handleParentProcess(server, client.response, client.request->getStartLine()["method"], client.request->getBody());
 		waitpid(pid, nullptr, 0);
+	}
+	LOG_INFO("CGI script executed");
+}
+
+void CGIServer::checkResponseHeaders(const std::string& result, Response* response)
+{
+	LOG_DEBUG("Checking for the headers in CGI output");
+	size_t headerEnd = result.find("\n\n");
+	
+	if (headerEnd != std::string::npos)
+	{
+		std::string headers = result.substr(0, headerEnd);
+		
+		response->setBody(result.substr(headerEnd + 2));
+
+		std::istringstream headerStream(headers);
+		std::string line;
+		
+		while (std::getline(headerStream, line))
+		{
+			size_t separator = line.find(": ");
+			if (separator != std::string::npos)
+			{
+				std::string key = line.substr(0, separator);
+				std::string value = line.substr(separator + 2);
+				if (key == "Content-Type")
+				{
+					response->setType(value);
+				}
+				else
+				{
+					response->setHeader(key, value);
+				}
+			}
+		}
+	}
+	else
+	{
+		response->setBody(result);
 	}
 }

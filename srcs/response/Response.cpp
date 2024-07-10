@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/09 21:38:41 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/10 18:34:56 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,9 +138,14 @@ std::string& Response::getType()
 	return _type;
 }
 
-int Response::getContentLength() const 
+int Response::getContentLength() const
 {
 	return _contentLength;
+}
+
+std::string Response::getHeader(std::string key)
+{
+	return _headers[key];
 }
 
 void Response::setBody(std::string body)
@@ -180,6 +185,11 @@ void Response::setContentLength(int contentLength)
 	_contentLength = contentLength;
 }
 
+void Response::setHeader(std::string& key, std::string& value)
+{
+	_headers[key] = value;
+}
+
 void Response::appendToBody(char* data, std::size_t length)
 {
 	_body.append(data, length);
@@ -197,8 +207,6 @@ std::string Response::buildResponse(Response& response)
 	responseNew << "Date: " << Utility::getDate() << "\r\n";
 	responseNew << "Server: webserv" << "\r\n";
 	responseNew << "Connection: close" << "\r\n";
-	// if (response.getContentLength() == 0)
-	// 	response.setContentLength(response.getBody().size());
 	responseNew << "Content-Length: " << response.getBody().size() << "\r\n";
 
 	if (!response.getType().empty())

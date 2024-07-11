@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/10 15:42:14 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/11 19:12:27 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -285,6 +285,8 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 						serverConfig.locations[j].index = value;
 				else if (key == "methods")
 				{
+					for (auto& methodPair : serverConfig.locations[j].methods)
+						methodPair.second = false;
 					std::vector<std::string> methods = Utility::splitString(value, ",");
 					for (std::string method : methods)
 						serverConfig.locations[j].methods[method] = true;

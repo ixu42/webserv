@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/09 21:38:19 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/11 21:59:15 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,13 +49,13 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	bool serverManagerInstanceCreated = false;
+	// bool serverManagerInstanceCreated = false; // wtf? where is it used?
 
 	try
 	{
 		ServersManager::initConfig(configFile.c_str());
 		ServersManager* manager = ServersManager::getInstance();
-		serverManagerInstanceCreated = true;
+		// serverManagerInstanceCreated = true; // wtf? where is it used?
 		manager->run();
 		delete manager->getInstance();
 	}

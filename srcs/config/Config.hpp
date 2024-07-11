@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:20 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/11 19:08:11 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/11 21:51:38 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,8 @@ struct Location
 	std::string							path;
 	std::string							redirect;
 	std::string							root;
-	std::string							uploadPath;
+	// std::string							uploadPath; // remove later, now handled with upload
+	bool								upload = false;
 	bool								autoindex = false;
 	std::string							defaultListingTemplate = "pages/listing-template.html";
 	// std::string						defaultIndex = "index.html";

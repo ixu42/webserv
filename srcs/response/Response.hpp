@@ -18,6 +18,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <unistd.h> // for access()
 
 class Response
 {

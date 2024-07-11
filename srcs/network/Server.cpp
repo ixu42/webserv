@@ -441,17 +441,21 @@ void	Server::handleStaticFiles(t_client& client, Location& foundLocation)
 {
 	std::string requestPath = client.request->getStartLine()["path"];
 	std::string filePath = foundLocation.root + requestPath.substr(foundLocation.path.length());
+	if (access(filePath.c_str(), F_OK) == -1)
+		throw ResponseError(404);
+	else if (access(filePath.c_str(), R_OK) == -1)
+		throw ResponseError(403);
+
 	Response* locationResp = nullptr;
 
 	// If path ends with /, check for index file and directory listing, otherwise throw 403
 	if (requestPath.back() == '/')
 	{
-		std::ifstream indexFile;
-		indexFile.open(filePath + foundLocation.index);
-		if (indexFile.is_open())
+		if (access((filePath + foundLocation.index).c_str(), F_OK) == 0)
 		{
 			filePath += foundLocation.index;
-			indexFile.close();
+			if (access((filePath).c_str(), R_OK) != 0)
+				throw ResponseError(403);
 		}
 		else if (foundLocation.autoindex)
 			locationResp = createDirListResponse(foundLocation, requestPath);

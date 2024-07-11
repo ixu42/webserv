@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/09 21:38:19 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/11 23:42:06 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,13 +49,10 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	bool serverManagerInstanceCreated = false;
-
 	try
 	{
 		ServersManager::initConfig(configFile.c_str());
 		ServersManager* manager = ServersManager::getInstance();
-		serverManagerInstanceCreated = true;
 		manager->run();
 		delete manager->getInstance();
 	}

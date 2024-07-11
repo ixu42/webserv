@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/10 18:57:14 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/11 23:43:33 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,10 +112,13 @@ size_t Server::findMaxClientBodyBytes(Request request)
 	switch (suffix) {
 		case 'G':
 			multiplier *= 1024;
+			break;
 		case 'M':
 			multiplier *= 1024;
+			break;
 		case 'K':
 			multiplier *= 1024;
+			break;
 		case 'B':
 			break;
 		default:

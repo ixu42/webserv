@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/09 19:48:25 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/11 22:17:14 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,7 +87,7 @@ class Server
 		bool						formCGIConfigAbsenceResponse(t_client& client, Server &server);
 		void						handleCGIResponse(t_client& client, Server &server);
 		void						handleNonCGIResponse(t_client& client, Server &server);
-		void						checkIfAllowed(t_client& client, Location& foundLocation);
+		void						checkIfMethodAllowed(t_client& client, Location& foundLocation);
 		void						handleRedirect(t_client& client, Location& foundLocation);
 		void						handleStaticFiles(t_client& client, Location& foundLocation);
 		void						finalizeResponse(t_client& client);

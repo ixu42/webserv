@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/10 18:57:14 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/11 22:17:00 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -381,7 +381,7 @@ void	Server::handleNonCGIResponse(t_client& client, Server &server)
 		Location foundLocation = server.findLocation(client.request);
 		LOG_DEBUG(TEXT_GREEN, "Location: ", foundLocation.path, RESET);
 		
-		checkIfAllowed(client, foundLocation);
+		checkIfMethodAllowed(client, foundLocation);
 		if (foundLocation.redirect != "")
 		{
 			handleRedirect(client, foundLocation);
@@ -407,7 +407,7 @@ void	Server::handleNonCGIResponse(t_client& client, Server &server)
 	}
 }
 
-void	Server::checkIfAllowed(t_client& client, Location& foundLocation)
+void	Server::checkIfMethodAllowed(t_client& client, Location& foundLocation)
 {
 	if (!foundLocation.methods[Utility::strToLower(client.request->getStartLine()["method"])])
 	{

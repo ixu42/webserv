@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Utility.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:11:23 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/06 12:26:48 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/10 18:58:29 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,7 +117,8 @@ std::pair<std::vector<uint8_t>, size_t> Utility::readBinaryFile(const std::strin
 	// Open the file in binary mode at the end to get the file size
 	std::ifstream file(filePath, std::ios::binary | std::ios::ate);
 	if (!file) {
-		throw ResponseError(404);
+		throw ResponseError(404, {}, "Exception (no file) has been thrown in readBinaryFile() "
+			"method of Utility class");
 	}
 
 	// Get the size of the file
@@ -127,7 +128,8 @@ std::pair<std::vector<uint8_t>, size_t> Utility::readBinaryFile(const std::strin
 	// Read the contents of the file into a vector
 	std::vector<uint8_t> buffer(size);
 	if (!file.read(reinterpret_cast<char*>(buffer.data()), size)) {
-		throw ResponseError(500);
+		throw ResponseError(500, {}, "Exception (reading error) has been thrown in readBinaryFile() "
+			"method of Utility class");
 	}
 
 	return {buffer, static_cast<size_t>(size)};

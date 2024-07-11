@@ -4,6 +4,9 @@ from datetime import datetime
 
 current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+print("Content-Type: text/html")
+print()
+
 print(f"""<!DOCTYPE html>
 <html lang="en">
 <head>

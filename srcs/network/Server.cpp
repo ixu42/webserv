@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/12 20:19:16 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/13 01:34:42 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -190,7 +190,7 @@ Request* Server::receiveRequest(int clientSockfd)
 
 void	Server::handler(Server*& server, t_client& client)
 {
-	try 
+	try
 	{
 		client.request = server->receiveRequest(client.fd);
 	}
@@ -247,17 +247,9 @@ bool	Server::formRequestErrorResponse(t_client& client)
 {
 	if (client.response)
 	{
-		std::string responseString = Response::buildResponse(*client.response);
-		sendResponse(responseString, client);
-		delete client.request;
-		delete client.response;
-		client.request = nullptr;
-		client.response = nullptr;
-		close(client.fd);
-		removeFromClients(client);
+		finalizeResponse(client);
 		return true;
 	}
-	
 	return false;
 }
 
@@ -267,74 +259,31 @@ bool	Server::formCGIConfigAbsenceResponse(t_client& client, Server& server)
 		&& !server.findServerConfig(client.request)->cgis["py"]
 		&& client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
 	{
-		// client.response = new Response(404, {}, findServerConfig(client.request));
 		client.response = createResponse(client.request, 404);
-		std::string responseString = Response::buildResponse(*client.response);
-		sendResponse(responseString, client);
-		delete client.request;
-		delete client.response;
-		client.request = nullptr;
-		client.response = nullptr;
-		close(client.fd);
-		removeFromClients(client);
+		finalizeResponse(client);
 		return true;
 	}
-	
 	return false;
 }
 
 void	Server::handleCGIResponse(t_client& client, Server& server)
 {
-	try
-	{
-		client.response = new Response();
-		CGIServer::handleCGI(client, server);
-	}
-	catch (ResponseError& e)
-	{
-		delete client.response;
-		LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
-		// client.response = new Response(e.getCode(), e.getHeaders(), findServerConfig(client.request));
-		client.response = createResponse(client.request, e.getCode(), e.getHeaders());
-	}
-	catch (const std::exception& e)
-	{
-		delete client.response;
-		LOG_ERROR("Responder caught an exception: ", e.what());
-		// client.response = new Response(500, {}, findServerConfig(client.request));
-		client.response = createResponse(client.request, 500);
-	}
+	client.response = new Response();
+	CGIServer::handleCGI(client, server);
 }
 
 void	Server::handleNonCGIResponse(t_client& client, Server &server)
 {
-	try
-	{
-		Location foundLocation = server.findLocation(client.request);
-		LOG_DEBUG(TEXT_GREEN, "Location: ", foundLocation.path, RESET);
-		
-		checkIfMethodAllowed(client, foundLocation);
-		if (foundLocation.redirect != "")
-			handleRedirect(client, foundLocation);
-		else if (foundLocation.upload && client.request->getStartLine()["method"] == "POST")
-			handleUpload(client, foundLocation);
-		else
-			handleStaticFiles(client, foundLocation);
-	}
-	catch (ResponseError& e)
-	{
-		delete client.response;
-		LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
-		// client.response = new Response(e.getCode(), e.getHeaders(), findServerConfig(client.request));
-		client.response = createResponse(client.request, e.getCode(), e.getHeaders());
-	}
-	catch (const std::exception& e)
-	{
-		delete client.response;
-		LOG_ERROR("Responder caught an exception: ", e.what());
-		// client.response = new Response(500, {}, findServerConfig(client.request));
-		client.response = createResponse(client.request, 500);
-	}
+	Location foundLocation = server.findLocation(client.request);
+	LOG_DEBUG(TEXT_GREEN, "Location: ", foundLocation.path, RESET);
+	
+	checkIfMethodAllowed(client, foundLocation);
+	if (foundLocation.redirect != "")
+		handleRedirect(client, foundLocation);
+	else if (foundLocation.upload && client.request->getStartLine()["method"] == "POST")
+		handleUpload(client, foundLocation);
+	else
+		handleStaticFiles(client, foundLocation);
 }
 
 void	Server::checkIfMethodAllowed(t_client& client, Location& foundLocation)
@@ -393,7 +342,6 @@ void	Server::handleRedirect(t_client& client, Location& foundLocation)
 
 	LOG_DEBUG("Redirect URL: ", redirectUrl);
 	LOG_DEBUG("Page path: ", pagePath);
-	// client.response = new Response(307, {{"Location", redirectUrl}}, findServerConfig(client.request));
 	client.response = createResponse(client.request, 307, {{"Location", redirectUrl}});
 }
 
@@ -406,9 +354,8 @@ void	Server::handleStaticFiles(t_client& client, Location& foundLocation)
 	else if (access(filePath.c_str(), R_OK) == -1)
 		throw ResponseError(403);
 
-	Response* locationResp = nullptr;
-
 	// If path ends with /, check for index file and directory listing, otherwise throw 403
+	Response* locationResp = nullptr;
 	if (requestPath.back() == '/')
 	{
 		if (access((filePath + foundLocation.index).c_str(), F_OK) == 0)
@@ -430,68 +377,64 @@ void	Server::handleStaticFiles(t_client& client, Location& foundLocation)
 
 void	Server::finalizeResponse(t_client& client)
 {
-	if (!client.response)
-		client.response = createResponse(client.request, 500);
-
 	std::string response = Response::buildResponse(*client.response);
 	LOG_DEBUG("response: ", response); // Can be really huge for huge files and can interrupt the Terminal
-	sendResponse(response, client);
 	// write(client.fd, response.c_str(), response.size());
-
+	sendResponse(response, client);
 	delete client.request;
 	delete client.response;
 	client.request = nullptr;
 	client.response = nullptr;
-
 	close(client.fd);
 	removeFromClients(client);
 }
 
-bool Server::validateRequest(t_client& client, Server& server)
+bool Server::validateRequest(t_client& client)
 {
 	try
 	{
-		client.request->getStartLine.at("get");
-	}
-	catch(const std::exception& e)
-	{
-		client.response = createResponse(client.request, 505);
-		std::cerr << e.what() << '\n';
-	}
-	try
-	{
+		client.request->getStartLine().at("method");
+		client.request->getStartLine().at("path");
+		client.request->getStartLine().at("version");
 		client.request->getHeaders().at("host");
 	}
 	catch(const std::exception& e)
 	{
 		client.response = createResponse(client.request, 400);
 		std::cerr << e.what() << '\n';
+		return false;
 	}
-	
+	return true;
 }
 
 void	Server::responder(t_client& client, Server& server)
 {
 	LOG_DEBUG("Server::responder() called");
-
+	client.request->printRequest(); // can flood the Terminal if a file is uploaded
 	if (formRequestErrorResponse(client)) return;
-	client.request->printRequest();
-
-	// replace writing a dummy response by the actual response
-	// request obj can be accessed by e.g. client.request->
-
-	// if (!client.request || client.request->getStartLine)
-	
 	if (formCGIConfigAbsenceResponse(client, server)) return;
-	
-	if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
+	if (!validateRequest(client)) return;
+	try
 	{
-		handleCGIResponse(client, server);
+		if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
+			handleCGIResponse(client, server);
+		else
+			handleNonCGIResponse(client, server);
 	}
-	else
+	catch (ResponseError& e)
 	{
-		handleNonCGIResponse(client, server);
+		delete client.response;
+		LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
+		client.response = createResponse(client.request, e.getCode(), e.getHeaders());
 	}
+	catch (const std::exception& e)
+	{
+		delete client.response;
+		LOG_ERROR("Responder caught an exception: ", e.what());
+		client.response = createResponse(client.request, 500);
+	}
+	if (!client.response)
+		client.response = createResponse(client.request, 500);
 	finalizeResponse(client);
 
 	LOG_INFO("Response sent and connection closed (socket fd: ", client.fd, ")");

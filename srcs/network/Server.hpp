@@ -6,18 +6,11 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/11 22:17:14 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/11 23:26:22 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
-
-#define FDS 2
-
-struct Pipe {
-	int input[FDS];
-	int output[FDS];
-};
 
 #include "Socket.hpp"
 #include "CGIHandler.hpp"
@@ -26,6 +19,7 @@ struct Pipe {
 #include "../utils/logUtils.hpp"
 #include "../request/Request.hpp"
 #include "../utils/ServerException.hpp"
+#include "DirLister.hpp"
 #include "client.hpp"
 #include <vector>
 #include <string>
@@ -42,10 +36,12 @@ struct Pipe {
 
 #include <fstream> //open file
 
-#include <filesystem> // for createDirListResp()
-#include <chrono> // for createDirListResp()
+#define FDS 2
 
-namespace fs = std::filesystem;
+struct Pipe {
+	int input[FDS];
+	int output[FDS];
+};
 
 class Server
 {
@@ -86,6 +82,7 @@ class Server
 		bool						formRequestErrorResponse(t_client& client);
 		bool						formCGIConfigAbsenceResponse(t_client& client, Server &server);
 		void						handleCGIResponse(t_client& client, Server &server);
+		void						handleUpload(t_client& client, Location& foundLocation);
 		void						handleNonCGIResponse(t_client& client, Server &server);
 		void						checkIfMethodAllowed(t_client& client, Location& foundLocation);
 		void						handleRedirect(t_client& client, Location& foundLocation);
@@ -93,8 +90,8 @@ class Server
 		void						finalizeResponse(t_client& client);
 		Location					findLocation(Request* req);
 		void						sendResponse(std::string& response, t_client& client);
-		Response*					createDirListResponse(Location& location, std::string requestPath);
-		std::stringstream			generateDirectoryListingHtml(const std::string& root);
+		// Response*					createDirListResponse(Location& location, std::string requestPath);
+		// std::stringstream			generateDirectoryListingHtml(const std::string& root);
 		
 		ServerConfig*				findServerConfig(Request* req);
 		size_t						findMaxClientBodyBytes(Request request);

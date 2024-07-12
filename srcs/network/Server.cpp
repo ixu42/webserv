@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/11 22:17:00 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/11 23:21:34 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,11 +142,11 @@ Request* Server::receiveRequest(int clientSockfd)
 	while (1)
 	{
 		bytesRead = read(clientSockfd, buffer, bufferSize);
-		LOG_DEBUG("=== Reading in chunks bytes: ", bytesRead);
-		LOG_DEBUG_RAW("[DEBUG] ");
-		for (int i = 0; i < bytesRead; i++)
-			LOG_DEBUG_RAW(buffer[i], "(", int(buffer[i]), "),");
-		LOG_DEBUG_RAW("\n");
+		// LOG_DEBUG("=== Reading in chunks bytes: ", bytesRead); // too much debug lol
+		// LOG_DEBUG_RAW("[DEBUG] ");
+		// for (int i = 0; i < bytesRead; i++)
+		// 	LOG_DEBUG_RAW(buffer[i], "(", int(buffer[i]), "),");
+		// LOG_DEBUG_RAW("\n");
 
 		if (bytesRead < 0)
 			continue;
@@ -226,91 +226,6 @@ void Server::sendResponse(std::string& response, t_client& client)
 	LOG_DEBUG(TEXT_GREEN, "response.length(): ", response.length(), RESET);
 }
 
-std::stringstream Server::generateDirectoryListingHtml(const std::string& root)
-{
-	std::stringstream htmlStream;
-	
-	htmlStream << "<div class=\"file-list\">\n";
-	htmlStream << "<div class=\"file-row\">\n";
-	htmlStream << "<div class=\"file-cell\"><a href=\"../\">../</a></div>\n";
-	htmlStream << "<div class=\"file-cell\"></div>\n";
-	htmlStream << "<div class=\"file-cell\"></div>\n";
-	htmlStream << "</div>\n";
-	
-	// Iterate over all the entries in the directory
-	for (const auto& entry : fs::directory_iterator(root)) {
-		fs::path filePath = entry.path();
-		std::string fileName = filePath.filename().string();
-
-		// Calculate last write time
-		auto ftime = fs::last_write_time(filePath);
-		auto sctp = std::chrono::time_point_cast<std::chrono::system_clock::duration>(ftime - fs::file_time_type::clock::now()
-				+ std::chrono::system_clock::now());
-		std::time_t cftime = std::chrono::system_clock::to_time_t(sctp);
-
-		htmlStream << "<div class=\"file-row\">\n";
-		// Output name
-		htmlStream << "<div class=\"file-cell name\"><a href=\"" << fileName;
-		if (entry.is_directory())
-			htmlStream << "/";
-		htmlStream << "\">" << fileName;
-		if (entry.is_directory())
-			htmlStream << "/"; 
-		htmlStream << "</a></div>\n";
-		// Output last write time
-		htmlStream << "<div class=\"file-cell date\">" << std::put_time(std::localtime(&cftime), "%d-%b-%Y %T") << "</div>";
-		// Output size
-		htmlStream << "<div class=\"file-cell size\">";
-		htmlStream << (!entry.is_directory() ? std::to_string(fs::file_size(filePath)) : "-");
-		htmlStream << "</div></div>\n";
-	}
-	htmlStream << "</div>\n";
-	
-	return htmlStream;
-}
-
-/**
- * Creates dynamic body for Response using, current location and html template
- * html template should have 
- */
-Response* Server::createDirListResponse(Location& location, std::string requestPath)
-{
-	std::string pathShortCode = "[path]";
-	std::string bodyShortCode = "[body]";
-	Response* listingResponse = new Response();
-	std::string fileString = Utility::readFile(location.defaultListingTemplate);
-	std::stringstream htmlStream;
-
-	// Find the root for requstPath
-	std::string root = location.root + requestPath.substr(location.path.length());
-
-	try
-	{
-		htmlStream = generateDirectoryListingHtml(root);
-	}
-	catch (const fs::filesystem_error& e)
-	{
-		LOG_ERROR("Error accessing directory: ", e.what());
-		delete listingResponse;
-		throw ResponseError(403, {}, "Exception has been thrown in createDirListResponse() "
-			"method of Server class");
-	}
-
-	// Replace [body]
-	size_t replaceStringPos = fileString.find(bodyShortCode);
-	if (replaceStringPos != std::string::npos)
-		fileString.replace(replaceStringPos,  bodyShortCode.length(), htmlStream.str());
-	// Replace [title]
-	while ((replaceStringPos = fileString.find(pathShortCode)) != std::string::npos)
-		fileString.replace(replaceStringPos, pathShortCode.length(), requestPath);
-
-	listingResponse->setBody(fileString);
-	listingResponse->setTypeFromFormat("html");
-	listingResponse->setStatusFromCode(200);
-
-	return listingResponse;
-}
-
 bool	Server::formRequestErrorResponse(t_client& client)
 {
 	if (client.response)
@@ -383,13 +298,11 @@ void	Server::handleNonCGIResponse(t_client& client, Server &server)
 		
 		checkIfMethodAllowed(client, foundLocation);
 		if (foundLocation.redirect != "")
-		{
 			handleRedirect(client, foundLocation);
-		}
+		else if (foundLocation.upload && client.request->getStartLine()["method"] == "POST")
+			handleUpload(client, foundLocation);
 		else
-		{
 			handleStaticFiles(client, foundLocation);
-		}
 	}
 	catch (ResponseError& e)
 	{
@@ -415,11 +328,17 @@ void	Server::checkIfMethodAllowed(t_client& client, Location& foundLocation)
 		for (auto& [methodName, methodBool] : foundLocation.methods)
 		{
 			if (methodBool)
-				allowedMethods += allowedMethods.empty() ? methodName : ", " + methodName;
+				allowedMethods += allowedMethods.empty() ? Utility::strToUpper(methodName) : ", " + Utility::strToUpper(methodName);
 		}
 		throw ResponseError(405, {{"Allowed", allowedMethods}}, "Exception has been thrown in checkIfAllowed() "
 			"method of Server class");
 	}
+}
+
+void Server::handleUpload(t_client& client, Location& foundLocation)
+{
+	(void)foundLocation;
+	(void)client;
 }
 
 void	Server::handleRedirect(t_client& client, Location& foundLocation)
@@ -458,7 +377,7 @@ void	Server::handleStaticFiles(t_client& client, Location& foundLocation)
 				throw ResponseError(403);
 		}
 		else if (foundLocation.autoindex)
-			locationResp = createDirListResponse(foundLocation, requestPath);
+			locationResp = DirLister::createDirListResponse(foundLocation, requestPath);
 		else
 			throw ResponseError(404, {}, "Exception has been thrown in handleStaticFiles() "
 			"method of Server class"); // 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Utility.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:11:23 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/10 18:58:29 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/11 22:23:20 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,11 +57,18 @@ std::vector<std::string> Utility::splitString(const std::string &str, const std:
 	return seglist;
 }
 
-
 std::string Utility::strToLower(std::string str)
 {
 	for (char& c: str)
 		c = std::tolower(c);
+
+	return str;
+}
+
+std::string Utility::strToUpper(std::string str)
+{
+	for (char& c: str)
+		c = std::toupper(c);
 
 	return str;
 }

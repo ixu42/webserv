@@ -6,7 +6,7 @@
 #    By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/08 17:44:55 by ixu               #+#    #+#              #
-#    Updated: 2024/07/06 02:32:22 by vshchuki         ###   ########.fr        #
+#    Updated: 2024/07/11 23:28:00 by vshchuki         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,7 +23,7 @@ RESPONSE_DIR := $(SRCS_DIR)response/
 UTILS_DIR := $(SRCS_DIR)utils/
 
 # Source files
-SRCS = $(addsuffix .cpp, main Socket Server ServerException ServersManager Request Response \
+SRCS = $(addsuffix .cpp, main DirLister Socket Server ServerException ServersManager Request Response \
 			Utility Config ConfigValidator CGIHandler)
 
 # Object files

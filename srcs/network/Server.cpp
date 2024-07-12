@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/13 01:34:42 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/13 01:48:19 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -401,7 +401,8 @@ bool Server::validateRequest(t_client& client)
 	catch(const std::exception& e)
 	{
 		client.response = createResponse(client.request, 400);
-		std::cerr << e.what() << '\n';
+		finalizeResponse(client);
+		LOG_ERROR("Request validation error: ", e.what());
 		return false;
 	}
 	return true;
@@ -416,6 +417,8 @@ void	Server::responder(t_client& client, Server& server)
 	if (!validateRequest(client)) return;
 	try
 	{
+		if (client.request->getStartLine().at("version") != "HTTP/1.1")
+			throw ResponseError(505, {}, "Wrong version in header");
 		if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
 			handleCGIResponse(client, server);
 		else

@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/12 12:23:32 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/12 12:31:20 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/12 12:35:03 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,23 +19,22 @@
 #include <ctime>
 #include <sstream>
 
+#define SESSIONS_FILE "sessions.txt"
+
 class SessionsManager {
 private:
-    std::string sessionDir;
+    const std::string sessionFile = SESSIONS_FILE;
     const int sessionLifeSpan = 10; // years
     std::unordered_map<std::string, std::unordered_map<std::string, std::string>> sessions;
     
-    std::string generateSessionId();
-    void saveSessionToFile(const std::string &sessionId);
-    bool loadSessionFromFile(const std::string &sessionId);
+    static std::string generateSessionId();
+    static void saveSessionToFile(const std::string &sessionId);
+    static bool loadSessionFromFile(const std::string &sessionId);
 
 public:
-    SessionsManager();
-    SessionsManager(const std::string &sessionFile);
-    
-    std::string createSession(const std::string &domain);
-    bool loadSession(const std::string &sessionId);
-    void addDataToSession(const std::string &sessionId, const std::string &key, const std::string &value);
-    std::unordered_map<std::string, std::string> getSessionData(const std::string &sessionId);
-    void printSessionsToFile();
+    static std::string createSession(const std::string &domain);
+    static bool loadSession(const std::string &sessionId);
+    static void addDataToSession(const std::string &sessionId, const std::string &key, const std::string &value);
+    static std::unordered_map<std::string, std::string> getSessionData(const std::string &sessionId);
+    static void printSessionsToFile();
 };

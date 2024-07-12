@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/09 21:11:26 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/12 18:33:55 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -188,81 +188,3 @@ void	ServersManager::removeFromPollfd(int fd)
 		}
 	}
 }
-
-/**
- * Previous approaches for ServersManager::run()
- */
-
-// void ServersManager::run()
-// {
-	// for (Server *server : servers)
-	// {
-	// 	if (!server->run())
-	// 		throw ServerException("Server failed to run");
-	// }
-
-	// for (Server *server : servers)
-	// {config
-	// 	pollfd pfd;
-	// 	pfd.fd = server->getSocket();
-	// 	pfd.events = POLLIN;
-	// 	this->poll_fds.push_back(pfd);
-	// }
-	// /* Waiting for incoming connections */
-	// while (true)
-	// {
-	// 	int ret = poll(this->poll_fds.data(), this->poll_fds.size(), -1);
-	// 	if (ret < 0)
-	// 	{
-	// 		if (errno == EINTR || errno == EWOULDBLOCK)
-	// 		{
-	// 			continue;
-	// 		}
-	// 		throw ServerException("Poll failed");
-	// 	}
-
-	// 	for (size_t i = 0; i < poll_fds.size(); ++i)
-	// 	{
-	// 		if (poll_fds[i].revents & POLLIN)
-	// 		{
-	// 			int addrlen = sizeof(sockaddr_in);
-	// 			// servers[i]->setClientSocket(accept(poll_fds[i].fd, (struct sockaddr *)&servers[i]->getSockAddress(), (socklen_t *)&addrlen));
-	// 			int clientSocket = accept(poll_fds[i].fd, (struct sockaddr *)&servers[i]->getSockAddress(), (socklen_t *)&addrlen);
-	// 			if (clientSocket >= 0)
-	// 			{
-	// 				servers[i]->setClientSocket(clientSocket);
-	// 				// Set socket to non-blocking mode
-	// 				int flags = fcntl(clientSocket, F_GETFL, 0);
-
-	// 				if (flags == -1)
-	// 				{
-	// 					if (close(clientSocket) == -1)
-	// 						throw ServerException("Failed to close socket");
-	// 					throw ServerException("Failed to get socket flags");
-	// 				}
-	// 				if (fcntl(clientSocket, F_SETFL, flags | O_NONBLOCK) == -1)
-	// 				{
-	// 					if (close(clientSocket) == -1)
-	// 						throw ServerException("Failed to close socket");
-	// 					throw ServerException("Failed to set non-blocking mode on socket");
-	// 				}
-
-
-
-	// 				// std::cout << "Locations vector size: " << servers[i]->getConfig()->locations.size() << std::endl;
-	// 				// if (servers[i]->getConfig()->locations.empty())
-	// 				// 	return ;
-	// 				// for (Location location : servers[i]->getConfig()->locations)
-	// 				// {
-	// 				// 	std::cout << "Server config and location: " << location.path << std::endl;
-	// 				// }
-
-	// 				servers[i]->handleRequest3();
-
-	// 				close(clientSocket);
-	// 				std::cout << "Connection closed" << std::endl;
-	// 			}
-	// 		}
-	// 	}
-	// }
-// }

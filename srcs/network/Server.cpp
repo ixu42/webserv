@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/11 23:21:34 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/12 20:19:16 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,6 +102,7 @@ size_t Server::findMaxClientBodyBytes(Request request)
 {
 	ServerConfig* serverConfig = findServerConfig(&request);
 	std::string sizeString = serverConfig->clientMaxBodySize;
+	// std::string sizeString = serverConfig ? serverConfig->clientMaxBodySize : "100M";
 
 	// Parse the numeric part of the string
 	size_t multiplier = 1;
@@ -202,6 +203,22 @@ void	Server::handler(Server*& server, t_client& client)
 Response* Server::createResponse(Request* request, int code, 
 						std::map<std::string, std::string> optionalHeaders)
 {
+	// LOG_DEBUG("createResponse() called");
+	// ServerConfig* serverConfig = nullptr;
+	// try
+	// {
+	// 	serverConfig = findServerConfig(request);
+	// 	LOG_DEBUG("trying to find server config for create response");
+	// }
+	// catch(const ResponseError& e)
+	// {
+	// 	serverConfig = &getConfigs()[0];
+	// 	return new Response(e.getCode(), serverConfig, optionalHeaders);
+	// }
+	LOG_DEBUG("createResponse() called");
+	// ServerConfig* serverConfig = findServerConfig(request);
+	// serverConfig = serverConfig ? serverConfig : &getConfigs()[0];
+
 	return new Response(code, findServerConfig(request), optionalHeaders);
 }
 
@@ -335,8 +352,32 @@ void	Server::checkIfMethodAllowed(t_client& client, Location& foundLocation)
 	}
 }
 
-void Server::handleUpload(t_client& client, Location& foundLocation)
+std::string findUplooadFormBoundary(t_client& client)
 {
+	std::string boundary;
+	std::string contentTypeValue = client.request->getHeaders().at("content-type");
+
+	if (contentTypeValue.find("multipart/form-data") != std::string::npos)
+	{
+		
+	}
+
+	return boundary;
+}
+
+void Server:: handleUpload(t_client& client, Location& foundLocation)
+{
+	// // Handle upload from API app (Thunder Client for example)
+	// if (client.request->getHeaders().at("content-type") == "application/octet-stream")
+	// {
+
+	// }
+	// // Handle upload from the HTML form
+	// else if (client.request->getHeaders())
+	// {
+	// 	/* code */
+	// }
+	
 	(void)foundLocation;
 	(void)client;
 }
@@ -389,8 +430,11 @@ void	Server::handleStaticFiles(t_client& client, Location& foundLocation)
 
 void	Server::finalizeResponse(t_client& client)
 {
-	std::string response = Response::buildResponse(*client.response);
+	if (!client.response)
+		client.response = createResponse(client.request, 500);
 
+	std::string response = Response::buildResponse(*client.response);
+	LOG_DEBUG("response: ", response); // Can be really huge for huge files and can interrupt the Terminal
 	sendResponse(response, client);
 	// write(client.fd, response.c_str(), response.size());
 
@@ -401,11 +445,32 @@ void	Server::finalizeResponse(t_client& client)
 
 	close(client.fd);
 	removeFromClients(client);
-
-	LOG_DEBUG("response: ", response);
 }
 
-void	Server::responder(t_client& client, Server &server)
+bool Server::validateRequest(t_client& client, Server& server)
+{
+	try
+	{
+		client.request->getStartLine.at("get");
+	}
+	catch(const std::exception& e)
+	{
+		client.response = createResponse(client.request, 505);
+		std::cerr << e.what() << '\n';
+	}
+	try
+	{
+		client.request->getHeaders().at("host");
+	}
+	catch(const std::exception& e)
+	{
+		client.response = createResponse(client.request, 400);
+		std::cerr << e.what() << '\n';
+	}
+	
+}
+
+void	Server::responder(t_client& client, Server& server)
 {
 	LOG_DEBUG("Server::responder() called");
 
@@ -414,6 +479,8 @@ void	Server::responder(t_client& client, Server &server)
 
 	// replace writing a dummy response by the actual response
 	// request obj can be accessed by e.g. client.request->
+
+	// if (!client.request || client.request->getStartLine)
 	
 	if (formCGIConfigAbsenceResponse(client, server)) return;
 	
@@ -452,12 +519,16 @@ std::string Server::whoAmI() const
 ServerConfig* Server::findServerConfig(Request* req)
 {
 	// If request host is an ip address:port or if the ip is not specified for current server, the first config for the server is used
-	if(!req)
+/* 	if(!req)
 		throw ResponseError(400, {}, "Exception has been thrown in findServerConfig() "
 			"method of Server class");
 	if (req->getHeaders()["host"].empty())
 		throw ResponseError(400, {}, "Exception (empty host) has been thrown in findServerConfig() "
-			"method of Server class"); // Bad request
+			"method of Server class"); // Bad request */
+
+
+	if(!req || req->getHeaders()["host"].empty())
+		return &_configs[0];
 
 	std::vector<std::string> hostSplit = Utility::splitString(req->getHeaders()["host"], ":");
 
@@ -491,7 +562,6 @@ ServerConfig* Server::findServerConfig(Request* req)
 	return &_configs[0];
 }
 
-
 Location Server::findLocation(Request* req)
 {
 	LOG_INFO("Searching for server for current location...");
@@ -500,7 +570,7 @@ Location Server::findLocation(Request* req)
 			"method of Server class");
 
 	ServerConfig* namedServerConfig = findServerConfig(req);
-	// This block might be redundant as we always have a server config???
+	// This block might be redundant as we always have a server config???f
 	if (!namedServerConfig)
 	{
 		throw ResponseError(404, {}, "Exception (no ServerConfig) has been thrown in findLocation() "
@@ -543,12 +613,11 @@ Location Server::findLocation(Request* req)
 	return foundLocation;
 }
 
-
 /**
  * Getters
 */
 
-std::vector<ServerConfig> Server::getConfig()
+std::vector<ServerConfig> Server::getConfigs()
 {
 	return _configs;
 }

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/11 23:26:22 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/12 20:03:20 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,7 +67,7 @@ class Server
 		std::vector<t_client>&		getClients();
 		std::string					getIpAddress();
 		int							getPort();
-		std::vector<ServerConfig>	getConfig();
+		std::vector<ServerConfig>	getConfigs();
 
 		int							accepter();
 		void						handler(Server*& server, t_client& client);
@@ -79,6 +79,7 @@ class Server
 		std::string					whoAmI() const;
 		void						initServer(const char* ipAddr, int port);
 		void						removeFromClients(t_client& client);
+		bool						validateRequest(t_client& client, Server& server);
 		bool						formRequestErrorResponse(t_client& client);
 		bool						formCGIConfigAbsenceResponse(t_client& client, Server &server);
 		void						handleCGIResponse(t_client& client, Server &server);
@@ -90,8 +91,6 @@ class Server
 		void						finalizeResponse(t_client& client);
 		Location					findLocation(Request* req);
 		void						sendResponse(std::string& response, t_client& client);
-		// Response*					createDirListResponse(Location& location, std::string requestPath);
-		// std::stringstream			generateDirectoryListingHtml(const std::string& root);
 		
 		ServerConfig*				findServerConfig(Request* req);
 		size_t						findMaxClientBodyBytes(Request request);

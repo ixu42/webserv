@@ -6,20 +6,23 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/12 12:23:32 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/12 16:14:43 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/13 13:58:07 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 #include <iostream>
-#include <random>
 #include <fstream>
 #include <string>
-#include <unordered_map>
 #include <chrono>
-#include <iomanip>
+#include <random>
 #include <sstream>
+#include <iomanip>
+#include <ctime>
+#include <map>
+#include <deque>
+#include <algorithm>
 
 #include "client.hpp"
 #include "../utils/Utility.hpp"
@@ -28,18 +31,18 @@
 class SessionsManager {
 private:
 	static std::string _session;
+	const static std::string _filename;
+	const static size_t _MAX_SESSIONS = 500;
 	
 public:
 	static void setSession(std::string session);
 	static std::string getSession();
+	const std::string getFilename();
 	
+	static bool sessionExistsCheck(std::string& sessionData);
 	static void generateSession(Request& request);
-	
-	static void saveSessionToFile();
-	static bool loadSessionFromFile(const std::string &sessionId);
-	static std::string createSession(const std::string &domain);
-	static bool loadSession(const std::string &sessionId);
-	static void addDataToSession(const std::string &sessionId, const std::string &key, const std::string &value);
-	static std::unordered_map<std::string, std::string> getSessionData(const std::string &sessionId);
-	static void printSessionsToFile();
+	static void checkIfFileExist();
+	static void addSessionToFile(std::string& sessionData);
+	static void manageSessions(std::deque<std::string>& sessions);
+	static void setSessionToResponse(Response& response, std::string& sessionData);
 };

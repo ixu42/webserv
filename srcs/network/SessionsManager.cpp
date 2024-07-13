@@ -6,11 +6,14 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/12 15:02:01 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/12 16:14:34 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/13 13:55:53 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "SessionsManager.hpp"
+
+const std::string SessionsManager::_filename = "sessions.txt";
+std::string SessionsManager::_session;
 
 void SessionsManager::setSession(std::string session)
 {
@@ -20,6 +23,11 @@ void SessionsManager::setSession(std::string session)
 std::string SessionsManager::getSession()
 {
 	return _session;
+}
+
+const std::string SessionsManager::getFilename()
+{
+	return _filename;
 }
 
 void SessionsManager::generateSession(Request& request)
@@ -60,7 +68,92 @@ void SessionsManager::generateSession(Request& request)
 	setSession(sessionStream.str());
 }
 
-void SessionsManager::saveSessionToFile()
+void SessionsManager::checkIfFileExist()
 {
+	std::ifstream infile(_filename);
 	
+	if (!infile.good())
+	{
+		std::ofstream outfile(_filename);
+		if (outfile.is_open())
+		{
+			outfile.close();
+		}
+		else
+		{
+			throw ResponseError(500, {}, "Exception has been thrown in checkIfFileExist() "
+			"method of SessionsManager class");
+		}
+	}
+	infile.close();
+}
+
+bool SessionsManager::sessionExistsCheck(std::string& sessionData)
+{
+	std::ifstream infile(_filename);
+	std::string line;
+	
+	if (!infile.is_open())
+	{
+		throw ResponseError(500, {}, "Exception has been thrown in writeSessionToFile() "
+			"method of SessionsManager class");
+	}
+
+	while (std::getline(infile, line))
+	{
+		if (line == sessionData)
+		{
+			infile.close();
+			return true;
+		}
+	}
+
+	infile.close();
+	return false;
+}
+
+void SessionsManager::addSessionToFile(std::string& sessionData)
+{
+	std::deque<std::string> sessions;
+	std::ifstream infile(_filename);
+	std::string line;
+	
+	while (std::getline(infile, line))
+	{
+		sessions.push_back(line);
+	}
+	infile.close();
+	
+	sessions.push_back(sessionData);
+	
+	manageSessions(sessions);
+	
+	std::ofstream outfile(_filename, std::ios_base::trunc);
+	
+	if (outfile.is_open())
+	{
+		for (const auto& session : sessions)
+		{
+			outfile << session << std::endl;
+		}
+		outfile.close();
+	}
+	else
+	{
+		throw ResponseError(500, {}, "Exception has been thrown in addSession() "
+			"method of SessionsManager class");
+	}
+}
+
+void SessionsManager::manageSessions(std::deque<std::string>& sessions)
+{
+	while (sessions.size() > _MAX_SESSIONS)
+	{
+		sessions.pop_front();
+	}
+}
+
+void SessionsManager::setSessionToResponse(Response& response, std::string& sessionData)
+{
+	response.setHeader("Set-Cookie", sessionData);
 }

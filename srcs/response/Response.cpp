@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/10 19:17:13 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/13 13:47:07 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -161,7 +161,7 @@ int Response::getContentLength() const
 	return _contentLength;
 }
 
-std::string Response::getHeader(std::string key)
+std::string Response::getHeader(const std::string& key)
 {
 	return _headers[key];
 }
@@ -203,7 +203,7 @@ void Response::setContentLength(int contentLength)
 	_contentLength = contentLength;
 }
 
-void Response::setHeader(std::string& key, std::string& value)
+void Response::setHeader(const std::string& key, std::string& value)
 {
 	_headers[key] = value;
 }

@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:51 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/10 17:39:00 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/13 13:47:22 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ class Response
 		std::string& getBody();
 		std::string& getStatus();
 		std::string& getType();
-		std::string getHeader(std::string key);
+		std::string getHeader(const std::string& key);
 		int getContentLength() const;
 
 		void setBody(std::string body);
@@ -46,7 +46,7 @@ class Response
 		void setType(std::string type);
 		void setTypeFromFormat(std::string format);
 		void setContentLength(int contentLength);
-		void setHeader(std::string& key, std::string& value);
+		void setHeader(const std::string& key, std::string& value);
 		
 		void appendToBody(char* data, std::size_t length);
 		static std::string buildResponse(Response& response);

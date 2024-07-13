@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:11 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/11 22:10:39 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/14 02:20:45 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -231,7 +231,7 @@ int ConfigValidator::validateLocationConfig(std::string locationString)
 		{"path", std::regex(R"(\s*path\s+\/([a-zA-Z0-9_\-~.]+\/?)*([a-zA-Z0-9_\-~.]+\.[a-zA-Z0-9_\-~.]+)?\s*)")},
 		{"index", std::regex(R"(\s*index\s+([^,\s]+(?:\.html|\.htm))\s*)")},
 		{"redirect", std::regex(R"(\s*redirect\s+((\w+:(\/\/[^\/\s]+)?[^\s]*)|(\/([a-zA-Z0-9-_~.]*\/)))\s*)")},
-		{"root", std::regex(R"(\s*root\s+\/([a-zA-Z0-9-_~.]*\/)*\s*)")}, 
+		{"root", std::regex(R"(\s*root\s+(\.\.\/|\/)*([a-zA-Z0-9-_~.]*\/)*\s*)")}, 
 		// {"uploadPath", std::regex(R"(\s*uploadPath\s+\/([a-zA-Z0-9-_~.]*\/)*\s*)")}, // remove later
 		{"upload", std::regex(R"(\s*upload\s+(on|off)\s*)")},
 		{"methods", std::regex(R"(\s*methods\s+(get|post|delete)(,(get|post|delete)){0,2}\s*)")},

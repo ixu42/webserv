@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:20 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/11 21:51:38 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/13 02:37:22 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,8 +53,10 @@ struct ServerConfig
 															{403, "pages/403.html"},
 															{404, "pages/404.html"},
 															{405, "pages/405.html"},
+															{411, "pages/411.html"},
 															{413, "pages/413.html"},
-															{500, "pages/500.html"}
+															{500, "pages/500.html"},
+															{505, "pages/505.html"}
 														};
 		std::map<int, std::string>	errorPages;
 		std::map<std::string, bool>	cgis = {{"php", false}, {"py", false}};

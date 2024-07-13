@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 10:55:10 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/14 00:02:52 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,11 +27,13 @@ Request::Request()
 
 Request::Request(std::string request)
 {
+	LOG_DEBUG("Request constructor called");
 	parse(request);
 }
 
 void Request::parse(std::string request)
 {
+	LOG_DEBUG("Request::parse() called");
 	int emptyLinePosition = request.find("\r\n\r\n");
 	if (emptyLinePosition == -1)
 		emptyLinePosition = request.find("\n\n");
@@ -41,12 +43,19 @@ void Request::parse(std::string request)
 	{
 		std::string headers = Utility::trim(request.substr(0, emptyLinePosition));
 		std::string body = Utility::trim(request.substr(emptyLinePosition + 2));
-
 		// Split headers into lines
 		std::vector<std::string> headerLines = Utility::splitString(headers, "\n");
+		LOG_DEBUG("Request::parse() splitting headerLines");
+		
+		// Check if headers are not empty
+		if (headers.size() < 1)
+			return;
 
 		// Parse the start line
 		std::vector<std::string> startLineSplit = Utility::splitString(headerLines[0], " ");
+		// Check start line after split
+		if (startLineSplit.size() != 3)
+			return;
 		std::vector<std::string> querySplit = Utility::splitString(startLineSplit[1], "?");
 
  		_startLine["method"] = Utility::trim(startLineSplit[0]);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/10 19:17:13 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/13 02:35:16 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,8 +23,10 @@ static const std::map<int, std::string> statusMessages = {
 	{403, "Forbidden"},
 	{404, "Not Found"},
 	{405, "Method Not Allowed"}, // if the location does not allowes method in request. Then put "Allowed: GET, POST" in response header
+	{411, "Length Required"}, // Content-Length not provided
 	{413, "Request Entity Too Large"}, // if the request body size exceeds the clientMaxBodySize
-	{500, "Internal Server Error"} // can be used when the server runs into unexpected issues processing the request, including memory allocation failures
+	{500, "Internal Server Error"}, // can be used when the server runs into unexpected issues processing the request, including memory allocation failures
+	{505, "HTTP Version Not Supported"}
 };
 
 static const std::map<std::string, std::string> mimeTypes = {
@@ -96,14 +98,14 @@ Response::Response(int code, ServerConfig* serverConfig, std::map<std::string, s
 		// {
 		// 	std::cout << "error key: " << errorkey << ", errorpath:" << errorpath << std::endl;
 		// }
-		if (errorIt != serverConfig->errorPages.end() && access(errorIt->second.c_str(),R_OK) == 0)
+		if (errorIt != serverConfig->errorPages.end() && access(errorIt->second.c_str(), R_OK) == 0)
 		{
 			// std::cout << TEXT_GREEN << "user page found for error" << std::endl;
 			errorPagePath = serverConfig->errorPages[code];
 		}
 		else if (defaultErrorIt != serverConfig->defaultErrorPages.end())
 		{
-			// std::cout << TEXT_GREEN << "default page found for error" << std::endl;
+			std::cout << TEXT_GREEN << "default page found for error" << std::endl;
 		// else if (defaultErrorIt != serverConfig->defaultErrorPages.end())
 			errorPagePath = serverConfig->defaultErrorPages[code];
 		}

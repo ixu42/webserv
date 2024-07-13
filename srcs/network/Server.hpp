@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/13 01:05:14 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/13 23:33:00 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,13 +73,14 @@ class Server
 		void						handler(Server*& server, t_client& client);
 		void						responder(t_client& client, Server &server);
 
-		Request*					receiveRequest(int clientSockfd);
+		// Request*					receiveRequest(int clientSockfd);
+		Request*					receiveRequest(t_client& client);
 
 	private:
 		std::string					whoAmI() const;
 		void						initServer(const char* ipAddr, int port);
 		void						removeFromClients(t_client& client);
-		bool						validateRequest(t_client& client);
+		void						validateRequest(t_client& client);
 		bool						formRequestErrorResponse(t_client& client);
 		bool						formCGIConfigAbsenceResponse(t_client& client, Server &server);
 		void						handleCGIResponse(t_client& client, Server &server);

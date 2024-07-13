@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/13 01:48:19 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/13 23:59:43 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ int	Server::accepter()
 		return -1;
 	LOG_INFO("Connection established with client (socket fd: ", clientSockfd, ")");
 
-	_clients.push_back((t_client){clientSockfd, nullptr, nullptr});
+	_clients.push_back((t_client){clientSockfd, nullptr, nullptr, READING, ""});
 	return clientSockfd;
 }
 
@@ -126,13 +126,51 @@ size_t Server::findMaxClientBodyBytes(Request request)
 	return static_cast<std::size_t>(numericValue * multiplier);
 }
 
-Request* Server::receiveRequest(int clientSockfd)
+// Request* Server::receiveRequest(int clientSockfd)
+// {
+// 	LOG_DEBUG("Server::receiveRequest called");
+// 	const int bufferSize = 10;
+// 	char buffer[bufferSize] = {0};
+// 	int bytesRead;
+// 	std::string request;
+// 	while (1)
+// 	{
+// 		bytesRead = read(clientSockfd, buffer, bufferSize);
+
+// 		LOG_DEBUG(TEXT_YELLOW, "bytesRead in receiveRequest())): ", bytesRead);
+// 		if (bytesRead < 0)
+// 			break;
+// 		else if (bytesRead == 0)
+// 			break;
+// 		else
+//         {
+//             // Append the data read to the request string
+//             request.append(buffer, bytesRead);
+            
+//             // Check if the request is complete (depends on protocol, e.g., HTTP)
+//             // For example, in HTTP, we might check for the end of headers
+//             if (request.find("\r\n\r\n") != std::string::npos)
+//             {
+//                 break;
+//             }
+//         }
+// 	}
+
+// 	LOG_INFO("Request read");
+// 	std::cout << TEXT_YELLOW << request.substr(0, 500) << "\n...\n" << RESET << std::endl;
+// 	// LOG_DEBUG_MULTILINE(TEXT_YELLOW, request.substr(0, 500), "\n...\n", RESET);
+
+// 	return new Request(request);
+// }
+
+// Request* Server::receiveRequest(int clientSockfd)
+Request* Server::receiveRequest(t_client& client)
 {
-	LOG_DEBUG("Server::receiveRequest called");
+	LOG_DEBUG("Server::receiveRequest called for fd: ", client.fd);
 	const int bufferSize = 10;
 	char buffer[bufferSize] = {0};
 	int bytesRead;
-	std::string request;
+	// std::string request;
 	int emptyLinePos = -1;
 	int emptyLinesSize = 0;
 
@@ -142,7 +180,8 @@ Request* Server::receiveRequest(int clientSockfd)
 	std::size_t maxClientBodyBytes = std::numeric_limits<std::size_t>::max();
 	while (1)
 	{
-		bytesRead = read(clientSockfd, buffer, bufferSize);
+		bytesRead = read(client.fd, buffer, bufferSize);
+		LOG_DEBUG(TEXT_YELLOW, "bytesRead in receiveRequest())): ", bytesRead);
 		// LOG_DEBUG("=== Reading in chunks bytes: ", bytesRead); // too much debug lol
 		// LOG_DEBUG_RAW("[DEBUG] ");
 		// for (int i = 0; i < bytesRead; i++)
@@ -150,49 +189,68 @@ Request* Server::receiveRequest(int clientSockfd)
 		// LOG_DEBUG_RAW("\n");
 
 		if (bytesRead < 0)
-			continue;
-		else if (bytesRead == 0)
 			break;
-		request += std::string(buffer, bytesRead);
+			// continue;
+		else if (bytesRead == 0)
+		{
+			client.state = WRITING;
+			break;
+		}
+		client.requestString += std::string(buffer, bytesRead);
 
 		// Check if the request is complete (ends with "\r\n\r\n")
-		if (!isHeadersRead && (request.find("\r\n\r\n") != std::string::npos || request.find("\n\n") != std::string::npos))
+		if (!isHeadersRead && (client.requestString.find("\r\n\r\n") != std::string::npos || client.requestString.find("\n\n") != std::string::npos))
 		{
-			emptyLinePos = request.find("\r\n\r\n") ? request.find("\r\n\r\n") : request.find("\n\n");
-			emptyLinesSize = request.find("\r\n\r\n") ? 4 : 2;
+			emptyLinePos = client.requestString.find("\r\n\r\n") ? client.requestString.find("\r\n\r\n") : client.requestString.find("\n\n");
+			emptyLinesSize = client.requestString.find("\r\n\r\n") ? 4 : 2;
 			isHeadersRead = true;
-			contentLengthNum = findContentLength(request);
+			contentLengthNum = findContentLength(client.requestString);
 			if (contentLengthNum == std::string::npos)
+			{
+				client.state = WRITING;
 				break;
+			}
 
 			// Find maxClientBodySize
-			maxClientBodyBytes = findMaxClientBodyBytes(Request(request));
+			maxClientBodyBytes = findMaxClientBodyBytes(Request(client.requestString));
 		}
 
 		if (isHeadersRead && contentLengthNum != -std::string::npos)
 		{
-			size_t currRequestBodyBytes = request.length() - emptyLinePos - emptyLinesSize;
+			size_t currRequestBodyBytes = client.requestString.length() - emptyLinePos - emptyLinesSize;
 
 			if (currRequestBodyBytes > maxClientBodyBytes)
 				throw ResponseError(407, {}, "Exception has been thrown in receiveRequest() "
 			"method of Server class");
 
 			if (currRequestBodyBytes >= contentLengthNum)
+			{
+				client.state = WRITING;
 				break;
+			}
 		}
+		if (bytesRead == bufferSize)
+			break;
+	}
+
+	if (client.state == READING)
+	{
+		std::cout << TEXT_CYAN << client.requestString.substr(0, 500) << "\n...\n" << RESET << std::endl;
+		return nullptr;
 	}
 
 	LOG_INFO("Request read");
-	LOG_DEBUG_MULTILINE(TEXT_YELLOW, request, RESET);
+	std::cout << TEXT_YELLOW << client.requestString.substr(0, 500) << "\n...\n" << RESET << std::endl;
+	// LOG_DEBUG_MULTILINE(TEXT_YELLOW, request, RESET);
 
-	return new Request(request);
+	return new Request(client.requestString);
 }
 
 void	Server::handler(Server*& server, t_client& client)
 {
 	try
 	{
-		client.request = server->receiveRequest(client.fd);
+		client.request = server->receiveRequest(client);
 	}
 	catch (ResponseError& e)
 	{
@@ -378,7 +436,7 @@ void	Server::handleStaticFiles(t_client& client, Location& foundLocation)
 void	Server::finalizeResponse(t_client& client)
 {
 	std::string response = Response::buildResponse(*client.response);
-	LOG_DEBUG("response: ", response); // Can be really huge for huge files and can interrupt the Terminal
+	LOG_DEBUG("response: ", response.substr(0, 500), "\n...\n"); // Can be really huge for huge files and can interrupt the Terminal
 	// write(client.fd, response.c_str(), response.size());
 	sendResponse(response, client);
 	delete client.request;
@@ -389,23 +447,25 @@ void	Server::finalizeResponse(t_client& client)
 	removeFromClients(client);
 }
 
-bool Server::validateRequest(t_client& client)
+void Server::validateRequest(t_client& client)
 {
-	try
-	{
-		client.request->getStartLine().at("method");
-		client.request->getStartLine().at("path");
-		client.request->getStartLine().at("version");
-		client.request->getHeaders().at("host");
-	}
-	catch(const std::exception& e)
-	{
-		client.response = createResponse(client.request, 400);
-		finalizeResponse(client);
-		LOG_ERROR("Request validation error: ", e.what());
-		return false;
-	}
-	return true;
+		if (!client.request)
+			throw ResponseError(400, {}, "Request is nullptr");
+		if (client.request->getStartLine()["method"].empty() ||
+			client.request->getStartLine()["path"].empty() ||
+			client.request->getStartLine()["version"].empty() ||
+			client.request->getHeaders()["host"].empty())
+			throw ResponseError(400, {}, "Request does not have mandatory fields");
+		if (client.request->getStartLine()["version"] != "HTTP/1.1")
+			throw ResponseError(505, {}, "Wrong HTTP version in start line");
+		// try
+		// {
+		// 	client.request->getStartLine().at("content-length");
+		// }
+		// catch(const std::exception& e)
+		// {
+		// 	throw ResponseError(411, {}, "No content length provided");
+		// }
 }
 
 void	Server::responder(t_client& client, Server& server)
@@ -414,11 +474,9 @@ void	Server::responder(t_client& client, Server& server)
 	client.request->printRequest(); // can flood the Terminal if a file is uploaded
 	if (formRequestErrorResponse(client)) return;
 	if (formCGIConfigAbsenceResponse(client, server)) return;
-	if (!validateRequest(client)) return;
 	try
 	{
-		if (client.request->getStartLine().at("version") != "HTTP/1.1")
-			throw ResponseError(505, {}, "Wrong version in header");
+		validateRequest(client);
 		if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
 			handleCGIResponse(client, server);
 		else

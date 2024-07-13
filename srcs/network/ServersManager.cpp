@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/12 18:33:55 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/13 23:21:59 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,7 +146,10 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 			{
 				// client.request = server->receiveRequest(pfdReadyForRead.fd);
 				server->handler(server, client);
-				pfdReadyForRead.events = POLLOUT;
+				if (client.state == WRITING)
+				{
+					pfdReadyForRead.events = POLLOUT;
+				}
 				fdFound = true;
 				break ;
 			}

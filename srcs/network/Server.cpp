@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/15 00:27:47 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/15 02:42:34 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,16 @@ int	Server::accepter()
 		return -1;
 	LOG_INFO("Connection established with client (socket fd: ", clientSockfd, ")");
 
-	_clients.push_back((t_client){clientSockfd, nullptr, nullptr, READING, "", "", 0});
+	t_client newClient;
+    newClient.fd = clientSockfd;
+
+	_clients.push_back(newClient);
+	// _clients.push_back((t_client){clientSockfd,
+	// 								nullptr, nullptr,
+	// 								READING,
+	// 								"", 
+	// 								std::numeric_limits<std::size_t>::max(),
+	// 								"", 0});
 	return clientSockfd;
 }
 
@@ -127,7 +136,7 @@ size_t Server::findMaxClientBodyBytes(Request request)
 }
 
 // Request* Server::receiveRequest(int clientSockfd)
-Request* Server::receiveRequest(t_client& client)
+bool Server::receiveRequest(t_client& client)
 {
 	LOG_DEBUG("Server::receiveRequest called for fd: ", client.fd);
 	const int bufferSize = 10;
@@ -140,9 +149,8 @@ Request* Server::receiveRequest(t_client& client)
 	bool isHeadersRead = false;
 	std::size_t contentLengthNum = std::string::npos;
 
-	std::size_t maxClientBodyBytes = std::numeric_limits<std::size_t>::max();
-	while (1)
-	{
+	// std::size_t maxClientBodyBytes = std::numeric_limits<std::size_t>::max();
+	
 		bytesRead = read(client.fd, buffer, bufferSize);
 		LOG_DEBUG(TEXT_YELLOW, "bytesRead in receiveRequest())): ", bytesRead, RESET);
 		// LOG_DEBUG("=== Reading in chunks bytes: ", bytesRead); // too much debug lol
@@ -151,14 +159,13 @@ Request* Server::receiveRequest(t_client& client)
 		// 	LOG_DEBUG_RAW(buffer[i], "(", int(buffer[i]), "),");
 		// LOG_DEBUG_RAW("\n");
 
-		if (bytesRead < 0)
-			break;
-			// continue;
-		else if (bytesRead == 0)
-		{
-			client.state = READY_TO_WRITE;
-			break;
-		}
+	if (bytesRead < 0)
+		return false;
+	if (bytesRead == 0)
+		client.state = READY_TO_WRITE;
+
+	if (client.state == READING)
+	{
 		client.requestString += std::string(buffer, bytesRead);
 
 		// Check if the request is complete (ends with "\r\n\r\n")
@@ -171,50 +178,46 @@ Request* Server::receiveRequest(t_client& client)
 			if (contentLengthNum == std::string::npos)
 			{
 				client.state = READY_TO_WRITE;
-				break;
 			}
 
 			// Find maxClientBodySize
-			maxClientBodyBytes = findMaxClientBodyBytes(Request(client.requestString));
+			if (client.maxClientBodyBytes == std::numeric_limits<std::size_t>::max()) // only calculate if the value is initial
+				client.maxClientBodyBytes = findMaxClientBodyBytes(Request(client.requestString));
 		}
 
-		if (isHeadersRead && contentLengthNum != -std::string::npos)
+		if (isHeadersRead && contentLengthNum != std::string::npos)
 		{
 			size_t currRequestBodyBytes = client.requestString.length() - emptyLinePos - emptyLinesSize;
 
-			if (currRequestBodyBytes > maxClientBodyBytes)
-				throw ResponseError(407, {}, "Exception has been thrown in receiveRequest() "
+			if (currRequestBodyBytes > client.maxClientBodyBytes)
+				throw ResponseError(413, {}, "Exception has been thrown in receiveRequest() "
 			"method of Server class");
 
 			if (currRequestBodyBytes >= contentLengthNum)
 			{
 				client.state = READY_TO_WRITE;
-				break;
 			}
 		}
-		if (bytesRead == bufferSize)
-			break;
-	}
-
-	if (client.state == READING)
-	{
-		// std::cout << TEXT_CYAN << client.requestString.substr(0, 500) << "\n...\n" << RESET << std::endl;
-		return nullptr;
+		if (client.state != READY_TO_WRITE)
+			// std::cout << TEXT_CYAN << client.requestString.substr(0, 500) << "\n...\n" << RESET << std::endl;
+			return false;
 	}
 
 	LOG_INFO("Request read");
-	// std::cout << TEXT_YELLOW << client.requestString.substr(0, 1000) << "\n...\n" << RESET << std::endl;
-	std::cout << TEXT_YELLOW << client.requestString << RESET << std::endl;
+	std::cout << TEXT_YELLOW << client.requestString.substr(0, 1000) << "\n...\n" << RESET << std::endl;
+	// std::cout << TEXT_YELLOW << client.requestString << RESET << std::endl;
 	// LOG_DEBUG_MULTILINE(TEXT_YELLOW, client.requestString, RESET);
 
-	return new Request(client.requestString);
+	return true;
 }
 
 void	Server::handler(Server*& server, t_client& client)
 {
 	try
 	{
-		client.request = server->receiveRequest(client);
+		// client.request = server->receiveRequest(client);
+		if (server->receiveRequest(client))
+			client.request = new Request(client.requestString);
 	}
 	catch (ResponseError& e)
 	{
@@ -321,10 +324,11 @@ std::string findUplooadFormBoundary(t_client& client)
 
 void Server:: handleUpload(t_client& client, Location& foundLocation)
 {
+	LOG_INFO("Handling upload...");
 	// // Handle upload from API app (Thunder Client for example)
 	// if (client.request->getHeaders().at("content-type") == "application/octet-stream")
 	// {
-
+		
 	// }
 	// // Handle upload from the HTML form
 	// else if (client.request->getHeaders())

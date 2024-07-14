@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/14 00:02:52 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/15 00:44:39 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,7 @@ void Request::parse(std::string request)
 			std::string key = Utility::strToLower(Utility::trim(headerSplit[0]));
 			std::string value = Utility::trim(headerSplit[1]);
 			_headers[key] = value;
-			LOG_DEBUG("Header: ", key, " Value: ", value);
+			// LOG_DEBUG("Header: ", key, " Value: ", value);
 		}
 
 		// Parse the body
@@ -165,7 +165,8 @@ void	Request::printRequest()
 	for (auto& [key, value] : getHeaders())
 		LOG_DEBUG("Header: ", key, " = ", value);
 	LOG_DEBUG_RAW("[DEBUG] Body: ", "\n");
-	LOG_DEBUG_RAW(getBody());
+	LOG_DEBUG_RAW(getBody().substr(0, 500));
+	LOG_DEBUG_RAW("...\n");
 }
 
 // Request should be at least start line, Host, Connection

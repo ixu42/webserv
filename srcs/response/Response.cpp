@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/14 17:03:48 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/15 02:27:29 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ static const std::map<int, std::string> statusMessages = {
 	{404, "Not Found"},
 	{405, "Method Not Allowed"}, // if the location does not allowes method in request. Then put "Allowed: GET, POST" in response header
 	{411, "Length Required"}, // Content-Length not provided
-	{413, "Request Entity Too Large"}, // if the request body size exceeds the clientMaxBodySize
+	{413, "Payload Too Large"}, // if the request body size exceeds the clientMaxBodySize
 	{500, "Internal Server Error"}, // can be used when the server runs into unexpected issues processing the request, including memory allocation failures
 	{505, "HTTP Version Not Supported"}
 };

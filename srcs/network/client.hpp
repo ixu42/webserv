@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 21:59:14 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/14 03:02:00 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/15 02:40:38 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,10 +26,11 @@ enum ClientState
 typedef struct s_client
 {
 	int			fd;
-	Request*	request;
-	Response*	response;
+	Request*	request = nullptr;
+	Response*	response = nullptr;
 	ClientState	state = READING;
 	std::string	requestString;
+	std::size_t maxClientBodyBytes = std::numeric_limits<std::size_t>::max();
 	std::string	responseString;
 	size_t		totalBytesWritten = 0;
 }	t_client;

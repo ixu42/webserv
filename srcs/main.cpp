@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/11 21:59:15 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/14 19:40:13 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
 	signal(SIGINT, signalHandler); /* ctrl + c */
 	signal(SIGTSTP, signalHandler); /* ctrl + z */
 	signal(SIGQUIT, signalHandler); /* ctrl + \ */
+	// signal(SIGPIPE, SIG_IGN);
 
 	std::string configFile = DEFAULT_CONFIG;
 

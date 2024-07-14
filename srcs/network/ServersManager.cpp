@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/13 23:21:59 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/14 23:48:29 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,8 +100,9 @@ void ServersManager::run()
 {
 	while (!g_signalReceived.load())
 	{
-		LOG_DEBUG("poll() waiting for an fd to be ready...");
+		// LOG_DEBUG("poll() waiting for an fd to be ready...");
 		int ready = poll(_fds.data(), _fds.size(), -1);
+		// LOG_DEBUG("poll() returned: ", ready);
 		if (ready == -1)
 		{
 			if (errno == EINTR)
@@ -111,15 +112,36 @@ void ServersManager::run()
 		}
 		for (struct pollfd& pfd : _fds)
 		{
+		// LOG_DEBUG("Checking pollfds...");
 			if (pfd.revents & POLLIN)
 			{
+			// LOG_DEBUG("if POLLIN");
 				handleRead(pfd);
-				break ;
+				// break ; // should it break?
 			}
 			if (pfd.revents & POLLOUT)
 			{
+			// LOG_DEBUG("if POLLOUT");
 				handleWrite(pfd.fd);
-				break ;
+				// break ; // should it break?
+			}
+			// if (pfd.revents & (POLLERR | POLLHUP | POLLNVAL))
+			if (pfd.revents & (POLLERR | POLLHUP))
+			{
+				LOG_DEBUG("Error or hangup on fd: ", pfd.fd);
+				if (pfd.revents & POLLERR )
+					LOG_DEBUG("POLLERR");
+				if (pfd.revents & POLLHUP)
+					LOG_DEBUG("POLLHUP");
+				if (pfd.revents & POLLNVAL)
+					LOG_DEBUG("POLLNVAL");
+				removeClientByFd(pfd.fd);
+				removeFromPollfd(pfd.fd);
+				if (close(pfd.fd) == -1) {
+					LOG_DEBUG("Failed to close fd: ", pfd.fd, " Error: ", strerror(errno));
+				} else {
+					LOG_DEBUG("Closed fd: ", pfd.fd);
+				}
 			}
 		}
 	}
@@ -137,18 +159,22 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 			if (clientSockfd == -1)
 				throw ServerException("Server failed to accept a connection");
 			// Add connected client fd to pollfd vector
-			_fds.push_back({clientSockfd, POLLIN, 0});
+			// _fds.push_back({clientSockfd, POLLIN, 0}); // Only POLLIN? or both?
+			// _fds.push_back({clientSockfd, POLLIN | POLLERR | POLLHUP | POLLNVAL, 0}); // Onlu POLLIN? or both?
+			_fds.push_back({clientSockfd, POLLIN | POLLERR | POLLHUP, 0}); // Onlu POLLIN? or both?
 			break ;
 		}
 		for (t_client& client : server->getClients())
 		{
-			if (pfdReadyForRead.fd == client.fd)
+			if (pfdReadyForRead.fd == client.fd && client.state == READING)
 			{
 				// client.request = server->receiveRequest(pfdReadyForRead.fd);
 				server->handler(server, client);
-				if (client.state == WRITING)
+				if (client.state == READY_TO_WRITE)
 				{
-					pfdReadyForRead.events = POLLOUT;
+					// pfdReadyForRead.events = POLLOUT;
+					// pfdReadyForRead.events = POLLOUT | POLLERR | POLLHUP | POLLNVAL;
+					pfdReadyForRead.events = POLLOUT | POLLERR | POLLHUP;
 				}
 				fdFound = true;
 				break ;
@@ -169,8 +195,26 @@ void	ServersManager::handleWrite(int fdReadyForWrite)
 		{
 			if (fdReadyForWrite == client.fd)
 			{
-				server->responder(client, *server);
-				removeFromPollfd(fdReadyForWrite);
+				if (client.state == READY_TO_WRITE)
+				{
+					server->responder(client, *server);
+					client.responseString = Response::buildResponse(*client.response);
+					LOG_DEBUG("response: ", client.responseString.substr(0, 500), "\n...\n"); // Can be really huge for huge files and can interrupt the Terminal
+					client.state = WRITING;
+				}
+				if (client.state == WRITING)
+				{
+					// write(client.fd, response.c_str(), response.size());
+					if (server->sendResponse(client))
+						client.state = FINISHED_WRITING;
+				}
+				if (client.state == FINISHED_WRITING)
+				{
+				{
+						server->finalizeResponse(client);
+						LOG_INFO("Response sent and connection closed (socket fd: ", client.fd, ")");
+				}
+				}
 				fdFound = true;
 				break ;
 			}
@@ -188,6 +232,22 @@ void	ServersManager::removeFromPollfd(int fd)
 		{
 			_fds.erase(fd_it);
 			break ;
+		}
+	}
+}
+
+void	ServersManager::removeClientByFd(int currentFd)
+{
+	for (Server*& server : _servers)
+	{
+		std::vector<t_client>& clients = server->getClients();
+		for (auto it = clients.begin(); it != clients.end(); ++it)
+		{
+		if (it->fd == currentFd)
+		{
+			clients.erase(it);
+			break ;
+		}
 		}
 	}
 }

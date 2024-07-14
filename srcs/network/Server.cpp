@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/13 23:59:43 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/15 00:27:47 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ int	Server::accepter()
 		return -1;
 	LOG_INFO("Connection established with client (socket fd: ", clientSockfd, ")");
 
-	_clients.push_back((t_client){clientSockfd, nullptr, nullptr, READING, ""});
+	_clients.push_back((t_client){clientSockfd, nullptr, nullptr, READING, "", "", 0});
 	return clientSockfd;
 }
 
@@ -127,43 +127,6 @@ size_t Server::findMaxClientBodyBytes(Request request)
 }
 
 // Request* Server::receiveRequest(int clientSockfd)
-// {
-// 	LOG_DEBUG("Server::receiveRequest called");
-// 	const int bufferSize = 10;
-// 	char buffer[bufferSize] = {0};
-// 	int bytesRead;
-// 	std::string request;
-// 	while (1)
-// 	{
-// 		bytesRead = read(clientSockfd, buffer, bufferSize);
-
-// 		LOG_DEBUG(TEXT_YELLOW, "bytesRead in receiveRequest())): ", bytesRead);
-// 		if (bytesRead < 0)
-// 			break;
-// 		else if (bytesRead == 0)
-// 			break;
-// 		else
-//         {
-//             // Append the data read to the request string
-//             request.append(buffer, bytesRead);
-            
-//             // Check if the request is complete (depends on protocol, e.g., HTTP)
-//             // For example, in HTTP, we might check for the end of headers
-//             if (request.find("\r\n\r\n") != std::string::npos)
-//             {
-//                 break;
-//             }
-//         }
-// 	}
-
-// 	LOG_INFO("Request read");
-// 	std::cout << TEXT_YELLOW << request.substr(0, 500) << "\n...\n" << RESET << std::endl;
-// 	// LOG_DEBUG_MULTILINE(TEXT_YELLOW, request.substr(0, 500), "\n...\n", RESET);
-
-// 	return new Request(request);
-// }
-
-// Request* Server::receiveRequest(int clientSockfd)
 Request* Server::receiveRequest(t_client& client)
 {
 	LOG_DEBUG("Server::receiveRequest called for fd: ", client.fd);
@@ -181,7 +144,7 @@ Request* Server::receiveRequest(t_client& client)
 	while (1)
 	{
 		bytesRead = read(client.fd, buffer, bufferSize);
-		LOG_DEBUG(TEXT_YELLOW, "bytesRead in receiveRequest())): ", bytesRead);
+		LOG_DEBUG(TEXT_YELLOW, "bytesRead in receiveRequest())): ", bytesRead, RESET);
 		// LOG_DEBUG("=== Reading in chunks bytes: ", bytesRead); // too much debug lol
 		// LOG_DEBUG_RAW("[DEBUG] ");
 		// for (int i = 0; i < bytesRead; i++)
@@ -193,7 +156,7 @@ Request* Server::receiveRequest(t_client& client)
 			// continue;
 		else if (bytesRead == 0)
 		{
-			client.state = WRITING;
+			client.state = READY_TO_WRITE;
 			break;
 		}
 		client.requestString += std::string(buffer, bytesRead);
@@ -207,7 +170,7 @@ Request* Server::receiveRequest(t_client& client)
 			contentLengthNum = findContentLength(client.requestString);
 			if (contentLengthNum == std::string::npos)
 			{
-				client.state = WRITING;
+				client.state = READY_TO_WRITE;
 				break;
 			}
 
@@ -225,7 +188,7 @@ Request* Server::receiveRequest(t_client& client)
 
 			if (currRequestBodyBytes >= contentLengthNum)
 			{
-				client.state = WRITING;
+				client.state = READY_TO_WRITE;
 				break;
 			}
 		}
@@ -235,13 +198,14 @@ Request* Server::receiveRequest(t_client& client)
 
 	if (client.state == READING)
 	{
-		std::cout << TEXT_CYAN << client.requestString.substr(0, 500) << "\n...\n" << RESET << std::endl;
+		// std::cout << TEXT_CYAN << client.requestString.substr(0, 500) << "\n...\n" << RESET << std::endl;
 		return nullptr;
 	}
 
 	LOG_INFO("Request read");
-	std::cout << TEXT_YELLOW << client.requestString.substr(0, 500) << "\n...\n" << RESET << std::endl;
-	// LOG_DEBUG_MULTILINE(TEXT_YELLOW, request, RESET);
+	// std::cout << TEXT_YELLOW << client.requestString.substr(0, 1000) << "\n...\n" << RESET << std::endl;
+	std::cout << TEXT_YELLOW << client.requestString << RESET << std::endl;
+	// LOG_DEBUG_MULTILINE(TEXT_YELLOW, client.requestString, RESET);
 
 	return new Request(client.requestString);
 }
@@ -261,54 +225,37 @@ void	Server::handler(Server*& server, t_client& client)
 Response* Server::createResponse(Request* request, int code, 
 						std::map<std::string, std::string> optionalHeaders)
 {
-	// LOG_DEBUG("createResponse() called");
-	// ServerConfig* serverConfig = nullptr;
-	// try
-	// {
-	// 	serverConfig = findServerConfig(request);
-	// 	LOG_DEBUG("trying to find server config for create response");
-	// }
-	// catch(const ResponseError& e)
-	// {
-	// 	serverConfig = &getConfigs()[0];
-	// 	return new Response(e.getCode(), serverConfig, optionalHeaders);
-	// }
 	LOG_DEBUG("createResponse() called");
-	// ServerConfig* serverConfig = findServerConfig(request);
-	// serverConfig = serverConfig ? serverConfig : &getConfigs()[0];
-
 	return new Response(code, findServerConfig(request), optionalHeaders);
 }
 
-void Server::sendResponse(std::string& response, t_client& client)
+bool Server::sendResponse(t_client& client)
 {
-	size_t totalBytesWritten = 0;
-	size_t bytesToWrite = response.length();
-	const char* buffer = response.c_str();
+	// size_t totalBytesWritten = 0;
+	size_t		chunkSize = 10*1024;
+	size_t		bytesToWrite = client.responseString.length(); // maybe copy to struct to optimize
+	// const char*	buffer = client.responseString.c_str(); // maybe copy to struct to optimize
 
-	while (totalBytesWritten < bytesToWrite)
-	{
-		ssize_t bytesWritten = write(client.fd, buffer + totalBytesWritten, bytesToWrite - totalBytesWritten);
-		if (bytesWritten == -1) // We can not use EAGAIN or EWOULDBLOCK here
-			continue;
-		else if (bytesWritten == 0) // Handle case where write returns 0 (should not happen with regular sockets)
-			break;
-		else {
-			totalBytesWritten += bytesWritten;
-		}
-		LOG_DEBUG(TEXT_GREEN, "Bytes written: ", bytesWritten, RESET);
-	}
-	LOG_DEBUG(TEXT_GREEN, "response.length(): ", response.length(), RESET);
-}
+	// Calculate the remaining bytes to write
+	size_t remainingBytes = bytesToWrite - client.totalBytesWritten;
+	// Limit the chunk size to the remaining bytes
+	size_t bytesToWriteNow = remainingBytes < chunkSize ? remainingBytes : chunkSize;
 
-bool	Server::formRequestErrorResponse(t_client& client)
-{
-	if (client.response)
+	// ssize_t bytesWritten = write(client.fd, buffer + client.totalBytesWritten, bytesToWrite - client.totalBytesWritten);
+	ssize_t bytesWritten = write(client.fd, client.responseString.c_str() + client.totalBytesWritten, bytesToWriteNow);
+	LOG_DEBUG(TEXT_GREEN, "Bytes written: ", bytesWritten, RESET);
+	if (bytesWritten == -1) // We can not use EAGAIN or EWOULDBLOCK here
+		return false;
+	client.totalBytesWritten += bytesWritten;
+	LOG_DEBUG(TEXT_GREEN, "client.totalBytesWritten: ", client.totalBytesWritten, RESET);
+	if (bytesWritten == 0 || client.totalBytesWritten == bytesToWrite) // Handle case where write returns 0 (should not happen with regular sockets)
 	{
-		finalizeResponse(client);
+		LOG_INFO(TEXT_GREEN, "Response written total: ", client.totalBytesWritten, RESET);
 		return true;
-	}
+	}	
+	// else if (client.totalBytesWritten < bytesToWrite)
 	return false;
+	// LOG_DEBUG(TEXT_GREEN, "client.responseString.length(): ", client.responseString.length(), RESET);
 }
 
 bool	Server::formCGIConfigAbsenceResponse(t_client& client, Server& server)
@@ -318,7 +265,7 @@ bool	Server::formCGIConfigAbsenceResponse(t_client& client, Server& server)
 		&& client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
 	{
 		client.response = createResponse(client.request, 404);
-		finalizeResponse(client);
+		// finalizeResponse(client);
 		return true;
 	}
 	return false;
@@ -435,10 +382,6 @@ void	Server::handleStaticFiles(t_client& client, Location& foundLocation)
 
 void	Server::finalizeResponse(t_client& client)
 {
-	std::string response = Response::buildResponse(*client.response);
-	LOG_DEBUG("response: ", response.substr(0, 500), "\n...\n"); // Can be really huge for huge files and can interrupt the Terminal
-	// write(client.fd, response.c_str(), response.size());
-	sendResponse(response, client);
 	delete client.request;
 	delete client.response;
 	client.request = nullptr;
@@ -457,7 +400,7 @@ void Server::validateRequest(t_client& client)
 			client.request->getHeaders()["host"].empty())
 			throw ResponseError(400, {}, "Request does not have mandatory fields");
 		if (client.request->getStartLine()["version"] != "HTTP/1.1")
-			throw ResponseError(505, {}, "Wrong HTTP version in start line");
+			throw ResponseError(505, {}, "Wrong HTTP version in the start line");
 		// try
 		// {
 		// 	client.request->getStartLine().at("content-length");
@@ -472,8 +415,12 @@ void	Server::responder(t_client& client, Server& server)
 {
 	LOG_DEBUG("Server::responder() called");
 	client.request->printRequest(); // can flood the Terminal if a file is uploaded
-	if (formRequestErrorResponse(client)) return;
-	if (formCGIConfigAbsenceResponse(client, server)) return;
+	// if (formRequestErrorResponse(client)) return; // TODO: remove this line later
+	if ((client.response || formCGIConfigAbsenceResponse(client, server)))
+	{
+		client.state = FINISHED_WRITING;
+		return;
+	}
 	try
 	{
 		validateRequest(client);
@@ -496,9 +443,6 @@ void	Server::responder(t_client& client, Server& server)
 	}
 	if (!client.response)
 		client.response = createResponse(client.request, 500);
-	finalizeResponse(client);
-
-	LOG_INFO("Response sent and connection closed (socket fd: ", client.fd, ")");
 }
 
 void	Server::removeFromClients(t_client& client)

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 21:59:14 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/13 23:18:55 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/14 03:02:00 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,9 @@
 enum ClientState
 {
 	READING,
-	WRITING
+	READY_TO_WRITE,
+	WRITING,
+	FINISHED_WRITING
 };
 
 typedef struct s_client
@@ -26,6 +28,8 @@ typedef struct s_client
 	int			fd;
 	Request*	request;
 	Response*	response;
-	ClientState state = READING;
+	ClientState	state = READING;
 	std::string	requestString;
+	std::string	responseString;
+	size_t		totalBytesWritten = 0;
 }	t_client;

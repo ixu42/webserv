@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/13 02:35:16 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/14 17:03:48 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,7 +128,9 @@ Response::Response(int code, std::string filePath)
 
 	if (access(filePath.c_str(), R_OK) == 0)
 	{
+		LOG_INFO("Utility::readBinaryFile() called");
 		auto [binaryFile, binarySize] = Utility::readBinaryFile(filePath);
+		LOG_INFO("Utility::readBinaryFile() finished");
 		size = binarySize;
 		fileContent = std::string(binaryFile.begin(), binaryFile.end());
 

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/13 23:33:00 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/14 22:21:12 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,13 +75,17 @@ class Server
 
 		// Request*					receiveRequest(int clientSockfd);
 		Request*					receiveRequest(t_client& client);
+		bool						sendResponse(t_client& client);
+		void						finalizeResponse(t_client& client);
 
 	private:
 		std::string					whoAmI() const;
 		void						initServer(const char* ipAddr, int port);
 		void						removeFromClients(t_client& client);
+
+
 		void						validateRequest(t_client& client);
-		bool						formRequestErrorResponse(t_client& client);
+		// bool						formRequestErrorResponse(t_client& client);
 		bool						formCGIConfigAbsenceResponse(t_client& client, Server &server);
 		void						handleCGIResponse(t_client& client, Server &server);
 		void						handleUpload(t_client& client, Location& foundLocation);
@@ -89,9 +93,7 @@ class Server
 		void						checkIfMethodAllowed(t_client& client, Location& foundLocation);
 		void						handleRedirect(t_client& client, Location& foundLocation);
 		void						handleStaticFiles(t_client& client, Location& foundLocation);
-		void						finalizeResponse(t_client& client);
 		Location					findLocation(Request* req);
-		void						sendResponse(std::string& response, t_client& client);
 		
 		ServerConfig*				findServerConfig(Request* req);
 		size_t						findMaxClientBodyBytes(Request request);

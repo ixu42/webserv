@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:46 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/08 12:47:39 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/13 23:31:02 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,7 +125,7 @@ int	Socket::acceptConnection(struct sockaddr_in addr)
 
 int	Socket::getSockfd()
 {
-	LOG_DEBUG("Socket::getSocketFd() called");
+	LOG_DEBUG("Socket::getSockFd() called");
 	return _sockfd;
 }
 

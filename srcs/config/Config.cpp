@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/10 15:42:14 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/11 22:06:13 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,8 @@ void Config::printConfig()
 				LOG_DEBUG(TEXT_YELLOW, TEXT_UNDERLINE, "\tLocation: ", location.path, RESET_UNDERLINE, RESET);
 				LOG_DEBUG(TEXT_YELLOW, "\t\tredirect: ", location.redirect, RESET);
 				LOG_DEBUG(TEXT_YELLOW, "\t\troot: ", location.root, RESET);
-				LOG_DEBUG(TEXT_YELLOW, "\t\tuploadPath: ", location.uploadPath, RESET);
+				// LOG_DEBUG(TEXT_YELLOW, "\t\tuploadPath: ", location.uploadPath, RESET); // remove, now handled with upload
+				LOG_DEBUG(TEXT_YELLOW, "\t\tupload: ", location.upload, RESET);
 				LOG_DEBUG(TEXT_YELLOW, "\t\tautoindex: ", std::boolalpha, location.autoindex, RESET);
 				LOG_DEBUG(TEXT_YELLOW, "\t\tindex: ", location.index, RESET);
 				for (auto& method : location.methods)
@@ -188,9 +189,9 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 		std::string line;
 		while (std::getline(stream, line))
 		{	
-			std::string ipPort = findIpPortKey(generalConfig);
+			if (line.empty() || line[0] == '#') continue;
 
-			if (line.empty()) continue;
+			std::string ipPort = findIpPortKey(generalConfig);
 
 			// std::cout << "Line: " << line << std::endl;
 
@@ -277,14 +278,18 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 					serverConfig.locations[j].redirect = value;
 				else if (key == "root")
 					serverConfig.locations[j].root = value;
-				else if (key == "uploadPath")
-					serverConfig.locations[j].uploadPath = value;
+				// else if (key == "uploadPath")
+				// 	serverConfig.locations[j].uploadPath = value;
+				else if (key == "upload" && value == "on")
+					serverConfig.locations[j].upload = true;
 				else if (key == "autoindex" && value == "on")
 						serverConfig.locations[j].autoindex = true;
 				else if (key == "index")
 						serverConfig.locations[j].index = value;
 				else if (key == "methods")
 				{
+					for (auto& methodPair : serverConfig.locations[j].methods)
+						methodPair.second = false;
 					std::vector<std::string> methods = Utility::splitString(value, ",");
 					for (std::string method : methods)
 						serverConfig.locations[j].methods[method] = true;

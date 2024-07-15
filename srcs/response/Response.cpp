@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/13 13:47:07 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/15 19:37:11 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,8 +23,10 @@ static const std::map<int, std::string> statusMessages = {
 	{403, "Forbidden"},
 	{404, "Not Found"},
 	{405, "Method Not Allowed"}, // if the location does not allowes method in request. Then put "Allowed: GET, POST" in response header
-	{413, "Request Entity Too Large"}, // if the request body size exceeds the clientMaxBodySize
-	{500, "Internal Server Error"} // can be used when the server runs into unexpected issues processing the request, including memory allocation failures
+	{411, "Length Required"}, // Content-Length not provided
+	{413, "Payload Too Large"}, // if the request body size exceeds the clientMaxBodySize
+	{500, "Internal Server Error"}, // can be used when the server runs into unexpected issues processing the request, including memory allocation failures
+	{505, "HTTP Version Not Supported"}
 };
 
 static const std::map<std::string, std::string> mimeTypes = {
@@ -96,14 +98,14 @@ Response::Response(int code, ServerConfig* serverConfig, std::map<std::string, s
 		// {
 		// 	std::cout << "error key: " << errorkey << ", errorpath:" << errorpath << std::endl;
 		// }
-		if (errorIt != serverConfig->errorPages.end() && access(errorIt->second.c_str(),R_OK) == 0)
+		if (errorIt != serverConfig->errorPages.end() && access(errorIt->second.c_str(), R_OK) == 0)
 		{
 			// std::cout << TEXT_GREEN << "user page found for error" << std::endl;
 			errorPagePath = serverConfig->errorPages[code];
 		}
 		else if (defaultErrorIt != serverConfig->defaultErrorPages.end())
 		{
-			// std::cout << TEXT_GREEN << "default page found for error" << std::endl;
+			std::cout << TEXT_GREEN << "default page found for error" << std::endl;
 		// else if (defaultErrorIt != serverConfig->defaultErrorPages.end())
 			errorPagePath = serverConfig->defaultErrorPages[code];
 		}
@@ -126,7 +128,9 @@ Response::Response(int code, std::string filePath)
 
 	if (access(filePath.c_str(), R_OK) == 0)
 	{
+		LOG_INFO("Utility::readBinaryFile() called");
 		auto [binaryFile, binarySize] = Utility::readBinaryFile(filePath);
+		LOG_INFO("Utility::readBinaryFile() finished");
 		size = binarySize;
 		fileContent = std::string(binaryFile.begin(), binaryFile.end());
 

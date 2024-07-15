@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/12 15:02:01 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/15 17:54:25 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/15 19:47:41 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,6 @@ void SessionsManager::handleSessions(t_client& client)
 	checkPermissions();
 	if (isHTMLRequest(client))
 	{
-		checkIfFileExist();
 		if (cookie.empty() || !sessionExistsCheck(cookie))
 		{
 			generateSession(client.request);
@@ -90,14 +89,21 @@ void SessionsManager::checkPermissions()
 {
 	if (access(_filename.c_str(), F_OK) != 0)
 	{
-		throw ResponseError(404, {}, "File not found: " + _filename);
+		std::ofstream outfile(_filename);
+		if (outfile.is_open())
+		{
+			outfile.close();
+		}
+		else
+		{
+			throw ResponseError(500, {}, "Exception has been thrown in checkIfFileExist() "
+			"method of SessionsManager class");
+		}
 	}
-
 	if (access(_filename.c_str(), R_OK) != 0)
 	{
 		throw ResponseError(403, {}, "Read permission denied for file: " + _filename);
 	}
-	
 	if (access(_filename.c_str(), W_OK) != 0)
 	{
 		throw ResponseError(403, {}, "Write permission denied for file: " + _filename);

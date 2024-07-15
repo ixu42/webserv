@@ -6,18 +6,11 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/15 12:00:40 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/15 19:36:50 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
-
-#define FDS 2
-
-struct Pipe {
-	int input[FDS];
-	int output[FDS];
-};
 
 #include "Socket.hpp"
 #include "CGIHandler.hpp"
@@ -27,6 +20,7 @@ struct Pipe {
 #include "../utils/logUtils.hpp"
 #include "../request/Request.hpp"
 #include "../utils/ServerException.hpp"
+#include "DirLister.hpp"
 #include "client.hpp"
 #include <vector>
 #include <string>
@@ -43,10 +37,12 @@ struct Pipe {
 
 #include <fstream> //open file
 
-#include <filesystem> // for createDirListResp()
-#include <chrono> // for createDirListResp()
+#define FDS 2
 
-namespace fs = std::filesystem;
+struct Pipe {
+	int input[FDS];
+	int output[FDS];
+};
 
 class Server
 {
@@ -72,30 +68,33 @@ class Server
 		std::vector<t_client>&		getClients();
 		std::string					getIpAddress();
 		int							getPort();
-		std::vector<ServerConfig>	getConfig();
+		std::vector<ServerConfig>	getConfigs();
 
 		int							accepter();
 		void						handler(Server*& server, t_client& client);
 		void						responder(t_client& client, Server &server);
 
-		Request*					receiveRequest(int clientSockfd);
+		// Request*					receiveRequest(int clientSockfd);
+		bool					receiveRequest(t_client& client);
+		bool						sendResponse(t_client& client);
+		void						finalizeResponse(t_client& client);
 
 	private:
 		std::string					whoAmI() const;
 		void						initServer(const char* ipAddr, int port);
 		void						removeFromClients(t_client& client);
-		bool						formRequestErrorResponse(t_client& client);
+
+
+		void						validateRequest(t_client& client);
+		// bool						formRequestErrorResponse(t_client& client);
 		bool						formCGIConfigAbsenceResponse(t_client& client, Server &server);
 		void						handleCGIResponse(t_client& client, Server &server);
+		void						handleUpload(t_client& client, Location& foundLocation);
 		void						handleNonCGIResponse(t_client& client, Server &server);
-		void						checkIfAllowed(t_client& client, Location& foundLocation);
+		void						checkIfMethodAllowed(t_client& client, Location& foundLocation);
 		void						handleRedirect(t_client& client, Location& foundLocation);
 		void						handleStaticFiles(t_client& client, Location& foundLocation);
-		void						finalizeResponse(t_client& client);
 		Location					findLocation(Request* req);
-		void						sendResponse(std::string& response, t_client& client);
-		Response*					createDirListResponse(Location& location, std::string requestPath);
-		std::stringstream			generateDirectoryListingHtml(const std::string& root);
 		
 		ServerConfig*				findServerConfig(Request* req);
 		size_t						findMaxClientBodyBytes(Request request);

@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/12 12:23:32 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/15 17:49:16 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/15 19:42:41 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,6 @@ class SessionsManager {
 		
 		static bool sessionExistsCheck(std::string& sessionData);
 		static void generateSession(Request* request);
-		static void checkIfFileExist();
 		static void addSessionToFile(std::string& sessionData);
 		static void manageSessions(std::deque<std::string>& sessions);
 		static void setSessionToResponse(Response* response, std::string& sessionData);

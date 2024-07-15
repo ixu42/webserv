@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/09 21:38:19 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/14 19:40:13 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
 	signal(SIGINT, signalHandler); /* ctrl + c */
 	signal(SIGTSTP, signalHandler); /* ctrl + z */
 	signal(SIGQUIT, signalHandler); /* ctrl + \ */
+	// signal(SIGPIPE, SIG_IGN);
 
 	std::string configFile = DEFAULT_CONFIG;
 
@@ -49,13 +50,13 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 
-	bool serverManagerInstanceCreated = false;
+	// bool serverManagerInstanceCreated = false; // wtf? where is it used?
 
 	try
 	{
 		ServersManager::initConfig(configFile.c_str());
 		ServersManager* manager = ServersManager::getInstance();
-		serverManagerInstanceCreated = true;
+		// serverManagerInstanceCreated = true; // wtf? where is it used?
 		manager->run();
 		delete manager->getInstance();
 	}

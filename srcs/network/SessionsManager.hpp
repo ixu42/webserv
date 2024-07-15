@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/12 12:23:32 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/15 12:33:21 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/15 17:49:16 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,8 @@
 #include <map>
 #include <deque>
 #include <algorithm>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include "client.hpp"
 #include "../utils/Utility.hpp"
@@ -35,11 +37,13 @@ class SessionsManager {
 		const static size_t _MAX_SESSIONS = 500;
 		
 		static bool sessionExistsCheck(std::string& sessionData);
-		static void generateSession();
+		static void generateSession(Request* request);
 		static void checkIfFileExist();
 		static void addSessionToFile(std::string& sessionData);
 		static void manageSessions(std::deque<std::string>& sessions);
 		static void setSessionToResponse(Response* response, std::string& sessionData);
+		static bool isHTMLRequest(t_client& client);
+		static void checkPermissions();
 		
 	public:
 		static void setSession(std::string session);

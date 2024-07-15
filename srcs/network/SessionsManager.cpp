@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/12 15:02:01 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/15 12:53:34 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/15 17:54:25 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,23 +14,36 @@
 
 const std::string SessionsManager::_filename = "sessions";
 std::string SessionsManager::_session;
+static const std::vector<std::string> mediaExtensions = {
+		".jpg",
+		".jpeg",
+		".png",
+		".gif",
+		".ico",
+		".svg",
+		".mp3",
+		".mp4",
+		".webm"
+};
 
-void SessionsManager::setSession(std::string session)
+void SessionsManager::handleSessions(t_client& client)
 {
-	_session = session;
+	std::string cookie = client.request->getHeaders()["cookie"];
+
+	checkPermissions();
+	if (isHTMLRequest(client))
+	{
+		checkIfFileExist();
+		if (cookie.empty() || !sessionExistsCheck(cookie))
+		{
+			generateSession(client.request);
+			addSessionToFile(getSession());
+			setSessionToResponse(client.response, getSession());
+		}
+	}
 }
 
-std::string& SessionsManager::getSession()
-{
-	return _session;
-}
-
-const std::string SessionsManager::getFilename()
-{
-	return _filename;
-}
-
-void SessionsManager::generateSession()
+void SessionsManager::generateSession(Request* request)
 {
 	auto now = std::chrono::system_clock::now();
 	auto duration = now.time_since_epoch();
@@ -38,7 +51,7 @@ void SessionsManager::generateSession()
 
 	std::mt19937 generator(static_cast<unsigned long>(microseconds));
 
-	std::uniform_int_distribution<int> distribution(0, 35);
+	std::uniform_int_distribution<int> distribution(0, 61);
 
 	std::stringstream sessionStream;
 	sessionStream << "sessionid=";
@@ -49,49 +62,52 @@ void SessionsManager::generateSession()
 		{
 			sessionStream << static_cast<char>('0' + randomValue);
 		}
-		else
+		else if (randomValue < 36)
 		{
 			sessionStream << static_cast<char>('A' + (randomValue - 10));
+		}
+		else
+		{
+			sessionStream << static_cast<char>('a' + (randomValue - 36));
 		}
 	}
 	sessionStream << "; expires=";
 	Utility::strToLower(sessionStream.str());
 	
-	auto expirationTime = std::chrono::system_clock::now() + std::chrono::hours(24 * 365 * 25);
+	auto expirationTime = std::chrono::system_clock::now() + std::chrono::hours(24 * 365);
 	std::time_t expirationTimeT = std::chrono::system_clock::to_time_t(expirationTime);
 	char expirationBuffer[100];
 	std::strftime(expirationBuffer, sizeof(expirationBuffer), "%a, %d-%b-%Y %H:%M:%S GMT", std::gmtime(&expirationTimeT));
 	
-	sessionStream << expirationBuffer;
-	
+	sessionStream << expirationBuffer <<"; path=/";
+	sessionStream <<"; host=";
+	sessionStream << request->getHeaders()["host"];
+
 	setSession(sessionStream.str());
 }
 
-void SessionsManager::checkIfFileExist()
+void SessionsManager::checkPermissions()
 {
-	std::ifstream infile(_filename);
-	
-	if (!infile.good())
+	if (access(_filename.c_str(), F_OK) != 0)
 	{
-		std::ofstream outfile(_filename);
-		if (outfile.is_open())
-		{
-			outfile.close();
-		}
-		else
-		{
-			throw ResponseError(500, {}, "Exception has been thrown in checkIfFileExist() "
-			"method of SessionsManager class");
-		}
+		throw ResponseError(404, {}, "File not found: " + _filename);
 	}
-	infile.close();
+
+	if (access(_filename.c_str(), R_OK) != 0)
+	{
+		throw ResponseError(403, {}, "Read permission denied for file: " + _filename);
+	}
+	
+	if (access(_filename.c_str(), W_OK) != 0)
+	{
+		throw ResponseError(403, {}, "Write permission denied for file: " + _filename);
+	}
 }
 
 bool SessionsManager::sessionExistsCheck(std::string& sessionData)
 {
 	std::ifstream infile(_filename);
 	std::string line;
-	
 	if (!infile.is_open())
 	{
 		throw ResponseError(500, {}, "Exception has been thrown in writeSessionToFile() "
@@ -106,7 +122,6 @@ bool SessionsManager::sessionExistsCheck(std::string& sessionData)
 			return true;
 		}
 	}
-
 	infile.close();
 	return false;
 }
@@ -157,24 +172,30 @@ void SessionsManager::setSessionToResponse(Response* response, std::string& sess
 	response->setHeader("Set-Cookie", sessionData);
 }
 
-void SessionsManager::handleSessions(t_client& client)
+bool SessionsManager::isHTMLRequest(t_client& client)
 {
-	std::string cookie = client.request->getHeaders()["Cookie"];
-
-	if (cookie.empty())
+	for (const std::string& ext : mediaExtensions)
 	{
-		generateSession();
+		if (client.request->getStartLine()["path"].find(ext) != std::string::npos)
+		{
+			return false;
+		}
 	}
-	else
-	{
-		setSession(cookie);
-	}
-	checkIfFileExist();
+	
+	return true;
+}
 
-	if (!sessionExistsCheck(getSession()))
-	{
-		addSessionToFile(getSession());
-	}
+void SessionsManager::setSession(std::string session)
+{
+	_session = session;
+}
 
-	setSessionToResponse(client.response, getSession());
+std::string& SessionsManager::getSession()
+{
+	return _session;
+}
+
+const std::string SessionsManager::getFilename()
+{
+	return _filename;
 }

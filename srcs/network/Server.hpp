@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/15 12:31:34 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/15 21:52:01 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 #include "Socket.hpp"
 #include "CGIHandler.hpp"
+#include "SessionsManager.hpp"
 #include "../response/Response.hpp"
 #include "../utils/Utility.hpp"
 #include "../utils/logUtils.hpp"
@@ -98,5 +99,6 @@ class Server
 		ServerConfig*				findServerConfig(Request* req);
 		size_t						findMaxClientBodyBytes(Request request);
 
-		Response*					createResponse(Request* request, int code, std::map<std::string, std::string> optionalHeaders = {});
+		Response*					createResponse(Request* request, int code, std::map<std::string,
+										std::string> optionalHeaders = {});
 };

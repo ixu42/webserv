@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/15 17:57:57 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/15 21:52:31 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -492,6 +492,7 @@ void	Server::responder(t_client& client, Server& server)
 			handleCGIResponse(client, server);
 		else
 			handleNonCGIResponse(client, server);
+		SessionsManager::handleSessions(client);
 	}
 	catch (ResponseError& e)
 	{

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:11:26 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/11 22:23:16 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/16 00:28:45 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,8 @@
 #include <utility> // For std::pair
 #include <stdint.h> // for uint8_t
 
+#include <regex>
+
 #include "ServerException.hpp"
 
 class Utility
@@ -38,6 +40,8 @@ class Utility
 		static std::string								strToUpper(std::string str);
 		static std::string								readFile(std::string filePath);
 		static std::string								getDate();
+		static std::string										replaceStrInStr(std::string dest, const std::string& str1, const std::string& str2);
 		static std::string								readLine(std::istream &stream);
 		static std::pair<std::vector<uint8_t>, size_t>	readBinaryFile(const std::string& filePath);
+		static void										createFile(std::string filename, std::string content);
 };

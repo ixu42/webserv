@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:11:23 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/11 22:23:20 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/16 00:28:40 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,6 +108,11 @@ std::string Utility::getDate()
 	return std::string(buffer);
 }
 
+std::string	Utility::replaceStrInStr(std::string dest, const std::string& str1, const std::string& str2)
+{
+	return std::regex_replace(dest, std::regex(str1), str2);
+}
+
 std::string Utility::readLine(std::istream &stream)
 {
 	std::string line;
@@ -140,4 +145,13 @@ std::pair<std::vector<uint8_t>, size_t> Utility::readBinaryFile(const std::strin
 	}
 
 	return {buffer, static_cast<size_t>(size)};
+}
+void Utility::createFile(std::string filename, std::string content)
+{
+	std::ofstream outFile(filename);
+	if (!outFile) {
+		throw ServerException("Error: Could not create the file!");
+	}
+	outFile << content;
+	outFile.close();
 }

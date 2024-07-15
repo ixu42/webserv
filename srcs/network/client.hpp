@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 21:59:14 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/15 02:40:38 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/15 12:30:10 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 #include "../request/Request.hpp"
 #include "../response/Response.hpp"
+#include <limits>
 
 enum ClientState
 {

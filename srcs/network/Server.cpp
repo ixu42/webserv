@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/10 18:57:14 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/15 12:25:21 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -506,6 +506,8 @@ void	Server::responder(t_client& client, Server &server)
 	{
 		handleNonCGIResponse(client, server);
 	}
+
+	SessionsManager::handleSessions(client);
 	finalizeResponse(client);
 
 	LOG_INFO("Response sent and connection closed (socket fd: ", client.fd, ")");

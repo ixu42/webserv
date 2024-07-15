@@ -6,13 +6,13 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/12 15:02:01 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/13 13:55:53 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/15 12:53:34 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "SessionsManager.hpp"
 
-const std::string SessionsManager::_filename = "sessions.txt";
+const std::string SessionsManager::_filename = "sessions";
 std::string SessionsManager::_session;
 
 void SessionsManager::setSession(std::string session)
@@ -20,7 +20,7 @@ void SessionsManager::setSession(std::string session)
 	_session = session;
 }
 
-std::string SessionsManager::getSession()
+std::string& SessionsManager::getSession()
 {
 	return _session;
 }
@@ -30,7 +30,7 @@ const std::string SessionsManager::getFilename()
 	return _filename;
 }
 
-void SessionsManager::generateSession(Request& request)
+void SessionsManager::generateSession()
 {
 	auto now = std::chrono::system_clock::now();
 	auto duration = now.time_since_epoch();
@@ -62,8 +62,7 @@ void SessionsManager::generateSession(Request& request)
 	char expirationBuffer[100];
 	std::strftime(expirationBuffer, sizeof(expirationBuffer), "%a, %d-%b-%Y %H:%M:%S GMT", std::gmtime(&expirationTimeT));
 	
-	sessionStream << expirationBuffer << "; domain=";
-	sessionStream << request.getHeaders()["host"];
+	sessionStream << expirationBuffer;
 	
 	setSession(sessionStream.str());
 }
@@ -101,7 +100,7 @@ bool SessionsManager::sessionExistsCheck(std::string& sessionData)
 
 	while (std::getline(infile, line))
 	{
-		if (line == sessionData)
+		if (line.find(sessionData) != std::string::npos)
 		{
 			infile.close();
 			return true;
@@ -153,7 +152,29 @@ void SessionsManager::manageSessions(std::deque<std::string>& sessions)
 	}
 }
 
-void SessionsManager::setSessionToResponse(Response& response, std::string& sessionData)
+void SessionsManager::setSessionToResponse(Response* response, std::string& sessionData)
 {
-	response.setHeader("Set-Cookie", sessionData);
+	response->setHeader("Set-Cookie", sessionData);
+}
+
+void SessionsManager::handleSessions(t_client& client)
+{
+	std::string cookie = client.request->getHeaders()["Cookie"];
+
+	if (cookie.empty())
+	{
+		generateSession();
+	}
+	else
+	{
+		setSession(cookie);
+	}
+	checkIfFileExist();
+
+	if (!sessionExistsCheck(getSession()))
+	{
+		addSessionToFile(getSession());
+	}
+
+	setSessionToResponse(client.response, getSession());
 }

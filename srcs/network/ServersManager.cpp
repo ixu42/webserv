@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/14 23:48:29 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/15 12:57:12 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -187,6 +187,8 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 
 void	ServersManager::handleWrite(int fdReadyForWrite)
 {
+	int limitResponseString = 500;
+
 	bool fdFound = false;
 
 	for (Server*& server : _servers)
@@ -199,7 +201,7 @@ void	ServersManager::handleWrite(int fdReadyForWrite)
 				{
 					server->responder(client, *server);
 					client.responseString = Response::buildResponse(*client.response);
-					LOG_DEBUG("response: ", client.responseString.substr(0, 500), "\n...\n"); // Can be really huge for huge files and can interrupt the Terminal
+					LOG_DEBUG("response: ", client.responseString.substr(0, limitResponseString), "\n...\n"); // Can be really huge for huge files and can interrupt the Terminal
 					client.state = WRITING;
 				}
 				if (client.state == WRITING)

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/15 01:08:04 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/15 12:31:34 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,7 @@ class Server
 		void						responder(t_client& client, Server &server);
 
 		// Request*					receiveRequest(int clientSockfd);
-		bool					receiveRequest(t_client& client);
+		bool						receiveRequest(t_client& client);
 		bool						sendResponse(t_client& client);
 		void						finalizeResponse(t_client& client);
 

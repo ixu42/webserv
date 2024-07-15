@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/15 02:42:34 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/15 17:57:57 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,16 +92,16 @@ int	Server::accepter()
 
 int findContentLength(std::string request)
 {
-	std::string contentLength = "content-length: ";
+	std::string contentLength = "content-length:";
 
-	Utility::strToLower(request);
+	request = Utility::strToLower(request);
 	unsigned long contentLengthPos = request.find(contentLength);
 	if (contentLengthPos != std::string::npos)
 	{
 		std::string contentLengthValue = request.substr(contentLengthPos + contentLength.length());
 		int contentLengthValueEnd = contentLengthValue.find("\r\n");
 		contentLengthValue = contentLengthValue.substr(0, contentLengthValueEnd);
-		return std::stoi(contentLengthValue);
+		return std::stoi(Utility::trim(contentLengthValue));
 	}
 	return -1;
 }
@@ -139,7 +139,7 @@ size_t Server::findMaxClientBodyBytes(Request request)
 bool Server::receiveRequest(t_client& client)
 {
 	LOG_DEBUG("Server::receiveRequest called for fd: ", client.fd);
-	const int bufferSize = 10;
+	const int bufferSize = 1024;
 	char buffer[bufferSize] = {0};
 	int bytesRead;
 	// std::string request;
@@ -204,8 +204,9 @@ bool Server::receiveRequest(t_client& client)
 	}
 
 	LOG_INFO("Request read");
-	std::cout << TEXT_YELLOW << client.requestString.substr(0, 1000) << "\n...\n" << RESET << std::endl;
-	// std::cout << TEXT_YELLOW << client.requestString << RESET << std::endl;
+	// int limitRequestString = 2000;
+	// std::cout << TEXT_YELLOW << client.requestString.substr(0, limitRequestString) << "\n...\n" << RESET << std::endl;
+	std::cout << TEXT_YELLOW << client.requestString << RESET << std::endl;
 	// LOG_DEBUG_MULTILINE(TEXT_YELLOW, client.requestString, RESET);
 
 	return true;
@@ -286,10 +287,14 @@ void	Server::handleNonCGIResponse(t_client& client, Server &server)
 	LOG_DEBUG(TEXT_GREEN, "Location: ", foundLocation.path, RESET);
 	
 	checkIfMethodAllowed(client, foundLocation);
+
 	if (foundLocation.redirect != "")
 		handleRedirect(client, foundLocation);
 	else if (foundLocation.upload && client.request->getStartLine()["method"] == "POST")
+	{
+		LOG_INFO("Handling file upload...");
 		handleUpload(client, foundLocation);
+	}
 	else
 		handleStaticFiles(client, foundLocation);
 }
@@ -309,33 +314,88 @@ void	Server::checkIfMethodAllowed(t_client& client, Location& foundLocation)
 	}
 }
 
-std::string findUplooadFormBoundary(t_client& client)
+/**
+ * Example:
+ * For Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryTZKquQIqOzprsPRf
+ * value = "multipart/form-data; boundary=----WebKitFormBoundaryTZKquQIqOzprsPRf"
+ * field = "boundary"
+ * return -> "----WebKitFormBoundaryTZKquQIqOzprsPRf"
+ * 
+ * For Content-Disposition: form-data; name="file1"; filename="favicon.ico"
+ * pass value and field as "filename", it will extract: "favicon.ico"
+*/
+std::string extractFromMultiValue(std::string value, std::string field)
 {
-	std::string boundary;
-	std::string contentTypeValue = client.request->getHeaders().at("content-type");
+	std::string extract;
 
-	if (contentTypeValue.find("multipart/form-data") != std::string::npos)
+	value = Utility::replaceWhiteSpaces(value, ' ');
+	std::vector<std::string> splitVec = Utility::splitString(value, " ");
+
+	auto pos = std::find_if(splitVec.begin(), splitVec.end(), [field](const std::string s) {
+		return s.compare(0, 9, field + "=") == 0;
+	});
+
+	if (pos != splitVec.end())
 	{
-		
+		// value = value.substr(*pos, value.size() - *pos);
+		std::vector<std::string> extractSplitVec = Utility::splitString(value, "=");
+		if (extractSplitVec.size() == 2)
+			extract = extractSplitVec[1];
 	}
+
+	return extract;
+}
+
+std::string findUploadFormBoundary(t_client& client)
+{
+	std::string contentTypeValue = Utility::replaceWhiteSpaces(client.request->getHeaders().at("content-type"), ' ');
+	std::string boundary = extractFromMultiValue(contentTypeValue, "boundary");
 
 	return boundary;
 }
 
 void Server:: handleUpload(t_client& client, Location& foundLocation)
 {
-	LOG_INFO("Handling upload...");
-	// // Handle upload from API app (Thunder Client for example)
-	// if (client.request->getHeaders().at("content-type") == "application/octet-stream")
-	// {
-		
-	// }
-	// // Handle upload from the HTML form
-	// else if (client.request->getHeaders())
-	// {
-	// 	/* code */
-	// }
-	
+	LOG_DEBUG("handleUpload() called");
+	// Handle upload from API app (Thunder Client for example)
+	if (client.request->getHeaders().at("content-type") == "application/octet-stream")
+	{
+		// check query string for filename
+		LOG_INFO(TEXT_CYAN, "API Client upload...", RESET);
+	}
+	// Handle upload from the HTML form
+	else if (client.request->getHeaders().at("content-type").find("multipart/form-data") != std::string::npos)
+	{
+		LOG_INFO(TEXT_CYAN, "HTML Form upload...", RESET);
+		std::string boundary = findUploadFormBoundary(client);
+		LOG_INFO(TEXT_GREEN, boundary, RESET);
+		std::vector<std::string> multipartVec = Utility::splitString(client.request->getBody(), "--" + boundary);
+
+		for (std::string& part : multipartVec)
+		{
+			LOG_INFO(TEXT_GREEN, part, RESET);
+			std::string filename;
+			std::istringstream stream(part);
+			std::string line;
+			while (std::getline(stream, line))
+			{
+				size_t colonPos = line.find(":");
+				if (colonPos != std::string::npos)
+				{
+					std::string headerKey = Utility::trim(line.substr(0, colonPos));
+					std::string headerValue = Utility::trim(line.substr(colonPos, line.size() - colonPos));
+
+					if (Utility::strToLower(headerKey) == "content-disposition")
+					{
+						filename = extractFromMultiValue(headerValue, "filename");
+						LOG_INFO(TEXT_GREEN, filename, RESET);
+					}
+				}
+			}
+		}
+
+		/* code */
+	}
 	(void)foundLocation;
 	(void)client;
 }

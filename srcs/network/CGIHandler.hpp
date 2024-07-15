@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/10 20:28:19 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/13 14:00:59 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,16 +28,15 @@
 #include <vector>
 #include <memory>
 
-#define IN 0
-#define OUT 1
-
-#define PYTHON_INTERPRETER "/usr/bin/python3"
-#define PHP_INTERPRETER "/usr/bin/php"
-
 class Server;
 
 class CGIServer {
 	private:
+		const static std::string			_python_interpr;
+		const static std::string			_php_interpr;
+		const static int					_in = 0;
+		const static int					_out = 1;
+
 		static	std::string					determineInterpreter(const std::string& filePath);
 		static	std::vector<std::string>	setEnvironmentVariables(Request* request);
 		static	void						handleProcesses(t_client& client, Server& server,

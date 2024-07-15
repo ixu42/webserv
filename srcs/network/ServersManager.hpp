@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.hpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/09 21:38:40 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/14 22:26:35 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ class ServersManager
 		void						handleRead(struct pollfd& pfdReadyForRead);
 		void						handleWrite(int fdReadyForWrite);
 		void						removeFromPollfd(int fd);
+		void						removeClientByFd(int fd);
 
 	public:
 		~ServersManager();

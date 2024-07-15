@@ -6,11 +6,14 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/10 20:28:53 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/13 14:02:25 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "CGIHandler.hpp"
+
+const std::string CGIServer::_python_interpr = "/usr/bin/python3";
+const std::string CGIServer::_php_interpr = "/usr/bin/php";
 
 void CGIServer::handleCGI(t_client& client, Server& server)
 {
@@ -42,12 +45,12 @@ std::string CGIServer::determineInterpreter(const std::string& filePath)
 	if (filePath.substr(filePath.find_last_of(".") + 1) == "py")
 	{
 		LOG_DEBUG("Python specificator found");
-		return PYTHON_INTERPRETER;
+		return _python_interpr;
 	}
 	else if (filePath.substr(filePath.find_last_of(".") + 1) == "php")
 	{
 		LOG_DEBUG("PHP specificator found");
-		return PHP_INTERPRETER;
+		return _php_interpr;
 	}
 	else
 	{
@@ -77,16 +80,16 @@ void CGIServer::handleChildProcess(Server& server, const std::string& interprete
 	const std::string& filePath, const std::vector<std::string>& envVars)
 {
 	LOG_DEBUG("Duplicating stdin and stdout");
-	if (dup2(server.getPipe().input[IN], STDIN_FILENO) < 0 ||
-		dup2(server.getPipe().output[OUT], STDOUT_FILENO) < 0)
+	if (dup2(server.getPipe().input[_in], STDIN_FILENO) < 0 ||
+		dup2(server.getPipe().output[_out], STDOUT_FILENO) < 0)
 	{
 		closeFds(server);
 		throw ResponseError(500, {}, "Exception (dup2) has been thrown in handleChildProcess() "
 			"method of CGIServer class");
 	}
 
-	close(server.getPipe().input[OUT]);
-	close(server.getPipe().output[IN]);
+	close(server.getPipe().input[_out]);
+	close(server.getPipe().output[_in]);
 
 	std::vector<char*> args;
 	args.push_back(const_cast<char*>(interpreter.c_str()));
@@ -104,38 +107,38 @@ void CGIServer::handleChildProcess(Server& server, const std::string& interprete
 
 	LOG_DEBUG("About to start execve");
 	execve(interpreter.c_str(), args.data(), envp.data());
-	close(server.getPipe().input[IN]);
-	close(server.getPipe().output[OUT]);
+	close(server.getPipe().input[_in]);
+	close(server.getPipe().output[_out]);
 	throw ResponseError(500, {}, "Exception (execve) has been thrown in handleChildProcess() "
 		"method of CGIServer class");
 }
 
 void CGIServer::handleParentProcess(Server& server, Response* response, const std::string& body)
 {
-	close(server.getPipe().input[IN]);
-	close(server.getPipe().output[OUT]);
+	close(server.getPipe().input[_in]);
+	close(server.getPipe().output[_out]);
 
 	LOG_DEBUG("Writing body of the request inside the pipe");
-	write(server.getPipe().input[OUT], body.c_str(), body.size());
-	close(server.getPipe().input[OUT]);
+	write(server.getPipe().input[_out], body.c_str(), body.size());
+	close(server.getPipe().input[_out]);
 
 	char buffer[1024];
 	ssize_t bytesRead;
 	std::ostringstream oss;
 
-	while ((bytesRead = read(server.getPipe().output[IN], buffer, sizeof(buffer))) > 0)
+	while ((bytesRead = read(server.getPipe().output[_in], buffer, sizeof(buffer))) > 0)
 	{
 		LOG_DEBUG("Populating response body");
 		oss.write(buffer, bytesRead);
 	}
 	if (bytesRead < 0)
 	{
-		close(server.getPipe().output[IN]);
+		close(server.getPipe().output[_in]);
 		throw ResponseError(500, {}, "Exception has been thrown in handleParentProcess() "
 			"method of CGIServer class");
 	}
 	checkResponseHeaders(oss.str(), response);
-	close(server.getPipe().output[IN]);
+	close(server.getPipe().output[_in]);
 }
 
 void CGIServer::handleProcesses(t_client& client, Server& server,
@@ -188,7 +191,7 @@ void CGIServer::checkResponseHeaders(const std::string& result, Response* respon
 			size_t separator = line.find(": ");
 			if (separator != std::string::npos)
 			{
-				std::string key = line.substr(0, separator);
+				const std::string& key = line.substr(0, separator);
 				std::string value = line.substr(separator + 2);
 				if (key == "Content-Type")
 				{
@@ -209,8 +212,8 @@ void CGIServer::checkResponseHeaders(const std::string& result, Response* respon
 
 void CGIServer::closeFds(Server& server)
 {
-	close(server.getPipe().output[IN]);
-	close(server.getPipe().output[OUT]);
-	close(server.getPipe().input[IN]);
-	close(server.getPipe().input[OUT]);
+	close(server.getPipe().output[_in]);
+	close(server.getPipe().output[_out]);
+	close(server.getPipe().input[_in]);
+	close(server.getPipe().input[_out]);
 }

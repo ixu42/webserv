@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+         #
+#    By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/08 17:44:55 by ixu               #+#    #+#              #
-#    Updated: 2024/07/06 02:32:22 by vshchuki         ###   ########.fr        #
+#    Updated: 2024/07/15 19:35:33 by dnikifor         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,8 +23,8 @@ RESPONSE_DIR := $(SRCS_DIR)response/
 UTILS_DIR := $(SRCS_DIR)utils/
 
 # Source files
-SRCS = $(addsuffix .cpp, main Socket Server ServerException ServersManager Request Response \
-			Utility Config ConfigValidator CGIHandler)
+SRCS = $(addsuffix .cpp, main DirLister Socket Server ServerException ServersManager Request Response \
+			Utility Config ConfigValidator CGIHandler SessionsManager)
 
 # Object files
 OBJS = $(addprefix $(OBJS_DIR), $(SRCS:.cpp=.o))

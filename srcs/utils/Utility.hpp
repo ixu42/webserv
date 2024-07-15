@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:11:26 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/06 11:48:40 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/11 22:23:16 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ class Utility
 		static std::string								trim(std::string str);
 		static std::vector<std::string>					splitString(const std::string &str, const std::string &delimiter);
 		static std::string								strToLower(std::string str);
+		static std::string								strToUpper(std::string str);
 		static std::string								readFile(std::string filePath);
 		static std::string								getDate();
 		static std::string								readLine(std::istream &stream);

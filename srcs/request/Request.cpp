@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 10:55:10 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/15 00:44:39 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,11 +27,13 @@ Request::Request()
 
 Request::Request(std::string request)
 {
+	LOG_DEBUG("Request constructor called");
 	parse(request);
 }
 
 void Request::parse(std::string request)
 {
+	LOG_DEBUG("Request::parse() called");
 	int emptyLinePosition = request.find("\r\n\r\n");
 	if (emptyLinePosition == -1)
 		emptyLinePosition = request.find("\n\n");
@@ -41,12 +43,19 @@ void Request::parse(std::string request)
 	{
 		std::string headers = Utility::trim(request.substr(0, emptyLinePosition));
 		std::string body = Utility::trim(request.substr(emptyLinePosition + 2));
-
 		// Split headers into lines
 		std::vector<std::string> headerLines = Utility::splitString(headers, "\n");
+		LOG_DEBUG("Request::parse() splitting headerLines");
+		
+		// Check if headers are not empty
+		if (headers.size() < 1)
+			return;
 
 		// Parse the start line
 		std::vector<std::string> startLineSplit = Utility::splitString(headerLines[0], " ");
+		// Check start line after split
+		if (startLineSplit.size() != 3)
+			return;
 		std::vector<std::string> querySplit = Utility::splitString(startLineSplit[1], "?");
 
  		_startLine["method"] = Utility::trim(startLineSplit[0]);
@@ -66,7 +75,7 @@ void Request::parse(std::string request)
 			std::string key = Utility::strToLower(Utility::trim(headerSplit[0]));
 			std::string value = Utility::trim(headerSplit[1]);
 			_headers[key] = value;
-			LOG_DEBUG("Header: ", key, " Value: ", value);
+			// LOG_DEBUG("Header: ", key, " Value: ", value);
 		}
 
 		// Parse the body
@@ -156,7 +165,8 @@ void	Request::printRequest()
 	for (auto& [key, value] : getHeaders())
 		LOG_DEBUG("Header: ", key, " = ", value);
 	LOG_DEBUG_RAW("[DEBUG] Body: ", "\n");
-	LOG_DEBUG_RAW(getBody());
+	LOG_DEBUG_RAW(getBody().substr(0, 500));
+	LOG_DEBUG_RAW("...\n");
 }
 
 // Request should be at least start line, Host, Connection

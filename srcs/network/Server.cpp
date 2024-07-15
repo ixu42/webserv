@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/16 00:31:51 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/16 01:27:36 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -367,6 +367,7 @@ std::string removeQuotes(const std::string& str) {
 void Server:: handleUpload(t_client& client, Location& foundLocation)
 {
 	LOG_DEBUG("handleUpload() called");
+	size_t filesCreated = 0;
 	// Handle upload from API app (Thunder Client for example)
 	if (client.request->getHeaders().at("content-type") == "application/octet-stream")
 	{
@@ -424,9 +425,14 @@ void Server:: handleUpload(t_client& client, Location& foundLocation)
 			{
 				LOG_INFO(TEXT_YELLOW, "File will be created here: ", foundLocation.root, RESET);
 				Utility::createFile(foundLocation.root + filename, body);
+				filesCreated++;
 			}
 		}
 	}
+	if (filesCreated)
+		client.response = createResponse(client.request, 201);
+	else
+		client.response = createResponse(client.request, 500);
 }
 
 void	Server::handleRedirect(t_client& client, Location& foundLocation)

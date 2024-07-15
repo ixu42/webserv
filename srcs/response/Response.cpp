@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/15 19:37:11 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/16 01:48:57 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@ static const std::string serverName = "webserv";
 static const std::string charset = "; charset=UTF-8";
 static const std::map<int, std::string> statusMessages = {
 	{200, "OK"},
+	{201, "Created"},
 	{307, "Temporary Redirect"},
 	{400, "Bad Request"},
 	{403, "Forbidden"},
@@ -89,28 +90,19 @@ Response::Response(int code, ServerConfig* serverConfig, std::map<std::string, s
 	if (optionalHeaders.size() > 0)
 		_headers.insert(optionalHeaders.begin(), optionalHeaders.end());
 
-	if (code >= 400 && code <= 599)
+	std::string errorPagePath = serverConfig->defaultPages[404]; // fallback for not legit error codes
+	auto errorIt = serverConfig->errorPages.find(code);
+	auto defaultIt = serverConfig->defaultPages.find(code);
+	if (errorIt != serverConfig->errorPages.end() && access(errorIt->second.c_str(), R_OK) == 0)
 	{
-		std::string errorPagePath = serverConfig->defaultErrorPages[404]; // fallback for not legit error codes
-		auto errorIt = serverConfig->errorPages.find(code);
-		auto defaultErrorIt = serverConfig->defaultErrorPages.find(code);
-		// for (auto& [errorkey, errorpath] : serverConfig->errorPages)
-		// {
-		// 	std::cout << "error key: " << errorkey << ", errorpath:" << errorpath << std::endl;
-		// }
-		if (errorIt != serverConfig->errorPages.end() && access(errorIt->second.c_str(), R_OK) == 0)
-		{
-			// std::cout << TEXT_GREEN << "user page found for error" << std::endl;
-			errorPagePath = serverConfig->errorPages[code];
-		}
-		else if (defaultErrorIt != serverConfig->defaultErrorPages.end())
-		{
-			std::cout << TEXT_GREEN << "default page found for error" << std::endl;
-		// else if (defaultErrorIt != serverConfig->defaultErrorPages.end())
-			errorPagePath = serverConfig->defaultErrorPages[code];
-		}
-		*this = Response(code, errorPagePath);
+		errorPagePath = serverConfig->errorPages[code];
 	}
+	else if (defaultIt != serverConfig->defaultPages.end())
+	{
+		std::cout << TEXT_GREEN << "default page found" << std::endl;
+		errorPagePath = serverConfig->defaultPages[code];
+	}
+	*this = Response(code, errorPagePath);
 }
 
 Response::Response(int code, std::string filePath)

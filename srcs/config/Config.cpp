@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/11 22:06:13 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/16 01:49:33 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ void Config::printConfig()
 			LOG_DEBUG(TEXT_YELLOW, "\tport: ", server.port, RESET);
 			LOG_DEBUG(TEXT_YELLOW, "\tserverName: ", server.serverName, RESET);
 			LOG_DEBUG(TEXT_YELLOW, "\tclientMaxBodySize: ", server.clientMaxBodySize, RESET);
-			for (auto& error : server.defaultErrorPages)
+			for (auto& error : server.defaultPages)
 				LOG_DEBUG(TEXT_YELLOW, "\tdefaultError: ", error.first, " ", error.second, RESET);
 			for (auto& error : server.errorPages)
 				LOG_DEBUG(TEXT_YELLOW, "\terror: ", error.first, " ", error.second, RESET);

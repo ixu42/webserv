@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/15 21:52:01 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/16 18:19:59 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 #include "../request/Request.hpp"
 #include "../utils/ServerException.hpp"
 #include "DirLister.hpp"
+#include "Uploader.hpp"
 #include "client.hpp"
 #include <vector>
 #include <string>

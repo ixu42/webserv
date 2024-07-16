@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/16 15:21:27 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/16 16:44:44 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
 	signal(SIGINT, signalHandler); /* ctrl + c */
 	signal(SIGTSTP, signalHandler); /* ctrl + z */
 	signal(SIGQUIT, signalHandler); /* ctrl + \ */
+	signal(SIGTERM, signalHandler); /* kill -15 pid */
 	// signal(SIGPIPE, SIG_IGN);
 
 	std::string configFile = DEFAULT_CONFIG;

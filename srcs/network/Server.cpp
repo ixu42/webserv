@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/16 18:20:24 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/16 19:54:49 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -289,8 +289,12 @@ void	Server::handleNonCGIResponse(t_client& client, Server &server)
 	else if (foundLocation.upload && client.request->getStartLine()["method"] == "POST")
 	{
 		LOG_INFO("Handling file upload...");
-		
-		client.response = Server::createResponse(client.request, Uploader::handleUpload(client, foundLocation));
+		client.response = createResponse(client.request, Uploader::handleUpload(client, foundLocation));
+	}
+	else if (client.request->getStartLine()["method"] == "DELETE")
+	{
+		LOG_INFO("Handling file deletion...");
+		client.response = createResponse(client.request, handleDelete(client, foundLocation));
 	}
 	else
 		handleStaticFiles(client, foundLocation);
@@ -323,6 +327,23 @@ void	Server::handleRedirect(t_client& client, Location& foundLocation)
 	LOG_DEBUG("Redirect URL: ", redirectUrl);
 	LOG_DEBUG("Page path: ", pagePath);
 	client.response = createResponse(client.request, 307, {{"Location", redirectUrl}});
+}
+
+int Server::handleDelete(t_client& client, Location& foundLocation)
+{
+	std::string filePathString = foundLocation.root + client.request->getStartLine()["path"].substr(foundLocation.path.length());
+	std::filesystem::path filePath = filePathString;
+
+	if (access(filePathString.c_str(), F_OK) != 0)
+		return 404;
+	else if (access(filePathString.c_str(), W_OK) != 0)
+		return 403;
+	else if (std::filesystem::remove(filePath))
+	{
+		LOG_INFO("File ", filePathString, " deleted successfully.");
+		return 204;
+	}
+	return 500;
 }
 
 void	Server::handleStaticFiles(t_client& client, Location& foundLocation)
@@ -390,7 +411,6 @@ void	Server::responder(t_client& client, Server& server)
 {
 	LOG_DEBUG("Server::responder() called");
 	client.request->printRequest(); // can flood the Terminal if a file is uploaded
-	// if (formRequestErrorResponse(client)) return; // TODO: remove this line later
 	if ((client.response || formCGIConfigAbsenceResponse(client, server)))
 	{
 		client.state = FINISHED_WRITING;

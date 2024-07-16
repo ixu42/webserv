@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:20 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/16 01:48:00 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/16 19:40:56 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,7 @@ struct ServerConfig
 
 		std::map<int, std::string>	defaultPages = {
 															{201, "pages/201.html"},
+															{204, "pages/204.html"},
 															{400, "pages/400.html"},
 															{403, "pages/403.html"},
 															{404, "pages/404.html"},

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/16 17:53:36 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/16 18:20:06 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/16 18:52:35 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,6 +129,5 @@ int Uploader::handleUpload(t_client& client, Location& foundLocation)
 	}
 	if (filesCreated)
 		return 201;
-	else
-		return 500;
+	return 500;
 }

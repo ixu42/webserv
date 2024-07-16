@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/16 18:19:59 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/16 19:23:49 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <filesystem>
 
 #include <fstream> //open file
 
@@ -75,7 +76,6 @@ class Server
 		void						handler(Server*& server, t_client& client);
 		void						responder(t_client& client, Server &server);
 
-		// Request*					receiveRequest(int clientSockfd);
 		bool						receiveRequest(t_client& client);
 		bool						sendResponse(t_client& client);
 		void						finalizeResponse(t_client& client);
@@ -87,13 +87,13 @@ class Server
 
 
 		void						validateRequest(t_client& client);
-		// bool						formRequestErrorResponse(t_client& client);
+
 		bool						formCGIConfigAbsenceResponse(t_client& client, Server &server);
 		void						handleCGIResponse(t_client& client, Server &server);
-		void						handleUpload(t_client& client, Location& foundLocation);
 		void						handleNonCGIResponse(t_client& client, Server &server);
 		void						checkIfMethodAllowed(t_client& client, Location& foundLocation);
 		void						handleRedirect(t_client& client, Location& foundLocation);
+		int							handleDelete(t_client& client, Location& foundLocation);
 		void						handleStaticFiles(t_client& client, Location& foundLocation);
 		Location					findLocation(Request* req);
 		

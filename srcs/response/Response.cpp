@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/16 01:48:57 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/16 19:48:01 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@ static const std::string charset = "; charset=UTF-8";
 static const std::map<int, std::string> statusMessages = {
 	{200, "OK"},
 	{201, "Created"},
+	{204, "No Content"},
 	{307, "Temporary Redirect"},
 	{400, "Bad Request"},
 	{403, "Forbidden"},

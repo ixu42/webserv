@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/14 19:40:13 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/16 15:21:27 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,11 +20,20 @@
 #include "utils/signal.hpp"
 
 std::atomic<bool> g_signalReceived(false);
+std::vector<pid_t> g_childPids;
 
 static void signalHandler(int signal)
 {
 	LOG_DEBUG("Signal ", signal, " received");
 	g_signalReceived.store(true);
+	for (auto pid : g_childPids)
+	{
+        if (pid > 0)
+		{
+            std::cout << TEXT_MAGENTA << "\n[INFO] Terminating the process with pid [" << pid << "]" << RESET;
+            kill(pid, SIGTERM);
+        }
+    }
 	std::cout << TEXT_MAGENTA << "\n[INFO] Shutting down the server(s)..." << RESET << std::endl;
 }
 

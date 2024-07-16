@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/13 14:02:25 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/16 15:06:18 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -166,6 +166,7 @@ void CGIServer::handleProcesses(t_client& client, Server& server,
 	else
 	{
 		LOG_DEBUG("Parent started");
+		g_childPids.push_back(pid);
 		handleParentProcess(server, client.response, client.request->getBody());
 		waitpid(pid, nullptr, 0);
 	}

@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/17 12:46:43 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/17 19:42:19 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,7 +83,6 @@ class Server
 		void						validateRequest(t_client& client);
 		// bool						formRequestErrorResponse(t_client& client);
 		bool						formCGIConfigAbsenceResponse(t_client& client, Server &server);
-		void						handleCGIResponse(t_client& client, Server &server);
 		void						handleUpload(t_client& client, Location& foundLocation);
 		void						handleNonCGIResponse(t_client& client, Server &server);
 		void						checkIfMethodAllowed(t_client& client, Location& foundLocation);

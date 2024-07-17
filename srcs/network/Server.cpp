@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/17 17:55:38 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/17 21:23:49 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -274,13 +274,6 @@ bool	Server::formCGIConfigAbsenceResponse(t_client& client, Server& server)
 	return false;
 }
 
-void	Server::handleCGIResponse(t_client& client, Server& server)
-{
-	(void)server;
-	client.response = new Response();
-	CGIServer::handleCGI(client);
-}
-
 void	Server::handleNonCGIResponse(t_client& client, Server &server)
 {
 	Location foundLocation = server.findLocation(client.request);
@@ -397,40 +390,41 @@ void	Server::finalizeResponse(t_client& client)
 
 void Server::validateRequest(t_client& client)
 {
-		if (!client.request)
-			throw ResponseError(400, {}, "Request is nullptr");
-		if (client.request->getStartLine()["method"].empty() ||
-			client.request->getStartLine()["path"].empty() ||
-			client.request->getStartLine()["version"].empty() ||
-			client.request->getHeaders()["host"].empty())
-			throw ResponseError(400, {}, "Request does not have mandatory fields");
-		if (client.request->getStartLine()["version"] != "HTTP/1.1")
-			throw ResponseError(505, {}, "Wrong HTTP version in the start line");
-		// try
-		// {
-		// 	client.request->getStartLine().at("content-length");
-		// }
-		// catch(const std::exception& e)
-		// {
-		// 	throw ResponseError(411, {}, "No content length provided");
-		// }
+	LOG_DEBUG("validateRequest()");
+	if (!client.request)
+		throw ResponseError(400, {}, "Request is nullptr");
+	if (client.request->getStartLine()["method"].empty() ||
+		client.request->getStartLine()["path"].empty() ||
+		client.request->getStartLine()["version"].empty() ||
+		client.request->getHeaders()["host"].empty())
+		throw ResponseError(400, {}, "Request does not have mandatory fields");
+	if (client.request->getStartLine()["version"] != "HTTP/1.1")
+		throw ResponseError(505, {}, "Wrong HTTP version in the start line");
+	// try
+	// {
+	// 	client.request->getStartLine().at("content-length");
+	// }
+	// catch(const std::exception& e)
+	// {
+	// 	throw ResponseError(411, {}, "No content length provided");
+	// }
 }
 
 void	Server::responder(t_client& client, Server& server)
 {
 	LOG_DEBUG("Server::responder() called");
-	client.request->printRequest(); // can flood the Terminal if a file is uploaded
 	// if (formRequestErrorResponse(client)) return; // TODO: remove this line later
 	if ((client.response || formCGIConfigAbsenceResponse(client, server)))
 	{
 		client.state = FINISHED_WRITING;
-		return;
+		return;	
 	}
 	try
 	{
 		validateRequest(client);
-		if (client.stateCGI == INIT && client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
-			handleCGIResponse(client, server);
+		client.request->printRequest(); // can flood the Terminal if a file is uploaded
+		if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
+			CGIServer::handleCGI(client);
 		else
 			handleNonCGIResponse(client, server);
 		SessionsManager::handleSessions(client);

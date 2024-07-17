@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/17 13:55:37 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/17 19:42:54 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,14 +44,18 @@ class CGIServer {
 												const std::vector<std::string>& envVars);
 		static	void						handleChildProcess(t_client& client, const std::string& interpreter,
 												const std::string& filePath, const std::vector<std::string>& envVars);
-		static	void						handleParentProcess(t_client& client, Response* response, const std::string& body);
+		static	void						handleParentProcess(t_client& client, const std::string& body);
 		static	std::string					readErrorPage(const std::string& errorPagePath);
 		static	void						checkResponseHeaders(const std::string& result, Response* response);
 		static	void						closeFds(t_client& client);
-		static	void						registerCGIPollFd(Server& server, int fd, short events);
-		static	void						unregisterCGIPollFd(Server& server, int fd);
 
 	public:
 		CGIServer()							= delete;
-		static void							handleCGI(t_client& client, Server& server);
+		static void							handleCGI(t_client& client);
+
+		static	void						registerCGIPollFd(Server& server, int fd, short events);
+		static	void						unregisterCGIPollFd(Server& server, int fd);
+		static	void						InitCGI(t_client& client, Server& server);
+		static	void						fcntlSet(int fd);
+		static	bool						readScriptOutput(t_client& client);
 };

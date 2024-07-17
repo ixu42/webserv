@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/17 18:43:27 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/17 21:33:00 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,7 +124,7 @@ void ServersManager::run()
 			}
 			if (pfd.revents & POLLOUT)
 			{
-			// LOG_DEBUG("if POLLOUT");
+			LOG_DEBUG("if POLLOUT");
 				handleWrite(pfd.fd);
 				// break ; // should it break?
 			}
@@ -175,11 +175,12 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 				server->handler(server, client);
 				if (client.state == READY_TO_WRITE)
 				{
-					
 					// Check cgi path and create pipes
 					// Set non blocking
 					// Add to pollfd
-
+					
+					CGIServer::InitCGI(client, *server);
+					
 					// pfdReadyForRead.events = POLLOUT;
 					// pfdReadyForRead.events = POLLOUT | POLLERR | POLLHUP | POLLNVAL;
 					pfdReadyForRead.events = POLLOUT | POLLERR | POLLHUP;
@@ -205,13 +206,13 @@ void	ServersManager::handleWrite(int fdReadyForWrite)
 			if (ifCGIsFd(client, fdReadyForWrite) && client.stateCGI == FORKED)
 			{
 				// after forking reading from the file and set lockers for CGIHandler
-				if (server->setResponseCGI(client)) // read in CGI
+				if (CGIServer::readScriptOutput(client)) // read in CGI
 				{
 					client.state = BUILDING;
 					client.stateCGI = FINISHED_SET;
 				}
 			}
-			if (fdReadyForWrite == client.fd && (ifCGIsFd(client, fdReadyForWrite)))
+			if (fdReadyForWrite == client.fd || (ifCGIsFd(client, fdReadyForWrite)))
 			{
 				if (client.state == READY_TO_WRITE || client.stateCGI == INIT)
 				{
@@ -279,5 +280,5 @@ void	ServersManager::removeClientByFd(int currentFd)
 
 bool ServersManager::ifCGIsFd(t_client& client, int fd)
 {
-	return (fd == client.childPipe[0] || fd == client.childPipe[1]);
+	return fd == client.childPipe[0];
 }

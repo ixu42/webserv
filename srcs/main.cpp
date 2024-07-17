@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/14 19:40:13 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/17 15:02:01 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include "utils/logUtils.hpp"
 #include <iostream>
 #include "utils/signal.hpp"
+// #include "utils/logUtils.hpp"
 
 std::atomic<bool> g_signalReceived(false);
 
@@ -47,18 +48,17 @@ int main(int argc, char *argv[])
 	{
 		LOG_ERROR("Too many arguments");
 		LOG_INFO("Usage: ./webserv <config>");
+		LOG_INFO("<config> - absolute path or relative path to the executable directory");
 		return EXIT_FAILURE;
 	}
 
-	// bool serverManagerInstanceCreated = false; // wtf? where is it used?
-
 	try
 	{
-		ServersManager::initConfig(configFile.c_str());
-		ServersManager* manager = ServersManager::getInstance();
-		// serverManagerInstanceCreated = true; // wtf? where is it used?
+		// std::cout << TEXT_MAGENTA << getExecutablePath(argv[0]) << RESET;
+		ServersManager::initConfig(configFile.c_str(), argv[0]);
+		ServersManager* manager = ServersManager::getInstance(argv[0]);
 		manager->run();
-		delete manager->getInstance();
+		delete manager->getInstance(argv[0]);
 	}
 	catch(const ServerException& e)
 	{

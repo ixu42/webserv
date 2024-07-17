@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/14 22:26:35 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/17 13:42:31 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,8 +49,8 @@ class ServersManager
 
 	public:
 		~ServersManager();
-		static ServersManager*		getInstance();
+		static ServersManager*		getInstance(const char* argv0);
 
 		void						run();
-		static void					initConfig(const char *fileNameString);
+		static void					initConfig(const char *fileNameString, const char* argv0);
 };

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/15 12:57:12 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/17 16:00:49 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,15 +81,15 @@ ServersManager::~ServersManager()
 	delete _webservConfig;
 }
 
-void ServersManager::initConfig(const char *fileNameString)
+void ServersManager::initConfig(const char *fileNameString, const char*argv0)
 {
-	_webservConfig = new Config(fileNameString);
+	_webservConfig = new Config(fileNameString, argv0);
 }
 
-ServersManager* ServersManager::getInstance()
+ServersManager* ServersManager::getInstance(const char* argv0)
 {
 	if (_webservConfig == nullptr)
-		_webservConfig = new Config(DEFAULT_CONFIG); // if config is not initialized with initConfig, DEFAULT_CONFIG will be used
+		_webservConfig = new Config(DEFAULT_CONFIG, argv0); // if config is not initialized with initConfig, DEFAULT_CONFIG will be used
 	if (_instance == nullptr)
 		_instance = new ServersManager();
 
@@ -247,6 +247,8 @@ void	ServersManager::removeClientByFd(int currentFd)
 		{
 		if (it->fd == currentFd)
 		{
+			delete it->request;
+			delete it->response;
 			clients.erase(it);
 			break ;
 		}

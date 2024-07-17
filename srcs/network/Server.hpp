@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/17 11:52:23 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/17 12:46:43 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ class Server
 		struct addrinfo*			_res;
 		std::vector<t_client>		_clients;
 		std::vector<ServerConfig>	_configs;
+		std::vector<struct pollfd>*	_managerFds;
 
 		int							_port;
 		std::string					_ipAddr;
@@ -55,18 +56,21 @@ class Server
 		~Server();
 
 		void						setConfig(std::vector<ServerConfig> serverConfigs);
+		void						setFds(std::vector<struct pollfd>* fds);
+		
 		int							getServerSockfd();
 		std::vector<t_client>&		getClients();
 		std::string					getIpAddress();
 		int							getPort();
 		std::vector<ServerConfig>	getConfigs();
+		std::vector<struct pollfd>*	getFds();
 
 		int							accepter();
 		void						handler(Server*& server, t_client& client);
 		void						responder(t_client& client, Server &server);
 
 		// Request*					receiveRequest(int clientSockfd);
-		bool					receiveRequest(t_client& client);
+		bool						receiveRequest(t_client& client);
 		bool						sendResponse(t_client& client);
 		void						finalizeResponse(t_client& client);
 

@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 21:59:14 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/17 11:50:52 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/17 12:49:22 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ typedef struct s_client
 	int			fd;
 	int			parentPipe[FDS];
 	int			childPipe[FDS];
+	std::string	CGIString;
 	Request*	request = nullptr;
 	Response*	response = nullptr;
 	ClientState	state = READING;

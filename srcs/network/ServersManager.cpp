@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/17 11:43:06 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/17 12:45:51 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,10 @@ ServersManager::ServersManager()
 
 	// Add all server fds to pollfd vector
 	for (Server*& server : _servers)
+	{
+		server->setFds(&_fds);
 		_fds.push_back({server->getServerSockfd(), POLLIN, 0});
+	}
 
 	if (_servers.empty())
 	{

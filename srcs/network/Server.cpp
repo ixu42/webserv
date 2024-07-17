@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/17 12:04:16 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/17 12:45:34 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -596,6 +596,11 @@ int Server::getPort()
 	return _port;
 }
 
+std::vector<struct pollfd>* Server::getFds()
+{
+	return _managerFds;
+}
+
 /**
  * Setters
  */
@@ -603,4 +608,9 @@ int Server::getPort()
 void Server::setConfig(std::vector<ServerConfig> serverConfigs)
 {
 	_configs = serverConfigs;
+}
+
+void Server::setFds(std::vector<struct pollfd>* fds)
+{
+	_managerFds = fds;
 }

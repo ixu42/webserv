@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/17 12:14:14 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/17 13:57:16 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 const std::string CGIServer::_python_interpr = "/usr/bin/python3";
 const std::string CGIServer::_php_interpr = "/usr/bin/php";
 
-void CGIServer::handleCGI(t_client& client)
+void CGIServer::handleCGI(t_client& client, Server& server)
 {
 	LOG_INFO(TEXT_GREEN, "Running CGI", RESET);
 	LOG_DEBUG("handleCGI function started");
@@ -150,6 +150,11 @@ void CGIServer::handleProcesses(t_client& client, const std::string& interpreter
 			"method of CGIServer class");
 	}
 
+	fcntl(client.parentPipe[_in], F_SETFL, O_NONBLOCK);
+	fcntl(client.parentPipe[_out], F_SETFL, O_NONBLOCK);
+	fcntl(client.childPipe[_in], F_SETFL, O_NONBLOCK);
+	fcntl(client.childPipe[_out], F_SETFL, O_NONBLOCK);
+
 	pid_t pid = fork();
 	if (pid == -1)
 	{
@@ -221,4 +226,18 @@ void CGIServer::closeFds(t_client& client)
 	close(client.childPipe[_out]);
 	close(client.parentPipe[_in]);
 	close(client.parentPipe[_out]);
+}
+
+void CGIServer::registerCGIPollFd(Server& server, int fd, short events)
+{
+	server.getFds()->push_back({fd, events, 0});
+}
+
+void CGIServer::unregisterCGIPollFd(Server& server, int fd)
+{
+	server.getFds()->erase(std::remove_if(server.getFds()->begin(),
+		server.getFds()->end(), [fd](const pollfd& pfd)
+	{
+		return pfd.fd == fd;
+	}), server.getFds()->end());
 }

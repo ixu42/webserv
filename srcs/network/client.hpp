@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 21:59:14 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/17 12:49:22 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/17 18:33:09 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,8 +22,17 @@ enum ClientState
 {
 	READING,
 	READY_TO_WRITE,
+	BUILDING,
 	WRITING,
 	FINISHED_WRITING
+};
+
+enum CGIState
+{
+	INIT,
+	FORKED,
+	FINISHED_SET,
+	FINISHED
 };
 
 typedef struct s_client
@@ -35,6 +44,7 @@ typedef struct s_client
 	Request*	request = nullptr;
 	Response*	response = nullptr;
 	ClientState	state = READING;
+	CGIState	stateCGI = INIT;
 	std::string	requestString;
 	std::size_t maxClientBodyBytes = std::numeric_limits<std::size_t>::max();
 	std::string	responseString;

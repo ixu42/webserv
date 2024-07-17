@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.hpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/14 22:26:35 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/17 18:42:18 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,7 @@ class ServersManager
 		void						handleWrite(int fdReadyForWrite);
 		void						removeFromPollfd(int fd);
 		void						removeClientByFd(int fd);
+		bool						ifCGIsFd(t_client& client, int fd);
 
 	public:
 		~ServersManager();

@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/17 12:45:51 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/17 18:43:27 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -175,6 +175,11 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 				server->handler(server, client);
 				if (client.state == READY_TO_WRITE)
 				{
+					
+					// Check cgi path and create pipes
+					// Set non blocking
+					// Add to pollfd
+
 					// pfdReadyForRead.events = POLLOUT;
 					// pfdReadyForRead.events = POLLOUT | POLLERR | POLLHUP | POLLNVAL;
 					pfdReadyForRead.events = POLLOUT | POLLERR | POLLHUP;
@@ -196,14 +201,31 @@ void	ServersManager::handleWrite(int fdReadyForWrite)
 	{
 		for (t_client& client : server->getClients())
 		{
-			if (fdReadyForWrite == client.fd)
+			// Check in client parentPipe[out], childPipe[in];
+			if (ifCGIsFd(client, fdReadyForWrite) && client.stateCGI == FORKED)
 			{
-				if (client.state == READY_TO_WRITE)
+				// after forking reading from the file and set lockers for CGIHandler
+				if (server->setResponseCGI(client)) // read in CGI
 				{
-					server->responder(client, *server);
+					client.state = BUILDING;
+					client.stateCGI = FINISHED_SET;
+				}
+			}
+			if (fdReadyForWrite == client.fd && (ifCGIsFd(client, fdReadyForWrite)))
+			{
+				if (client.state == READY_TO_WRITE || client.stateCGI == INIT)
+				{
+					server->responder(client, *server); // for CGI only fork, execve, child stuff
+					client.state = BUILDING;
+					client.stateCGI = FORKED;
+				}
+				if ((!ifCGIsFd(client, fdReadyForWrite) && client.state == BUILDING)
+					|| (ifCGIsFd(client, fdReadyForWrite) && client.stateCGI == FINISHED_SET))
+				{
 					client.responseString = Response::buildResponse(*client.response);
 					LOG_DEBUG("response: ", client.responseString.substr(0, 500), "\n...\n"); // Can be really huge for huge files and can interrupt the Terminal
 					client.state = WRITING;
+					client.stateCGI = FINISHED;
 				}
 				if (client.state == WRITING)
 				{
@@ -253,4 +275,9 @@ void	ServersManager::removeClientByFd(int currentFd)
 		}
 		}
 	}
+}
+
+bool ServersManager::ifCGIsFd(t_client& client, int fd)
+{
+	return (fd == client.childPipe[0] || fd == client.childPipe[1]);
 }

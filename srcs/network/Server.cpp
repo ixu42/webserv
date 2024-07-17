@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/17 12:45:34 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/17 17:55:38 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -429,7 +429,7 @@ void	Server::responder(t_client& client, Server& server)
 	try
 	{
 		validateRequest(client);
-		if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
+		if (client.stateCGI == INIT && client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
 			handleCGIResponse(client, server);
 		else
 			handleNonCGIResponse(client, server);

@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/17 11:56:41 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/17 13:55:37 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,8 +48,10 @@ class CGIServer {
 		static	std::string					readErrorPage(const std::string& errorPagePath);
 		static	void						checkResponseHeaders(const std::string& result, Response* response);
 		static	void						closeFds(t_client& client);
+		static	void						registerCGIPollFd(Server& server, int fd, short events);
+		static	void						unregisterCGIPollFd(Server& server, int fd);
 
 	public:
 		CGIServer()							= delete;
-		static void							handleCGI(t_client& client);
+		static void							handleCGI(t_client& client, Server& server);
 };

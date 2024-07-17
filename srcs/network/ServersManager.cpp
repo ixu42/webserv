@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/14 23:48:29 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/17 11:43:06 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ ServersManager::ServersManager()
 		std::string ipAddr = server->getIpAddress();
 		if (ipAddr.empty())
 			ipAddr = "0.0.0.0";
-		LOG_INFO("Server ipAddr: ", ipAddr, ", port: ", server->getPort());		
+		LOG_INFO("Server ipAddr: ", ipAddr, ", port: ", server->getPort());
 	}
 }
 		

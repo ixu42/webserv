@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 21:59:14 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/15 19:40:26 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/17 11:50:52 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 #include "../request/Request.hpp"
 #include "../response/Response.hpp"
 #include <limits>
+
+#define FDS 2
 
 enum ClientState
 {
@@ -27,6 +29,8 @@ enum ClientState
 typedef struct s_client
 {
 	int			fd;
+	int			parentPipe[FDS];
+	int			childPipe[FDS];
 	Request*	request = nullptr;
 	Response*	response = nullptr;
 	ClientState	state = READING;

@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/15 19:36:50 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/17 11:52:23 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,13 +37,6 @@
 
 #include <fstream> //open file
 
-#define FDS 2
-
-struct Pipe {
-	int input[FDS];
-	int output[FDS];
-};
-
 class Server
 {
 	private:
@@ -52,7 +45,6 @@ class Server
 		struct addrinfo*			_res;
 		std::vector<t_client>		_clients;
 		std::vector<ServerConfig>	_configs;
-		Pipe						_CGIpipes;
 
 		int							_port;
 		std::string					_ipAddr;
@@ -64,7 +56,6 @@ class Server
 
 		void						setConfig(std::vector<ServerConfig> serverConfigs);
 		int							getServerSockfd();
-		Pipe&						getPipe();
 		std::vector<t_client>&		getClients();
 		std::string					getIpAddress();
 		int							getPort();

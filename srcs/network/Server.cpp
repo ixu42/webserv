@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/15 19:38:15 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/17 12:04:16 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -276,8 +276,9 @@ bool	Server::formCGIConfigAbsenceResponse(t_client& client, Server& server)
 
 void	Server::handleCGIResponse(t_client& client, Server& server)
 {
+	(void)server;
 	client.response = new Response();
-	CGIServer::handleCGI(client, server);
+	CGIServer::handleCGI(client);
 }
 
 void	Server::handleNonCGIResponse(t_client& client, Server &server)
@@ -573,11 +574,6 @@ Location Server::findLocation(Request* req)
 std::vector<ServerConfig> Server::getConfigs()
 {
 	return _configs;
-}
-
-Pipe& Server::getPipe()
-{
-	return _CGIpipes;
 }
 
 int Server::getServerSockfd()

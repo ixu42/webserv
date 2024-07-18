@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/18 03:18:25 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/18 04:21:33 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,18 +118,18 @@ void ServersManager::run()
 		// LOG_DEBUG("Checking pollfds...");
 			if (pfd.revents & POLLIN)
 			{
-				LOG_DEBUG("if POLLIN");
+				LOG_DEBUG("if POLLIN for fd: ", pfd.fd);
 				handleRead(pfd);
 				// break ; // should it break?
 			}
 			if (pfd.revents & POLLOUT)
 			{
-				LOG_DEBUG("if POLLOUT");
+				LOG_DEBUG("if POLLOUT for fd: ", pfd.fd);
 				handleWrite(pfd.fd);
 				// break ; // should it break?
 			}
 			// if (pfd.revents & (POLLERR | POLLHUP | POLLNVAL))
-/* 			if (pfd.revents & (POLLERR | POLLHUP))
+			if (pfd.revents & (POLLERR | POLLHUP)) // if the page refreshed, device has been disconnected or an error has occurred on the file descriptor
 			{
 				LOG_DEBUG("Error or hangup on fd: ", pfd.fd);
 				if (pfd.revents & POLLERR )
@@ -145,7 +145,7 @@ void ServersManager::run()
 				} else {
 					LOG_DEBUG("Closed fd: ", pfd.fd);
 				}
-			} */
+			}
 		}
 	}
 }
@@ -169,6 +169,8 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 		}
 		for (t_client& client : server->getClients())
 		{
+			LOG_DEBUG("client.state: ", client.state);
+			LOG_DEBUG("client.stateCGI: ", client.stateCGI);
 			if (pfdReadyForRead.fd == client.fd && client.state == READING)
 			{
 				// client.request = server->receiveRequest(pfdReadyForRead.fd);
@@ -190,14 +192,15 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 				fdFound = true;
 				break ;
 			}
+			LOG_DEBUG("client.stateCGI ", client.stateCGI);
 			if (ifCGIsFd(client, pfdReadyForRead.fd) && client.stateCGI == FORKED)
 			{
 				LOG_INFO("Now forked and reading");
 				// after forking reading from the file and set lockers for CGIHandler
-				if (CGIServer::readScriptOutput(client)) // read in CGI
+				if (CGIServer::readScriptOutput(client, server)) // read in CGI
 				{
 					client.state = BUILDING;
-					// client.stateCGI = FINISHED_SET;
+					client.stateCGI = FINISHED_SET;
 				}
 				fdFound = true;
 				break ;
@@ -243,7 +246,7 @@ void	ServersManager::handleWrite(int fdReadyForWrite)
 				if (ifCGIsFd(client, fdReadyForWrite) && client.stateCGI == INIT)
 				{
 					server->responder(client, *server);
-					client.stateCGI = FORKED;
+					// client.stateCGI = FORKED;
 				}
 
 				if ((!ifCGIsFd(client, fdReadyForWrite) && client.state == BUILDING)
@@ -259,10 +262,18 @@ void	ServersManager::handleWrite(int fdReadyForWrite)
 				{
 					LOG_INFO("Sending the response now");
 					// write(client.fd, response.c_str(), response.size());
+
+					// if (findPollfdByFd(client.fd) != nullptr)
+					// {
+					// 	LOG_DEBUG("Set POLLOUT for fd: ", client.fd);
+					// 	findPollfdByFd(client.fd)->events = POLLOUT;
+					// }
+					
 					if (server->sendResponse(client))
 						client.state = FINISHED_WRITING;
+						
 				}
-				if (client.state == FINISHED_WRITING)
+				if (client.state == FINISHED_WRITING && (client.childPipe[0] == -1 || client.stateCGI == FINISHED_SET))
 				{
 				{
 						server->finalizeResponse(client);
@@ -309,4 +320,15 @@ void	ServersManager::removeClientByFd(int currentFd)
 bool ServersManager::ifCGIsFd(t_client& client, int fd)
 {
 	return fd == client.childPipe[0];
+}
+
+// find pollfd by fd
+pollfd* ServersManager::findPollfdByFd(int fd)
+{
+	for (struct pollfd& pfd : _fds)
+	{
+		if (pfd.fd == fd)
+			return &pfd;
+	}
+	return nullptr;
 }

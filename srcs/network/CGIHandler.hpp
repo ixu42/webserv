@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/17 19:42:54 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/18 03:25:23 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,5 +57,5 @@ class CGIServer {
 		static	void						unregisterCGIPollFd(Server& server, int fd);
 		static	void						InitCGI(t_client& client, Server& server);
 		static	void						fcntlSet(int fd);
-		static	bool						readScriptOutput(t_client& client);
+		static	bool						readScriptOutput(t_client& client, Server*& server);
 };

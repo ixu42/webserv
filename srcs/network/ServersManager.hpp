@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.hpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/17 18:42:18 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/18 03:45:00 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@ class ServersManager
 		void						removeFromPollfd(int fd);
 		void						removeClientByFd(int fd);
 		bool						ifCGIsFd(t_client& client, int fd);
+		pollfd*						findPollfdByFd(int fd);
 
 	public:
 		~ServersManager();

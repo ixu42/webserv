@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/18 03:16:55 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/18 04:23:21 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,7 +146,7 @@ void CGIServer::handleProcesses(t_client& client, const std::string& interpreter
 		LOG_DEBUG("Parent started");
 		g_childPids.push_back(pid);
 		handleParentProcess(client, client.request->getBody());
-		waitpid(pid, nullptr, 0);
+		// waitpid(pid, nullptr, 0);
 		
 		auto it = std::find(g_childPids.begin(), g_childPids.end(), pid);
 		if (it != g_childPids.end())
@@ -233,12 +233,13 @@ void CGIServer::InitCGI(t_client& client, Server& server)
 
 		LOG_DEBUG("Pipes numbers: ",client.parentPipe[0]," ",client.parentPipe[1]," ",client.childPipe[0]," ",client.childPipe[1]);
 		
-		fcntlSet(client.childPipe[_in]);
+		// fcntlSet(client.childPipe[_in]); // works without non-blocking ??
 		// fcntlSet(client.childPipe[_out]);
 		// fcntlSet(client.parentPipe[_out]);
 		// fcntlSet(client.parentPipe[_in]);
 		
 		registerCGIPollFd(server, client.childPipe[_in], POLLIN);
+		// registerCGIPollFd(server, client.parentPipe[_out], POLLOUT);
 		LOG_DEBUG("Finished InitCGI()");
 	}
 }
@@ -261,7 +262,7 @@ void CGIServer::fcntlSet(int fd)
 	}
 }
 
-bool CGIServer::readScriptOutput(t_client& client)
+bool CGIServer::readScriptOutput(t_client& client, Server*& server)
 {
 	LOG_DEBUG("readScriptOutput() called");
 	char buffer[1024];
@@ -273,6 +274,12 @@ bool CGIServer::readScriptOutput(t_client& client)
 		LOG_DEBUG(TEXT_GREEN, "Populating response body with: ", bytesRead, RESET);
 		oss.write(buffer, bytesRead);
 	}
+	LOG_DEBUG(TEXT_YELLOW, "bytesRead in readScriptOutput: ", bytesRead, RESET);
+
+	// if (bytesRead == -1)
+	// {
+	// 	return false;
+	// }
 	if (bytesRead != 0)
 	{
 		LOG_DEBUG("Still reading from pipe in CGI");
@@ -281,6 +288,7 @@ bool CGIServer::readScriptOutput(t_client& client)
 	LOG_DEBUG(TEXT_YELLOW, "readScriptOutput read the whole body", RESET);
 	checkResponseHeaders(oss.str(), client.response);
 	close(client.childPipe[_in]);
+	unregisterCGIPollFd(*server, client.childPipe[_in]);
 	
 	return true;
 }

@@ -3,28 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   SessionsManager.hpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/12 12:23:32 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/15 19:42:41 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/16 11:42:51 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <chrono>
 #include <random>
-#include <sstream>
-#include <iomanip>
-#include <ctime>
-#include <map>
-#include <deque>
-#include <algorithm>
-#include <unistd.h>
-#include <fcntl.h>
 
 #include "client.hpp"
 #include "../utils/Utility.hpp"

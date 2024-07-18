@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 21:59:14 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/17 18:33:09 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/18 00:25:07 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,8 +38,8 @@ enum CGIState
 typedef struct s_client
 {
 	int			fd;
-	int			parentPipe[FDS];
-	int			childPipe[FDS];
+	int			parentPipe[FDS] = {-1, -1};
+	int			childPipe[FDS] = {-1, -1};
 	std::string	CGIString;
 	Request*	request = nullptr;
 	Response*	response = nullptr;

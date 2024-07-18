@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/17 21:35:35 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/18 03:16:55 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,12 +121,14 @@ void CGIServer::handleParentProcess(t_client& client, const std::string& body)
 	LOG_DEBUG("Writing body of the request inside the pipe");
 	write(client.parentPipe[_out], body.c_str(), body.size());
 	close(client.parentPipe[_out]);
+	LOG_DEBUG("Wrote body of the request and closed the pipe");
 }
 
 void CGIServer::handleProcesses(t_client& client, const std::string& interpreter,
 	const std::vector<std::string>& envVars)
 {
 	pid_t pid = fork();
+	LOG_INFO("forked in handleProcesses");
 	if (pid == -1)
 	{
 		closeFds(client);
@@ -232,8 +234,11 @@ void CGIServer::InitCGI(t_client& client, Server& server)
 		LOG_DEBUG("Pipes numbers: ",client.parentPipe[0]," ",client.parentPipe[1]," ",client.childPipe[0]," ",client.childPipe[1]);
 		
 		fcntlSet(client.childPipe[_in]);
+		// fcntlSet(client.childPipe[_out]);
+		// fcntlSet(client.parentPipe[_out]);
+		// fcntlSet(client.parentPipe[_in]);
 		
-		registerCGIPollFd(server, client.childPipe[_in], POLLIN | POLLOUT);
+		registerCGIPollFd(server, client.childPipe[_in], POLLIN);
 		LOG_DEBUG("Finished InitCGI()");
 	}
 }
@@ -258,13 +263,14 @@ void CGIServer::fcntlSet(int fd)
 
 bool CGIServer::readScriptOutput(t_client& client)
 {
+	LOG_DEBUG("readScriptOutput() called");
 	char buffer[1024];
 	ssize_t bytesRead;
 	std::ostringstream oss;
 
 	while ((bytesRead = read(client.childPipe[_in], buffer, sizeof(buffer))) > 0)
 	{
-		LOG_DEBUG("Populating response body");
+		LOG_DEBUG(TEXT_GREEN, "Populating response body with: ", bytesRead, RESET);
 		oss.write(buffer, bytesRead);
 	}
 	if (bytesRead != 0)
@@ -272,6 +278,7 @@ bool CGIServer::readScriptOutput(t_client& client)
 		LOG_DEBUG("Still reading from pipe in CGI");
 		return false;
 	}
+	LOG_DEBUG(TEXT_YELLOW, "readScriptOutput read the whole body", RESET);
 	checkResponseHeaders(oss.str(), client.response);
 	close(client.childPipe[_in]);
 	

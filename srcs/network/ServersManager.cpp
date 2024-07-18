@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/17 21:33:00 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/18 03:18:25 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,18 +118,18 @@ void ServersManager::run()
 		// LOG_DEBUG("Checking pollfds...");
 			if (pfd.revents & POLLIN)
 			{
-			// LOG_DEBUG("if POLLIN");
+				LOG_DEBUG("if POLLIN");
 				handleRead(pfd);
 				// break ; // should it break?
 			}
 			if (pfd.revents & POLLOUT)
 			{
-			LOG_DEBUG("if POLLOUT");
+				LOG_DEBUG("if POLLOUT");
 				handleWrite(pfd.fd);
 				// break ; // should it break?
 			}
 			// if (pfd.revents & (POLLERR | POLLHUP | POLLNVAL))
-			if (pfd.revents & (POLLERR | POLLHUP))
+/* 			if (pfd.revents & (POLLERR | POLLHUP))
 			{
 				LOG_DEBUG("Error or hangup on fd: ", pfd.fd);
 				if (pfd.revents & POLLERR )
@@ -145,7 +145,7 @@ void ServersManager::run()
 				} else {
 					LOG_DEBUG("Closed fd: ", pfd.fd);
 				}
-			}
+			} */
 		}
 	}
 }
@@ -164,7 +164,7 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 			// Add connected client fd to pollfd vector
 			// _fds.push_back({clientSockfd, POLLIN, 0}); // Only POLLIN? or both?
 			// _fds.push_back({clientSockfd, POLLIN | POLLERR | POLLHUP | POLLNVAL, 0}); // Onlu POLLIN? or both?
-			_fds.push_back({clientSockfd, POLLIN | POLLERR | POLLHUP, 0}); // Onlu POLLIN? or both?
+			_fds.push_back({clientSockfd, POLLIN | POLLOUT | POLLERR | POLLHUP, 0}); // Onlu POLLIN? or both?
 			break ;
 		}
 		for (t_client& client : server->getClients())
@@ -178,12 +178,26 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 					// Check cgi path and create pipes
 					// Set non blocking
 					// Add to pollfd
-					
-					CGIServer::InitCGI(client, *server);
-					
+					if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
+					{
+						CGIServer::InitCGI(client, *server);
+					}
 					// pfdReadyForRead.events = POLLOUT;
 					// pfdReadyForRead.events = POLLOUT | POLLERR | POLLHUP | POLLNVAL;
-					pfdReadyForRead.events = POLLOUT | POLLERR | POLLHUP;
+					// pfdReadyForRead.events = POLLOUT | POLLERR | POLLHUP;
+				}
+
+				fdFound = true;
+				break ;
+			}
+			if (ifCGIsFd(client, pfdReadyForRead.fd) && client.stateCGI == FORKED)
+			{
+				LOG_INFO("Now forked and reading");
+				// after forking reading from the file and set lockers for CGIHandler
+				if (CGIServer::readScriptOutput(client)) // read in CGI
+				{
+					client.state = BUILDING;
+					// client.stateCGI = FINISHED_SET;
 				}
 				fdFound = true;
 				break ;
@@ -203,7 +217,7 @@ void	ServersManager::handleWrite(int fdReadyForWrite)
 		for (t_client& client : server->getClients())
 		{
 			// Check in client parentPipe[out], childPipe[in];
-			if (ifCGIsFd(client, fdReadyForWrite) && client.stateCGI == FORKED)
+/* 			if (ifCGIsFd(client, fdReadyForWrite) && client.stateCGI == FORKED)
 			{
 				// after forking reading from the file and set lockers for CGIHandler
 				if (CGIServer::readScriptOutput(client)) // read in CGI
@@ -211,25 +225,39 @@ void	ServersManager::handleWrite(int fdReadyForWrite)
 					client.state = BUILDING;
 					client.stateCGI = FINISHED_SET;
 				}
-			}
+			} */
 			if (fdReadyForWrite == client.fd || (ifCGIsFd(client, fdReadyForWrite)))
+			// if (fdReadyForWrite == client.fd)
 			{
-				if (client.state == READY_TO_WRITE || client.stateCGI == INIT)
+				// if (client.state == READY_TO_WRITE || client.stateCGI == INIT)
+				// if (client.state == READY_TO_WRITE && !ifCGIsFd(client, fdReadyForWrite) && client.childPipe[0] == -1)
+				if (client.state == READY_TO_WRITE && !ifCGIsFd(client, fdReadyForWrite))
 				{
 					server->responder(client, *server); // for CGI only fork, execve, child stuff
-					client.state = BUILDING;
+					if (client.childPipe[0] == -1)
+					{
+						client.state = BUILDING;
+						LOG_INFO("client switched to building");
+					}
+				}
+				if (ifCGIsFd(client, fdReadyForWrite) && client.stateCGI == INIT)
+				{
+					server->responder(client, *server);
 					client.stateCGI = FORKED;
 				}
+
 				if ((!ifCGIsFd(client, fdReadyForWrite) && client.state == BUILDING)
 					|| (ifCGIsFd(client, fdReadyForWrite) && client.stateCGI == FINISHED_SET))
+				// if (!ifCGIsFd(client, fdReadyForWrite) && client.state == BUILDING)
 				{
 					client.responseString = Response::buildResponse(*client.response);
 					LOG_DEBUG("response: ", client.responseString.substr(0, 500), "\n...\n"); // Can be really huge for huge files and can interrupt the Terminal
 					client.state = WRITING;
-					client.stateCGI = FINISHED;
+					// client.stateCGI = FINISHED;
 				}
-				if (client.state == WRITING)
+				if (fdReadyForWrite == client.fd && client.state == WRITING)
 				{
+					LOG_INFO("Sending the response now");
 					// write(client.fd, response.c_str(), response.size());
 					if (server->sendResponse(client))
 						client.state = FINISHED_WRITING;

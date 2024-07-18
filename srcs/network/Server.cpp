@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/17 21:23:49 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/18 03:17:36 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,7 +139,7 @@ size_t Server::findMaxClientBodyBytes(Request request)
 bool Server::receiveRequest(t_client& client)
 {
 	LOG_DEBUG("Server::receiveRequest called for fd: ", client.fd);
-	const int bufferSize = 10;
+	const int bufferSize = 1024;
 	char buffer[bufferSize] = {0};
 	int bytesRead;
 	// std::string request;
@@ -353,9 +353,11 @@ void	Server::handleStaticFiles(t_client& client, Location& foundLocation)
 	std::string requestPath = client.request->getStartLine()["path"];
 	std::string filePath = foundLocation.root + requestPath.substr(foundLocation.path.length());
 	if (access(filePath.c_str(), F_OK) == -1)
-		throw ResponseError(404);
+		throw ResponseError(404, {}, "Exception has been thrown in handleStaticFiles() "
+			"method of Server class");
 	else if (access(filePath.c_str(), R_OK) == -1)
-		throw ResponseError(403);
+		throw ResponseError(403, {}, "Exception has been thrown in handleStaticFiles() "
+			"method of Server class");
 
 	// If path ends with /, check for index file and directory listing, otherwise throw 403
 	Response* locationResp = nullptr;
@@ -414,7 +416,7 @@ void	Server::responder(t_client& client, Server& server)
 {
 	LOG_DEBUG("Server::responder() called");
 	// if (formRequestErrorResponse(client)) return; // TODO: remove this line later
-	if ((client.response || formCGIConfigAbsenceResponse(client, server)))
+	if ((client.response && !client.response->getBody().empty()) || formCGIConfigAbsenceResponse(client, server))
 	{
 		client.state = FINISHED_WRITING;
 		return;	
@@ -423,8 +425,12 @@ void	Server::responder(t_client& client, Server& server)
 	{
 		validateRequest(client);
 		client.request->printRequest(); // can flood the Terminal if a file is uploaded
-		if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
+		if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos && client.stateCGI == INIT)
+		{
 			CGIServer::handleCGI(client);
+			client.stateCGI = FORKED;
+			LOG_INFO("cgi switched to forked");
+		}
 		else
 			handleNonCGIResponse(client, server);
 		SessionsManager::handleSessions(client);

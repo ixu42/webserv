@@ -1,6 +1,9 @@
 import cgi
 import os
 from datetime import datetime
+import time
+
+time.sleep(5)
 
 current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 

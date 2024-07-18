@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:51 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/13 13:47:22 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/18 19:33:33 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ class Response
 	public:
 		Response();
 		Response(int code, ServerConfig* serverConfig, std::map<std::string, std::string> optionalHeaders = {});
-		Response(int code, std::string filePath);
+		Response(int code, std::string filePath, std::map<std::string, std::string> optionalHeaders = {});
 
 		std::string& getBody();
 		std::string& getStatus();

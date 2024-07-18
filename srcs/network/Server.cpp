@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/16 19:54:49 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/18 19:34:57 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,7 +135,7 @@ size_t Server::findMaxClientBodyBytes(Request request)
 bool Server::receiveRequest(t_client& client)
 {
 	LOG_DEBUG("Server::receiveRequest called for fd: ", client.fd);
-	const int bufferSize = 1024;
+	const int bufferSize = 10*1024;
 	char buffer[bufferSize] = {0};
 	int bytesRead;
 	// std::string request;
@@ -232,7 +232,7 @@ Response* Server::createResponse(Request* request, int code,
 bool Server::sendResponse(t_client& client)
 {
 	// size_t totalBytesWritten = 0;
-	size_t		chunkSize = 10*1024;
+	size_t		chunkSize = 10 * 1024;
 	size_t		bytesToWrite = client.responseString.length(); // maybe copy to struct to optimize
 	// const char*	buffer = client.responseString.c_str(); // maybe copy to struct to optimize
 

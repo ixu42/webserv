@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/16 19:48:01 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/18 19:37:08 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,13 +73,6 @@ static const std::map<std::string, std::string> mimeTypes = {
 	{"default", "application/octet-stream"}
 };
 
-// HTTP/1.1 404 Not Found
-// Date: Sun, 18 Oct 2012 10:36:20 GMT
-// Server: Apache/2.2.14 (Win32)
-// Content-Length: 230
-// Connection: Closed
-// Content-Type: text/html; charset=iso-8859-1
-
 Response::Response() {}
 
 /**
@@ -87,10 +80,6 @@ Response::Response() {}
 */
 Response::Response(int code, ServerConfig* serverConfig, std::map<std::string, std::string> optionalHeaders)
 {
-	setStatusFromCode(code);
-	if (optionalHeaders.size() > 0)
-		_headers.insert(optionalHeaders.begin(), optionalHeaders.end());
-
 	std::string errorPagePath = serverConfig->defaultPages[404]; // fallback for not legit error codes
 	auto errorIt = serverConfig->errorPages.find(code);
 	auto defaultIt = serverConfig->defaultPages.find(code);
@@ -103,11 +92,14 @@ Response::Response(int code, ServerConfig* serverConfig, std::map<std::string, s
 		std::cout << TEXT_GREEN << "default page found" << std::endl;
 		errorPagePath = serverConfig->defaultPages[code];
 	}
-	*this = Response(code, errorPagePath);
+	*this = Response(code, errorPagePath, optionalHeaders);
 }
 
-Response::Response(int code, std::string filePath)
+Response::Response(int code, std::string filePath, std::map<std::string, std::string> optionalHeaders)
 {
+	if (optionalHeaders.size() > 0)
+		_headers.insert(optionalHeaders.begin(), optionalHeaders.end());
+
 	std::string fileContent;
 	size_t size;
 	
@@ -229,8 +221,12 @@ std::string Response::buildResponse(Response& response)
 
 	/* Add optional headers*/
 	for (auto& [headerKey, headerValue] : response._headers)
-		responseNew << headerKey << ": " << headerValue << "\r\n";
+	{
 
+		responseNew << headerKey << ": " << headerValue << "\r\n";
+		LOG_INFO("headerKey: ", headerKey, ", headerValue: ", headerValue);
+	}
+	LOG_INFO("response so far: ", responseNew.str());
 	responseNew << "\r\n";
 
 	/* Not adding extra line if body is empty*/

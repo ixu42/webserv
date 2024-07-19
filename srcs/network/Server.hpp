@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/17 19:42:19 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/19 14:23:15 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@
 #include "../request/Request.hpp"
 #include "../utils/ServerException.hpp"
 #include "DirLister.hpp"
-#include "client.hpp"
+#include "Client.hpp"
 #include <vector>
 #include <string>
 #include <cstring> // memset()
@@ -43,7 +43,7 @@ class Server
 		Socket						_serverSocket;
 		struct addrinfo				_hints;
 		struct addrinfo*			_res;
-		std::vector<t_client>		_clients;
+		std::vector<Client>			_clients;
 		std::vector<ServerConfig>	_configs;
 		std::vector<struct pollfd>*	_managerFds;
 
@@ -59,35 +59,35 @@ class Server
 		void						setFds(std::vector<struct pollfd>* fds);
 		
 		int							getServerSockfd();
-		std::vector<t_client>&		getClients();
+		std::vector<Client>&		getClients();
 		std::string					getIpAddress();
 		int							getPort();
 		std::vector<ServerConfig>	getConfigs();
 		std::vector<struct pollfd>*	getFds();
 
 		int							accepter();
-		void						handler(Server*& server, t_client& client);
-		void						responder(t_client& client, Server &server);
+		void						handler(Server*& server, Client& client);
+		void						responder(Client& client, Server &server);
 
 		// Request*					receiveRequest(int clientSockfd);
-		bool						receiveRequest(t_client& client);
-		bool						sendResponse(t_client& client);
-		void						finalizeResponse(t_client& client);
+		bool						receiveRequest(Client& client);
+		bool						sendResponse(Client& client);
+		void						finalizeResponse(Client& client);
 
 	private:
 		std::string					whoAmI() const;
 		void						initServer(const char* ipAddr, int port);
-		void						removeFromClients(t_client& client);
+		void						removeFromClients(Client& client);
 
 
-		void						validateRequest(t_client& client);
+		void						validateRequest(Client& client);
 		// bool						formRequestErrorResponse(t_client& client);
-		bool						formCGIConfigAbsenceResponse(t_client& client, Server &server);
-		void						handleUpload(t_client& client, Location& foundLocation);
-		void						handleNonCGIResponse(t_client& client, Server &server);
-		void						checkIfMethodAllowed(t_client& client, Location& foundLocation);
-		void						handleRedirect(t_client& client, Location& foundLocation);
-		void						handleStaticFiles(t_client& client, Location& foundLocation);
+		bool						formCGIConfigAbsenceResponse(Client& client, Server &server);
+		void						handleUpload(Client& client, Location& foundLocation);
+		void						handleNonCGIResponse(Client& client, Server &server);
+		void						checkIfMethodAllowed(Client& client, Location& foundLocation);
+		void						handleRedirect(Client& client, Location& foundLocation);
+		void						handleStaticFiles(Client& client, Location& foundLocation);
 		Location					findLocation(Request* req);
 		
 		ServerConfig*				findServerConfig(Request* req);

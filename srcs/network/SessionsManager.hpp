@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/12 12:23:32 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/17 12:04:56 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/19 13:36:07 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 #include <random>
 #include <chrono>
 
-#include "client.hpp"
+#include "Client.hpp"
 #include "../utils/Utility.hpp"
 #include "../request/Request.hpp"
 
@@ -30,7 +30,7 @@ class SessionsManager {
 		static void addSessionToFile(std::string& sessionData);
 		static void manageSessions(std::deque<std::string>& sessions);
 		static void setSessionToResponse(Response* response, std::string& sessionData);
-		static bool isHTMLRequest(t_client& client);
+		static bool isHTMLRequest(Client& client);
 		static void checkPermissions();
 		
 	public:
@@ -38,5 +38,5 @@ class SessionsManager {
 		static std::string& getSession();
 		const std::string getFilename();
 		
-		static void handleSessions(t_client& client);
+		static void handleSessions(Client& client);
 };

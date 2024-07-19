@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/19 11:54:08 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/19 15:49:17 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,13 +57,13 @@ Server::~Server()
 {
 	LOG_DEBUG("Server destructor called");
 
-	for (t_client& client : _clients)
+	for (Client& client : _clients)
 	{
-		close(client.fd);
-		if (client.request)
-			delete client.request;
-		if (client.response)
-			delete client.response;
+		close(client.getFd());
+		if (client.getRequest())
+			delete client.getRequest();
+		if (client.getResponse())
+			delete client.getResponse();
 	}
 }
 
@@ -77,8 +77,8 @@ int	Server::accepter()
 		return -1;
 	LOG_INFO("Connection established with client (socket fd: ", clientSockfd, ")");
 
-	t_client newClient;
-    newClient.fd = clientSockfd;
+	Client newClient;
+	newClient.setFd(clientSockfd);
 
 	_clients.push_back(newClient);
 	// _clients.push_back((t_client){clientSockfd,
@@ -136,22 +136,22 @@ size_t Server::findMaxClientBodyBytes(Request request)
 }
 
 // Request* Server::receiveRequest(int clientSockfd)
-bool Server::receiveRequest(t_client& client)
+bool Server::receiveRequest(Client& client)
 {
-	LOG_DEBUG("Server::receiveRequest called for fd: ", client.fd);
-	const int bufferSize = 1024;
-	char buffer[bufferSize] = {0};
+	LOG_DEBUG("Server::receiveRequest called for fd: ", client.getFd());
+	char buffer[g_bufferSize];
 	int bytesRead;
 	// std::string request;
 	int emptyLinePos = -1;
 	int emptyLinesSize = 0;
 
+	std::fill(buffer, buffer + g_bufferSize, 0);
 	bool isHeadersRead = false;
 	std::size_t contentLengthNum = std::string::npos;
 
 	// std::size_t maxClientBodyBytes = std::numeric_limits<std::size_t>::max();
 	
-		bytesRead = read(client.fd, buffer, bufferSize);
+		bytesRead = read(client.getFd(), buffer, sizeof(buffer));
 		LOG_DEBUG(TEXT_YELLOW, "bytesRead in receiveRequest())): ", bytesRead, RESET);
 		// LOG_DEBUG("=== Reading in chunks bytes: ", bytesRead); // too much debug lol
 		// LOG_DEBUG_RAW("[DEBUG] ");
@@ -162,62 +162,63 @@ bool Server::receiveRequest(t_client& client)
 	if (bytesRead < 0)
 		return false;
 	if (bytesRead == 0)
-		client.state = READY_TO_WRITE;
-
-	if (client.state == READING)
+		client.setState(Client::ClientState::READY_TO_WRITE);
+	if (client.getState() == Client::ClientState::READING)
 	{
-		client.requestString += std::string(buffer, bytesRead);
+		client.setRequestString(client.getRequestString() + std::string(buffer, bytesRead));
 
 		// Check if the request is complete (ends with "\r\n\r\n")
-		if (!isHeadersRead && (client.requestString.find("\r\n\r\n") != std::string::npos || client.requestString.find("\n\n") != std::string::npos))
+		if (!isHeadersRead && (client.getRequestString().find("\r\n\r\n") != std::string::npos
+			|| client.getRequestString().find("\n\n") != std::string::npos))
 		{
-			emptyLinePos = client.requestString.find("\r\n\r\n") ? client.requestString.find("\r\n\r\n") : client.requestString.find("\n\n");
-			emptyLinesSize = client.requestString.find("\r\n\r\n") ? 4 : 2;
+			emptyLinePos = client.getRequestString().find("\r\n\r\n") ?
+				client.getRequestString().find("\r\n\r\n") :
+				client.getRequestString().find("\n\n");
+			emptyLinesSize = client.getRequestString().find("\r\n\r\n") ? 4 : 2;
 			isHeadersRead = true;
-			contentLengthNum = findContentLength(client.requestString);
+			contentLengthNum = findContentLength(client.getRequestString());
 			if (contentLengthNum == std::string::npos)
 			{
-				client.state = READY_TO_WRITE;
+				client.setState(Client::ClientState::READY_TO_WRITE);
 			}
-
 			// Find maxClientBodySize
-			if (client.maxClientBodyBytes == std::numeric_limits<std::size_t>::max()) // only calculate if the value is initial
-				client.maxClientBodyBytes = findMaxClientBodyBytes(Request(client.requestString));
+			// only calculate if the value is initial
+			if (client.getMaxClientBodyBytes() == std::numeric_limits<std::size_t>::max())
+				client.setMaxClientBodyBytes(findMaxClientBodyBytes(Request(client.getRequestString())));
 		}
 
 		if (isHeadersRead && contentLengthNum != std::string::npos)
 		{
-			size_t currRequestBodyBytes = client.requestString.length() - emptyLinePos - emptyLinesSize;
+			size_t currRequestBodyBytes = client.getRequestString().length() - emptyLinePos - emptyLinesSize;
 
-			if (currRequestBodyBytes > client.maxClientBodyBytes)
+			if (currRequestBodyBytes > client.getMaxClientBodyBytes())
 				throw ResponseError(413, {}, "Exception has been thrown in receiveRequest() "
 			"method of Server class");
 
 			if (currRequestBodyBytes >= contentLengthNum)
 			{
-				client.state = READY_TO_WRITE;
+				client.setState(Client::ClientState::READY_TO_WRITE);
 			}
 		}
-		if (client.state != READY_TO_WRITE)
+		if (client.getState() != Client::ClientState::READY_TO_WRITE)
 			// std::cout << TEXT_CYAN << client.requestString.substr(0, 500) << "\n...\n" << RESET << std::endl;
 			return false;
 	}
 
 	LOG_INFO("Request read");
-	LOG_DEBUG(TEXT_YELLOW, client.requestString.substr(0, 1000), "\n...\n", RESET, "\n");
+	LOG_DEBUG(TEXT_YELLOW, client.getRequestString().substr(0, 1000), "\n...\n", RESET, "\n");
 	// std::cout << TEXT_YELLOW << client.requestString << RESET << std::endl;
 	// LOG_DEBUG_MULTILINE(TEXT_YELLOW, client.requestString, RESET);
-
 	return true;
 }
 
-void	Server::handler(Server*& server, t_client& client)
+void	Server::handler(Server*& server, Client& client)
 {
 	try
 	{
 		// client.request = server->receiveRequest(client);
 		if (server->receiveRequest(client))
-			client.request = new Request(client.requestString);
+			client.setRequest(new Request(client.getRequestString()));
 	}
 	catch (ResponseError& e)
 	{
@@ -225,35 +226,34 @@ void	Server::handler(Server*& server, t_client& client)
 	}
 }
 
-Response* Server::createResponse(Request* request, int code, 
-						std::map<std::string, std::string> optionalHeaders)
+Response* Server::createResponse(Request* request, int code, std::map<std::string, std::string> optionalHeaders)
 {
 	LOG_DEBUG("createResponse() called");
 	return new Response(code, findServerConfig(request), optionalHeaders);
 }
 
-bool Server::sendResponse(t_client& client)
+bool Server::sendResponse(Client& client)
 {
 	// size_t totalBytesWritten = 0;
-	size_t		chunkSize = 10*1024;
-	size_t		bytesToWrite = client.responseString.length(); // maybe copy to struct to optimize
+	size_t	bytesToWrite = client.getResponseString().length(); // maybe copy to struct to optimize
 	// const char*	buffer = client.responseString.c_str(); // maybe copy to struct to optimize
 
 	// Calculate the remaining bytes to write
-	size_t remainingBytes = bytesToWrite - client.totalBytesWritten;
+	size_t remainingBytes = bytesToWrite - client.getTotalBytesWritten();
 	// Limit the chunk size to the remaining bytes
-	size_t bytesToWriteNow = remainingBytes < chunkSize ? remainingBytes : chunkSize;
+	size_t bytesToWriteNow = remainingBytes < g_bufferSize ? remainingBytes : g_bufferSize;
 
 	// ssize_t bytesWritten = write(client.fd, buffer + client.totalBytesWritten, bytesToWrite - client.totalBytesWritten);
-	ssize_t bytesWritten = write(client.fd, client.responseString.c_str() + client.totalBytesWritten, bytesToWriteNow);
+	ssize_t bytesWritten = write(client.getFd(), client.getResponseString().c_str() + client.getTotalBytesWritten(), bytesToWriteNow);
 	LOG_DEBUG(TEXT_GREEN, "Bytes written: ", bytesWritten, RESET);
 	if (bytesWritten == -1) // We can not use EAGAIN or EWOULDBLOCK here
 		return false;
-	client.totalBytesWritten += bytesWritten;
-	LOG_DEBUG(TEXT_GREEN, "client.totalBytesWritten: ", client.totalBytesWritten, RESET);
-	if (bytesWritten == 0 || client.totalBytesWritten == bytesToWrite) // Handle case where write returns 0 (should not happen with regular sockets)
+	client.setTotalBytesWritten(client.getTotalBytesWritten() + bytesWritten);
+	LOG_DEBUG(TEXT_GREEN, "client.totalBytesWritten: ", client.getTotalBytesWritten(), RESET);
+	// Handle case where write returns 0 (should not happen with regular sockets)
+	if (bytesWritten == 0 || client.getTotalBytesWritten() == bytesToWrite)
 	{
-		LOG_INFO(TEXT_GREEN, "Response written with length: ", client.totalBytesWritten, RESET);
+		LOG_INFO(TEXT_GREEN, "Response written with length: ", client.getTotalBytesWritten(), RESET);
 		return true;
 	}	
 	// else if (client.totalBytesWritten < bytesToWrite)
@@ -261,52 +261,54 @@ bool Server::sendResponse(t_client& client)
 	// LOG_DEBUG(TEXT_GREEN, "client.responseString.length(): ", client.responseString.length(), RESET);
 }
 
-bool	Server::formCGIConfigAbsenceResponse(t_client& client, Server& server)
+bool	Server::formCGIConfigAbsenceResponse(Client& client, Server& server)
 {
-	if (!server.findServerConfig(client.request)->cgis["php"]
-		&& !server.findServerConfig(client.request)->cgis["py"]
-		&& client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
+	if (!server.findServerConfig(client.getRequest())->cgis["php"]
+		&& !server.findServerConfig(client.getRequest())->cgis["py"]
+		&& client.getRequest()->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
 	{
-		client.response = createResponse(client.request, 404);
+		client.setResponse(createResponse(client.getRequest(), 404));
 		// finalizeResponse(client);
 		return true;
 	}
 	return false;
 }
 
-void	Server::handleNonCGIResponse(t_client& client, Server &server)
+void	Server::handleNonCGIResponse(Client& client, Server &server)
 {
-	Location foundLocation = server.findLocation(client.request);
+	Location foundLocation = server.findLocation(client.getRequest());
 	LOG_DEBUG(TEXT_GREEN, "Location: ", foundLocation.path, RESET);
 	
 	checkIfMethodAllowed(client, foundLocation);
 	if (foundLocation.redirect != "")
 		handleRedirect(client, foundLocation);
-	else if (foundLocation.upload && client.request->getStartLine()["method"] == "POST")
+	else if (foundLocation.upload && client.getRequest()->getStartLine()["method"] == "POST")
 		handleUpload(client, foundLocation);
 	else
 		handleStaticFiles(client, foundLocation);
 }
 
-void	Server::checkIfMethodAllowed(t_client& client, Location& foundLocation)
+void	Server::checkIfMethodAllowed(Client& client, Location& foundLocation)
 {
-	if (!foundLocation.methods[Utility::strToLower(client.request->getStartLine()["method"])])
+	if (!foundLocation.methods[Utility::strToLower(client.getRequest()->getStartLine()["method"])])
 	{
 		std::string allowedMethods;
 		for (auto& [methodName, methodBool] : foundLocation.methods)
 		{
 			if (methodBool)
-				allowedMethods += allowedMethods.empty() ? Utility::strToUpper(methodName) : ", " + Utility::strToUpper(methodName);
+				allowedMethods += allowedMethods.empty() ?
+				Utility::strToUpper(methodName) :
+				", " + Utility::strToUpper(methodName);
 		}
 		throw ResponseError(405, {{"Allowed", allowedMethods}}, "Exception has been thrown in checkIfAllowed() "
 			"method of Server class");
 	}
 }
 
-std::string findUplooadFormBoundary(t_client& client)
+std::string findUplooadFormBoundary(Client& client)
 {
 	std::string boundary;
-	std::string contentTypeValue = client.request->getHeaders().at("content-type");
+	std::string contentTypeValue = client.getRequest()->getHeaders().at("content-type");
 
 	if (contentTypeValue.find("multipart/form-data") != std::string::npos)
 	{
@@ -316,7 +318,7 @@ std::string findUplooadFormBoundary(t_client& client)
 	return boundary;
 }
 
-void Server:: handleUpload(t_client& client, Location& foundLocation)
+void Server:: handleUpload(Client& client, Location& foundLocation)
 {
 	LOG_INFO("Handling upload...");
 	// // Handle upload from API app (Thunder Client for example)
@@ -334,9 +336,9 @@ void Server:: handleUpload(t_client& client, Location& foundLocation)
 	(void)client;
 }
 
-void	Server::handleRedirect(t_client& client, Location& foundLocation)
+void	Server::handleRedirect(Client& client, Location& foundLocation)
 {
-	std::string pagePath = client.request->getStartLine()["path"].substr(foundLocation.path.length());
+	std::string pagePath = client.getRequest()->getStartLine()["path"].substr(foundLocation.path.length());
 	size_t requestUriPos = foundLocation.redirect.find("$request_uri");
 	std::string redirectUrl = foundLocation.redirect.substr(0, requestUriPos);
 
@@ -345,12 +347,12 @@ void	Server::handleRedirect(t_client& client, Location& foundLocation)
 
 	LOG_DEBUG("Redirect URL: ", redirectUrl);
 	LOG_DEBUG("Page path: ", pagePath);
-	client.response = createResponse(client.request, 307, {{"Location", redirectUrl}});
+	client.setResponse(createResponse(client.getRequest(), 307, {{"Location", redirectUrl}}));
 }
 
-void	Server::handleStaticFiles(t_client& client, Location& foundLocation)
+void	Server::handleStaticFiles(Client& client, Location& foundLocation)
 {
-	std::string requestPath = client.request->getStartLine()["path"];
+	std::string requestPath = client.getRequest()->getStartLine()["path"];
 	std::string filePath = foundLocation.root + requestPath.substr(foundLocation.path.length());
 	if (access(filePath.c_str(), F_OK) == -1)
 		throw ResponseError(404, {}, "Exception has been thrown in handleStaticFiles() "
@@ -377,30 +379,30 @@ void	Server::handleStaticFiles(t_client& client, Location& foundLocation)
 	}
 	
 	// Checks if location response was formed, otherwise creates Response from filePath
-	client.response = !locationResp ? new Response(200, filePath) : locationResp; 
+	client.setResponse(locationResp ? locationResp : new Response(200, filePath));
 }
 
-void	Server::finalizeResponse(t_client& client)
+void	Server::finalizeResponse(Client& client)
 {
-	delete client.request;
-	delete client.response;
-	client.request = nullptr;
-	client.response = nullptr;
-	close(client.fd);
+	delete client.getRequest();
+	delete client.getResponse();
+	client.setRequest(nullptr);
+	client.setResponse(nullptr);
+	close(client.getFd());
 	removeFromClients(client);
 }
 
-void Server::validateRequest(t_client& client)
+void Server::validateRequest(Client& client)
 {
 	LOG_DEBUG("validateRequest()");
-	if (!client.request)
+	if (!client.getRequest())
 		throw ResponseError(400, {}, "Request is nullptr");
-	if (client.request->getStartLine()["method"].empty() ||
-		client.request->getStartLine()["path"].empty() ||
-		client.request->getStartLine()["version"].empty() ||
-		client.request->getHeaders()["host"].empty())
+	if (client.getRequest()->getStartLine()["method"].empty() ||
+		client.getRequest()->getStartLine()["path"].empty() ||
+		client.getRequest()->getStartLine()["version"].empty() ||
+		client.getRequest()->getHeaders()["host"].empty())
 		throw ResponseError(400, {}, "Request does not have mandatory fields");
-	if (client.request->getStartLine()["version"] != "HTTP/1.1")
+	if (client.getRequest()->getStartLine()["version"] != "HTTP/1.1")
 		throw ResponseError(505, {}, "Wrong HTTP version in the start line");
 	// try
 	// {
@@ -412,46 +414,48 @@ void Server::validateRequest(t_client& client)
 	// }
 }
 
-void	Server::responder(t_client& client, Server& server)
+void	Server::responder(Client& client, Server& server)
 {
 	LOG_DEBUG("Server::responder() called");
 	// if (formRequestErrorResponse(client)) return; // TODO: remove this line later
-	if ((client.response && !client.response->getBody().empty()) || formCGIConfigAbsenceResponse(client, server))
+	if ((client.getResponse() && !client.getResponse()->getBody().empty())
+		|| formCGIConfigAbsenceResponse(client, server))
 	{
-		client.state = FINISHED_WRITING;
+		client.setState(Client::ClientState::FINISHED_WRITING);
 		return;
 	}
 	try
 	{
 		validateRequest(client);
-		client.request->printRequest(); // can flood the Terminal if a file is uploaded
-		if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos && client.stateCGI == INIT)
+		client.getRequest()->printRequest(); // can flood the Terminal if a file is uploaded
+		if (client.getRequest()->getStartLine()["path"].find("/cgi-bin")
+			!= std::string::npos && client.getCGIState() == Client::CGIState::INIT)
 		{
 			CGIServer::handleCGI(client);
-			client.stateCGI = FORKED;
+			client.setCGIState(Client::CGIState::FORKED);
 			LOG_DEBUG("cgi switched to forked");
 		}
-		else if (client.request->getStartLine()["path"].find("/cgi-bin") == std::string::npos)
+		else if (client.getRequest()->getStartLine()["path"].find("/cgi-bin") == std::string::npos)
 			handleNonCGIResponse(client, server);
 		SessionsManager::handleSessions(client);
 	}
 	catch (ResponseError& e)
 	{
-		delete client.response;
+		delete client.getResponse();
 		LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
-		client.response = createResponse(client.request, e.getCode(), e.getHeaders());
+		client.setResponse(createResponse(client.getRequest(), e.getCode(), e.getHeaders()));
 	}
 	catch (const std::exception& e)
 	{
-		delete client.response;
+		delete client.getResponse();
 		LOG_ERROR("Responder caught an exception: ", e.what());
-		client.response = createResponse(client.request, 500);
+		client.setResponse(createResponse(client.getRequest(), 500));
 	}
-	if (!client.response)
-		client.response = createResponse(client.request, 500);
+	if (!client.getResponse())
+		client.setResponse(createResponse(client.getRequest(), 500));
 }
 
-void	Server::removeFromClients(t_client& client)
+void	Server::removeFromClients(Client& client)
 {
 	// remove from _clients vector
 	for (auto it = _clients.begin(); it != _clients.end(); ++it)
@@ -581,7 +585,7 @@ int Server::getServerSockfd()
 	return _serverSocket.getSockfd();
 }
 
-std::vector<t_client>& Server::getClients()
+std::vector<Client>& Server::getClients()
 {
 	return _clients;
 }

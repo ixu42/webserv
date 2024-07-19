@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/19 11:56:48 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/19 15:47:00 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,11 +16,13 @@
 #include "utils/ServerException.hpp"
 #include "utils/Colors.hpp"
 #include "utils/logUtils.hpp"
+#include "utils/globals.hpp"
+
 #include <iostream>
-#include "utils/signal.hpp"
 
 std::atomic<bool> g_signalReceived(false);
 std::vector<pid_t> g_childPids;
+const size_t g_bufferSize = 10240;
 
 static void signalHandler(int signal)
 {

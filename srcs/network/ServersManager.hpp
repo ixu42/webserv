@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.hpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/18 03:45:00 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/19 15:38:39 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@
 #include <errno.h>
 
 #include <exception>
-#include "../utils/signal.hpp"
+#include "../utils/globals.hpp"
 
 #define DEFAULT_CONFIG "default/config.conf"
 
@@ -46,7 +46,7 @@ class ServersManager
 		void						handleWrite(int fdReadyForWrite);
 		void						removeFromPollfd(int fd);
 		void						removeClientByFd(int fd);
-		bool						ifCGIsFd(t_client& client, int fd);
+		bool						ifCGIsFd(Client& client, int fd);
 		pollfd*						findPollfdByFd(int fd);
 
 	public:

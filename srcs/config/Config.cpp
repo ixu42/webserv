@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/19 20:41:52 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/19 21:14:49 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -207,9 +207,6 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 		while (std::getline(stream, line))
 		{	
 			if (line.empty() || line[0] == '#') continue;
-
-			std::string ipPort = findIpPortKey(generalConfig);
-
 			// std::cout << "Line: " << line << std::endl;
 
 			// Split line into keys and values
@@ -251,10 +248,14 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 		{
 			page.second = normalizeFilePath(page.second, false);
 		}
-
 		parseLocations(serverConfig, locationStrings);
-		_serversConfigsMap[findIpPortKey(generalConfig)].push_back(serverConfig);
-		_serversConfigsMapKeys.push_back(findIpPortKey(generalConfig));
+
+		std::string ipPort = findIpPortKey(generalConfig);
+		_serversConfigsMap[ipPort].push_back(serverConfig);
+
+		if (_serversConfigsMap[ipPort].size() == 1) // only unique keys will be saved
+			_serversConfigsMapKeys.push_back(ipPort);
+
 		i++;
 	}
 	LOG_DEBUG("=== Server in map ===");

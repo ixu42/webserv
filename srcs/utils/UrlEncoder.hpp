@@ -1,29 +1,23 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Uploader.hpp                                       :+:      :+:    :+:   */
+/*   UrlEncoder.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/16 17:53:36 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/19 18:27:46 by vshchuki         ###   ########.fr       */
+/*   Created: 2024/07/19 14:32:13 by vshchuki          #+#    #+#             */
+/*   Updated: 2024/07/19 14:43:33 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include "Client.hpp"
 #include <string>
-#include "../config/Config.hpp"
-#include "../response/Response.hpp"
+#include <map>
+#include <sstream>
 
-class Uploader
-{
-	private:
-		static std::string	extractFromMultiValue(std::string value, std::string field);
-		static std::string	findUploadFormBoundary(Client& client);
-		static std::string	removeQuotes(const std::string& str);
-
+class UrlEncoder {
 	public:
-		static int			handleUpload(Client& client, Location& foundLocation);
+		static std::string encode(const std::string& str);
+		static std::string decode(const std::string& str);
 };

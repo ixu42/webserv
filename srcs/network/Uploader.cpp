@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Uploader.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/16 17:53:36 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/19 17:19:11 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/19 18:27:45 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,24 +22,23 @@
  * For Content-Disposition: form-data; name="file1"; filename="favicon.ico"
  * pass value and field as "filename", it will extract: "favicon.ico"
 */
-std::string Uploader::extractFromMultiValue(std::string value, std::string field)
-{
+std::string Uploader::extractFromMultiValue(const std::string value, const std::string field) {
 	std::string extract;
+	std::regex regex(field + R"(=\"([^\"]*)\")"); // Regex to find field="value" pattern
 
-	value = Utility::replaceWhiteSpaces(value, ' ');
-	std::vector<std::string> splitVec = Utility::splitString(value, " ");
-
-	auto pos = std::find_if(splitVec.begin(), splitVec.end(), [field](const std::string s) {
-		return s.compare(0, 9, field + "=") == 0;
-	});
-
-	if (pos != splitVec.end())
-	{
-		size_t fieldPos = value.find(field);
-		value = value.substr(fieldPos, value.size() - fieldPos);
-		std::vector<std::string> extractSplitVec = Utility::splitString(value, "=");
-		if (extractSplitVec.size() >= 2)
-			extract = extractSplitVec[1];
+	std::smatch match;
+	if (std::regex_search(value, match, regex)) {
+		if (match.size() == 2) {
+			extract = match[1].str(); // Extract the value inside the quotes
+		}
+	} else {
+		// If not found with quotes, try without quotes
+		std::regex regex_no_quotes(field + R"(=([^;]*))"); // Regex to find field=value pattern without quotes
+		if (std::regex_search(value, match, regex_no_quotes)) {
+			if (match.size() == 2) {
+				extract = match[1].str();
+			}
+		}
 	}
 
 	return extract;
@@ -53,7 +52,8 @@ std::string Uploader::findUploadFormBoundary(Client& client)
 	return boundary;
 }
 
-std::string Uploader::removeQuotes(const std::string& str) {
+std::string Uploader::removeQuotes(const std::string& str)
+{
 	std::string result = str;
 	if (!result.empty() && (result.front() == '"' || result.front() == '\'') && result.front() == result.back()) {
 		result.erase(result.begin());

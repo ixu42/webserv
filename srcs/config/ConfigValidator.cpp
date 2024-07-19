@@ -6,14 +6,14 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:11 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/14 02:20:45 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/19 13:02:36 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ConfigValidator.hpp"
 
 // Check if the serverName per ip:port is unique
-int ConfigValidator::validateSeverNamePerIpPort(std::vector<std::string> serverStrings, size_t i, std::map<std::string, std::regex> patterns)
+int ConfigValidator::validateServerNamePerIpPort(std::vector<std::string> serverStrings, size_t i, std::map<std::string, std::regex> patterns)
 {
 	std::string ipAddress = "";
 	std::string port = "";
@@ -161,7 +161,7 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 
 
 	generalConfigErrorsCount += validateMandatoryFields(generalConfig, mandatoryFields, patterns);
-	generalConfigErrorsCount += validateSeverNamePerIpPort(serverStrings, i, patterns);
+	generalConfigErrorsCount += validateServerNamePerIpPort(serverStrings, i, patterns);
 
 	std::istringstream stream(generalConfig); 
 	std::string line;

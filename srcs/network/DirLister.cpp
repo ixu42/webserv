@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/11 23:15:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/11 23:24:12 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/19 14:48:26 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ std::stringstream DirLister::generateDirectoryListingHtml(const std::string& roo
 
 		htmlStream << "<div class=\"file-row\">\n";
 		// Output name
-		htmlStream << "<div class=\"file-cell name\"><a href=\"" << fileName;
+		htmlStream << "<div class=\"file-cell name\"><a href=\"" << UrlEncoder::encode(fileName);
 		if (entry.is_directory())
 			htmlStream << "/";
 		htmlStream << "\">" << fileName;

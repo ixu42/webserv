@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/11 23:16:26 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/11 23:27:24 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/19 14:48:09 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include "../utils/ServerException.hpp"
 #include "../utils/Utility.hpp"
 #include "../config/Config.hpp"
+#include "../utils/UrlEncoder.hpp"
 #include <sstream>	// std::stringstream
 #include <filesystem> // for createDirListResp()
 #include <chrono> // for createDirListResp()

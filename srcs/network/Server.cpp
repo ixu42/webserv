@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/18 03:17:36 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/19 11:54:08 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -204,7 +204,7 @@ bool Server::receiveRequest(t_client& client)
 	}
 
 	LOG_INFO("Request read");
-	std::cout << TEXT_YELLOW << client.requestString.substr(0, 1000) << "\n...\n" << RESET << std::endl;
+	LOG_DEBUG(TEXT_YELLOW, client.requestString.substr(0, 1000), "\n...\n", RESET, "\n");
 	// std::cout << TEXT_YELLOW << client.requestString << RESET << std::endl;
 	// LOG_DEBUG_MULTILINE(TEXT_YELLOW, client.requestString, RESET);
 
@@ -253,7 +253,7 @@ bool Server::sendResponse(t_client& client)
 	LOG_DEBUG(TEXT_GREEN, "client.totalBytesWritten: ", client.totalBytesWritten, RESET);
 	if (bytesWritten == 0 || client.totalBytesWritten == bytesToWrite) // Handle case where write returns 0 (should not happen with regular sockets)
 	{
-		LOG_INFO(TEXT_GREEN, "Response written total: ", client.totalBytesWritten, RESET);
+		LOG_INFO(TEXT_GREEN, "Response written with length: ", client.totalBytesWritten, RESET);
 		return true;
 	}	
 	// else if (client.totalBytesWritten < bytesToWrite)
@@ -419,7 +419,7 @@ void	Server::responder(t_client& client, Server& server)
 	if ((client.response && !client.response->getBody().empty()) || formCGIConfigAbsenceResponse(client, server))
 	{
 		client.state = FINISHED_WRITING;
-		return;	
+		return;
 	}
 	try
 	{
@@ -429,9 +429,9 @@ void	Server::responder(t_client& client, Server& server)
 		{
 			CGIServer::handleCGI(client);
 			client.stateCGI = FORKED;
-			LOG_INFO("cgi switched to forked");
+			LOG_DEBUG("cgi switched to forked");
 		}
-		else
+		else if (client.request->getStartLine()["path"].find("/cgi-bin") == std::string::npos)
 			handleNonCGIResponse(client, server);
 		SessionsManager::handleSessions(client);
 	}
@@ -543,11 +543,11 @@ Location Server::findLocation(Request* req)
 	size_t locationLength = 0;
 	std::string requestPath = req->getStartLine()["path"];
 
-	LOG_INFO("Let's find location for request path: ", requestPath);
-	LOG_INFO("We have locations to check: ", namedServerConfig->locations.size());
+	LOG_DEBUG("Let's find location for request path: ", requestPath);
+	LOG_DEBUG("We have locations to check: ", namedServerConfig->locations.size());
 	for (Location& location : namedServerConfig->locations)
 	{
-		LOG_INFO("Path: ", location.path, " RequestPath: ", requestPath);
+		LOG_DEBUG("Path: ", location.path, " RequestPath: ", requestPath);
 		if (location.path == requestPath)
 		{
 			LOG_INFO("Location found, perfect match: ", location.path);

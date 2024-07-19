@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/18 04:23:21 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/19 12:13:46 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,15 +127,15 @@ void CGIServer::handleParentProcess(t_client& client, const std::string& body)
 void CGIServer::handleProcesses(t_client& client, const std::string& interpreter,
 	const std::vector<std::string>& envVars)
 {
-	pid_t pid = fork();
-	LOG_INFO("forked in handleProcesses");
-	if (pid == -1)
+	client.pid = fork();
+	LOG_DEBUG("forked in handleProcesses");
+	if (client.pid == -1)
 	{
 		closeFds(client);
 		throw ResponseError(500, {}, "Exception (fork) has been thrown in handleParentProcess() "
 			"method of CGIServer class");
 	}
-	else if (pid == 0)
+	else if (client.pid == 0)
 	{
 		LOG_DEBUG("Child started");
 		handleChildProcess(client, interpreter,
@@ -144,13 +144,9 @@ void CGIServer::handleProcesses(t_client& client, const std::string& interpreter
 	else
 	{
 		LOG_DEBUG("Parent started");
-		g_childPids.push_back(pid);
+		g_childPids.push_back(client.pid);
 		handleParentProcess(client, client.request->getBody());
 		// waitpid(pid, nullptr, 0);
-		
-		auto it = std::find(g_childPids.begin(), g_childPids.end(), pid);
-		if (it != g_childPids.end())
-			g_childPids.erase(it);
 	}
 	LOG_INFO(TEXT_GREEN, "CGI script executed", RESET);
 }
@@ -216,11 +212,8 @@ void CGIServer::unregisterCGIPollFd(Server& server, int fd)
 	}), server.getFds()->end());
 }
 
-
 void CGIServer::InitCGI(t_client& client, Server& server)
 {
-	// (void)client;
-	// (void)server;
 	LOG_DEBUG("Initializing CGI");
 	if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
 	{
@@ -234,9 +227,6 @@ void CGIServer::InitCGI(t_client& client, Server& server)
 		LOG_DEBUG("Pipes numbers: ",client.parentPipe[0]," ",client.parentPipe[1]," ",client.childPipe[0]," ",client.childPipe[1]);
 		
 		// fcntlSet(client.childPipe[_in]); // works without non-blocking ??
-		// fcntlSet(client.childPipe[_out]);
-		// fcntlSet(client.parentPipe[_out]);
-		// fcntlSet(client.parentPipe[_in]);
 		
 		registerCGIPollFd(server, client.childPipe[_in], POLLIN);
 		// registerCGIPollFd(server, client.parentPipe[_out], POLLOUT);
@@ -274,21 +264,23 @@ bool CGIServer::readScriptOutput(t_client& client, Server*& server)
 		LOG_DEBUG(TEXT_GREEN, "Populating response body with: ", bytesRead, RESET);
 		oss.write(buffer, bytesRead);
 	}
+	
 	LOG_DEBUG(TEXT_YELLOW, "bytesRead in readScriptOutput: ", bytesRead, RESET);
 
-	// if (bytesRead == -1)
-	// {
-	// 	return false;
-	// }
 	if (bytesRead != 0)
 	{
 		LOG_DEBUG("Still reading from pipe in CGI");
 		return false;
 	}
+	
 	LOG_DEBUG(TEXT_YELLOW, "readScriptOutput read the whole body", RESET);
+	
 	checkResponseHeaders(oss.str(), client.response);
 	close(client.childPipe[_in]);
 	unregisterCGIPollFd(*server, client.childPipe[_in]);
 	
+	auto it = std::find(g_childPids.begin(), g_childPids.end(), client.pid);
+	if (it != g_childPids.end())
+		g_childPids.erase(it);
 	return true;
 }

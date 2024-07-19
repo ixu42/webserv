@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/18 04:21:33 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/19 11:48:23 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -195,7 +195,7 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 			LOG_DEBUG("client.stateCGI ", client.stateCGI);
 			if (ifCGIsFd(client, pfdReadyForRead.fd) && client.stateCGI == FORKED)
 			{
-				LOG_INFO("Now forked and reading");
+				LOG_DEBUG("Now forked and reading");
 				// after forking reading from the file and set lockers for CGIHandler
 				if (CGIServer::readScriptOutput(client, server)) // read in CGI
 				{
@@ -219,66 +219,40 @@ void	ServersManager::handleWrite(int fdReadyForWrite)
 	{
 		for (t_client& client : server->getClients())
 		{
-			// Check in client parentPipe[out], childPipe[in];
-/* 			if (ifCGIsFd(client, fdReadyForWrite) && client.stateCGI == FORKED)
-			{
-				// after forking reading from the file and set lockers for CGIHandler
-				if (CGIServer::readScriptOutput(client)) // read in CGI
-				{
-					client.state = BUILDING;
-					client.stateCGI = FINISHED_SET;
-				}
-			} */
 			if (fdReadyForWrite == client.fd || (ifCGIsFd(client, fdReadyForWrite)))
-			// if (fdReadyForWrite == client.fd)
 			{
-				// if (client.state == READY_TO_WRITE || client.stateCGI == INIT)
-				// if (client.state == READY_TO_WRITE && !ifCGIsFd(client, fdReadyForWrite) && client.childPipe[0] == -1)
 				if (client.state == READY_TO_WRITE && !ifCGIsFd(client, fdReadyForWrite))
 				{
 					server->responder(client, *server); // for CGI only fork, execve, child stuff
 					if (client.childPipe[0] == -1)
 					{
 						client.state = BUILDING;
-						LOG_INFO("client switched to building");
+						LOG_DEBUG("client switched to building");
 					}
 				}
 				if (ifCGIsFd(client, fdReadyForWrite) && client.stateCGI == INIT)
 				{
 					server->responder(client, *server);
-					// client.stateCGI = FORKED;
 				}
 
 				if ((!ifCGIsFd(client, fdReadyForWrite) && client.state == BUILDING)
 					|| (ifCGIsFd(client, fdReadyForWrite) && client.stateCGI == FINISHED_SET))
-				// if (!ifCGIsFd(client, fdReadyForWrite) && client.state == BUILDING)
 				{
 					client.responseString = Response::buildResponse(*client.response);
-					LOG_DEBUG("response: ", client.responseString.substr(0, 500), "\n...\n"); // Can be really huge for huge files and can interrupt the Terminal
+					// Can be really huge for huge files and can interrupt the Terminal
+					LOG_DEBUG("response: ", client.responseString.substr(0, 500), "\n...\n");
 					client.state = WRITING;
-					// client.stateCGI = FINISHED;
 				}
 				if (fdReadyForWrite == client.fd && client.state == WRITING)
 				{
-					LOG_INFO("Sending the response now");
-					// write(client.fd, response.c_str(), response.size());
-
-					// if (findPollfdByFd(client.fd) != nullptr)
-					// {
-					// 	LOG_DEBUG("Set POLLOUT for fd: ", client.fd);
-					// 	findPollfdByFd(client.fd)->events = POLLOUT;
-					// }
-					
+					LOG_DEBUG("Sending the response now");
 					if (server->sendResponse(client))
 						client.state = FINISHED_WRITING;
-						
 				}
 				if (client.state == FINISHED_WRITING && (client.childPipe[0] == -1 || client.stateCGI == FINISHED_SET))
 				{
-				{
-						server->finalizeResponse(client);
-						LOG_INFO("Response sent and connection closed (socket fd: ", client.fd, ")");
-				}
+					server->finalizeResponse(client);
+					LOG_DEBUG("Response sent and connection closed (socket fd: ", client.fd, ")");
 				}
 				fdFound = true;
 				break ;

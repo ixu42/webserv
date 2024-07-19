@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/17 12:10:38 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/19 11:56:48 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ static void signalHandler(int signal)
 	{
 		if (pid > 0)
 		{
-			std::cout << TEXT_MAGENTA << "\n[INFO] Terminating the process with pid [" << pid << "]" << RESET;
+			std::cout << TEXT_MAGENTA << "\n[INFO] Terminating the child process with pid [" << pid << "]" << RESET;
 			kill(pid, SIGTERM);
 		}
 	}

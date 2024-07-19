@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/18 03:25:23 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/19 12:18:14 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,14 +48,13 @@ class CGIServer {
 		static	std::string					readErrorPage(const std::string& errorPagePath);
 		static	void						checkResponseHeaders(const std::string& result, Response* response);
 		static	void						closeFds(t_client& client);
+		static	void						registerCGIPollFd(Server& server, int fd, short events);
+		static	void						unregisterCGIPollFd(Server& server, int fd);
+		static	void						fcntlSet(int fd);
 
 	public:
 		CGIServer()							= delete;
 		static void							handleCGI(t_client& client);
-
-		static	void						registerCGIPollFd(Server& server, int fd, short events);
-		static	void						unregisterCGIPollFd(Server& server, int fd);
 		static	void						InitCGI(t_client& client, Server& server);
-		static	void						fcntlSet(int fd);
 		static	bool						readScriptOutput(t_client& client, Server*& server);
 };

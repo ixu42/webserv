@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/12 15:02:01 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/15 19:47:41 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/19 13:36:53 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,18 +26,18 @@ static const std::vector<std::string> mediaExtensions = {
 		".webm"
 };
 
-void SessionsManager::handleSessions(t_client& client)
+void SessionsManager::handleSessions(Client& client)
 {
-	std::string cookie = client.request->getHeaders()["cookie"];
+	std::string cookie = client.getRequest()->getHeaders()["cookie"];
 
 	checkPermissions();
 	if (isHTMLRequest(client))
 	{
 		if (cookie.empty() || !sessionExistsCheck(cookie))
 		{
-			generateSession(client.request);
+			generateSession(client.getRequest());
 			addSessionToFile(getSession());
-			setSessionToResponse(client.response, getSession());
+			setSessionToResponse(client.getResponse(), getSession());
 		}
 	}
 }
@@ -178,11 +178,11 @@ void SessionsManager::setSessionToResponse(Response* response, std::string& sess
 	response->setHeader("Set-Cookie", sessionData);
 }
 
-bool SessionsManager::isHTMLRequest(t_client& client)
+bool SessionsManager::isHTMLRequest(Client& client)
 {
 	for (const std::string& ext : mediaExtensions)
 	{
-		if (client.request->getStartLine()["path"].find(ext) != std::string::npos)
+		if (client.getRequest()->getStartLine()["path"].find(ext) != std::string::npos)
 		{
 			return false;
 		}

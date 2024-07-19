@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/16 17:53:36 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/19 18:03:25 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/19 18:27:45 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,9 +44,9 @@ std::string Uploader::extractFromMultiValue(const std::string value, const std::
 	return extract;
 }
 
-std::string Uploader::findUploadFormBoundary(t_client& client)
+std::string Uploader::findUploadFormBoundary(Client& client)
 {
-	std::string contentTypeValue = Utility::replaceWhiteSpaces(client.request->getHeaders().at("content-type"), ' ');
+	std::string contentTypeValue = Utility::replaceWhiteSpaces(client.getRequest()->getHeaders().at("content-type"), ' ');
 	std::string boundary = extractFromMultiValue(contentTypeValue, "boundary");
 
 	return boundary;
@@ -62,23 +62,23 @@ std::string Uploader::removeQuotes(const std::string& str)
 	return result;
 }
 
-int Uploader::handleUpload(t_client& client, Location& foundLocation)
+int Uploader::handleUpload(Client& client, Location& foundLocation)
 {
 	LOG_DEBUG("handleUpload() called");
 	size_t filesCreated = 0;
 	// Handle upload from API app (Thunder Client for example)
-	if (client.request->getHeaders().at("content-type") == "application/octet-stream")
+	if (client.getRequest()->getHeaders().at("content-type") == "application/octet-stream")
 	{
 		// check query string for filename
 		LOG_INFO(TEXT_CYAN, "API Client upload...", RESET);
 	}
 	// Handle upload from the HTML form
-	else if (client.request->getHeaders().at("content-type").find("multipart/form-data") != std::string::npos)
+	else if (client.getRequest()->getHeaders().at("content-type").find("multipart/form-data") != std::string::npos)
 	{
 		LOG_INFO(TEXT_CYAN, "HTML Form upload...", RESET);
 		std::string boundary = findUploadFormBoundary(client);
 		LOG_DEBUG(TEXT_GREEN, boundary, RESET);
-		std::string requestBody = Utility::replaceStrInStr(client.request->getBody(), "--" + boundary + "--", "");
+		std::string requestBody = Utility::replaceStrInStr(client.getRequest()->getBody(), "--" + boundary + "--", "");
 		std::vector<std::string> multipartVec = Utility::splitString(requestBody, "--" + boundary);
 
 		for (std::string& part : multipartVec)

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/16 19:23:49 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/19 17:15:08 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,6 @@
 #include "../utils/ServerException.hpp"
 #include "DirLister.hpp"
 #include "Uploader.hpp"
-#include "client.hpp"
 #include <vector>
 #include <string>
 #include <cstring> // memset()
@@ -39,22 +38,15 @@
 
 #include <fstream> //open file
 
-#define FDS 2
-
-struct Pipe {
-	int input[FDS];
-	int output[FDS];
-};
-
 class Server
 {
 	private:
 		Socket						_serverSocket;
 		struct addrinfo				_hints;
 		struct addrinfo*			_res;
-		std::vector<t_client>		_clients;
+		std::vector<Client>			_clients;
 		std::vector<ServerConfig>	_configs;
-		Pipe						_CGIpipes;
+		std::vector<struct pollfd>*	_managerFds;
 
 		int							_port;
 		std::string					_ipAddr;
@@ -65,36 +57,39 @@ class Server
 		~Server();
 
 		void						setConfig(std::vector<ServerConfig> serverConfigs);
+		void						setFds(std::vector<struct pollfd>* fds);
+		
 		int							getServerSockfd();
-		Pipe&						getPipe();
-		std::vector<t_client>&		getClients();
+		std::vector<Client>&		getClients();
 		std::string					getIpAddress();
 		int							getPort();
 		std::vector<ServerConfig>	getConfigs();
+		std::vector<struct pollfd>*	getFds();
 
 		int							accepter();
-		void						handler(Server*& server, t_client& client);
-		void						responder(t_client& client, Server &server);
+		void						handler(Server*& server, Client& client);
+		void						responder(Client& client, Server &server);
 
-		bool						receiveRequest(t_client& client);
-		bool						sendResponse(t_client& client);
-		void						finalizeResponse(t_client& client);
+		// Request*					receiveRequest(int clientSockfd);
+		bool						receiveRequest(Client& client);
+		bool						sendResponse(Client& client);
+		void						finalizeResponse(Client& client);
 
 	private:
 		std::string					whoAmI() const;
 		void						initServer(const char* ipAddr, int port);
-		void						removeFromClients(t_client& client);
+		void						removeFromClients(Client& client);
 
 
-		void						validateRequest(t_client& client);
-
-		bool						formCGIConfigAbsenceResponse(t_client& client, Server &server);
-		void						handleCGIResponse(t_client& client, Server &server);
-		void						handleNonCGIResponse(t_client& client, Server &server);
-		void						checkIfMethodAllowed(t_client& client, Location& foundLocation);
-		void						handleRedirect(t_client& client, Location& foundLocation);
-		int							handleDelete(t_client& client, Location& foundLocation);
-		void						handleStaticFiles(t_client& client, Location& foundLocation);
+		void						validateRequest(Client& client);
+		// bool						formRequestErrorResponse(t_client& client);
+		bool						formCGIConfigAbsenceResponse(Client& client, Server &server);
+		void						handleUpload(Client& client, Location& foundLocation);
+		void						handleNonCGIResponse(Client& client, Server &server);
+		void						checkIfMethodAllowed(Client& client, Location& foundLocation);
+		void						handleRedirect(Client& client, Location& foundLocation);
+		int							handleDelete(Client& client, Location& foundLocation);
+		void						handleStaticFiles(Client& client, Location& foundLocation);
 		Location					findLocation(Request* req);
 		
 		ServerConfig*				findServerConfig(Request* req);

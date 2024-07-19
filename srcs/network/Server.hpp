@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/19 14:23:15 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/19 17:15:08 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@
 #include "../request/Request.hpp"
 #include "../utils/ServerException.hpp"
 #include "DirLister.hpp"
-#include "Client.hpp"
+#include "Uploader.hpp"
 #include <vector>
 #include <string>
 #include <cstring> // memset()
@@ -34,6 +34,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <filesystem>
 
 #include <fstream> //open file
 
@@ -87,6 +88,7 @@ class Server
 		void						handleNonCGIResponse(Client& client, Server &server);
 		void						checkIfMethodAllowed(Client& client, Location& foundLocation);
 		void						handleRedirect(Client& client, Location& foundLocation);
+		int							handleDelete(Client& client, Location& foundLocation);
 		void						handleStaticFiles(Client& client, Location& foundLocation);
 		Location					findLocation(Request* req);
 		

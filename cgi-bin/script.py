@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 import time
 
-time.sleep(5)
+time.sleep(50000)
 
 current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 

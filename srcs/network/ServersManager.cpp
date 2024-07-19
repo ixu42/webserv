@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/19 15:25:00 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/19 17:48:18 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,16 +85,17 @@ ServersManager::~ServersManager()
 	delete _webservConfig;
 }
 
-void ServersManager::initConfig(const char *fileNameString)
+void ServersManager::initConfig(const char *fileNameString, const char*argv0)
 {
-	_webservConfig = new Config(fileNameString);
+	_webservConfig = new Config(fileNameString, argv0);
 }
 
-ServersManager* ServersManager::getInstance()
+ServersManager* ServersManager::getInstance(const char* argv0)
 {
 	// if config is not initialized with initConfig, DEFAULT_CONFIG will be used
 	if (_webservConfig == nullptr)
-		_webservConfig = new Config(DEFAULT_CONFIG); 
+	// if config is not initialized with initConfig, DEFAULT_CONFIG will be used
+		_webservConfig = new Config(DEFAULT_CONFIG, argv0);
 	if (_instance == nullptr)
 		_instance = new ServersManager();
 
@@ -120,13 +121,13 @@ void ServersManager::run()
 		// LOG_DEBUG("Checking pollfds...");
 			if (pfd.revents & POLLIN)
 			{
-				LOG_DEBUG("if POLLIN for fd: ", pfd.fd);
+				// LOG_DEBUG("if POLLIN for fd: ", pfd.fd);
 				handleRead(pfd);
 				// break ; // should it break?
 			}
 			if (pfd.revents & POLLOUT)
 			{
-				LOG_DEBUG("if POLLOUT for fd: ", pfd.fd);
+				// LOG_DEBUG("if POLLOUT for fd: ", pfd.fd);
 				handleWrite(pfd.fd);
 				// break ; // should it break?
 			}
@@ -219,6 +220,7 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 
 void	ServersManager::handleWrite(int fdReadyForWrite)
 {
+	int limitResponseString = 500;
 	bool fdFound = false;
 
 	for (Server*& server : _servers)
@@ -246,7 +248,7 @@ void	ServersManager::handleWrite(int fdReadyForWrite)
 				{
 					client.setResponseString(Response::buildResponse(*client.getResponse()));
 					// Can be really huge for huge files and can interrupt the Terminal
-					LOG_DEBUG("response: ", client.getResponseString().substr(0, 500), "\n...\n");
+					LOG_DEBUG("response: ", client.getResponseString().substr(0, limitResponseString), "\n...\n");
 					client.setState(Client::ClientState::WRITING);
 				}
 				if (fdReadyForWrite == client.getFd() && client.getState() == Client::ClientState::WRITING)
@@ -291,6 +293,8 @@ void	ServersManager::removeClientByFd(int currentFd)
 		{
 		if (it->getFd() == currentFd)
 		{
+			delete it->getRequest();
+			delete it->getResponse();
 			clients.erase(it);
 			break ;
 		}

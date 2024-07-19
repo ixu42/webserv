@@ -1,20 +1,30 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   globals.hpp                                        :+:      :+:    :+:   */
+/*   Uploader.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/19 17:16:12 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/19 17:16:15 by dnikifor         ###   ########.fr       */
+/*   Created: 2024/07/16 17:53:36 by vshchuki          #+#    #+#             */
+/*   Updated: 2024/07/19 17:18:33 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include <vector>
-#include <atomic>
+#include "Client.hpp"
+#include <string>
+#include "../config/Config.hpp"
+#include "../response/Response.hpp"
 
-extern std::vector<pid_t> g_childPids;
-extern std::atomic<bool> g_signalReceived;
-extern const size_t g_bufferSize;
+
+class Uploader
+{
+	private:
+		static std::string	extractFromMultiValue(std::string value, std::string field);
+		static std::string	findUploadFormBoundary(Client& client);
+		static std::string	removeQuotes(const std::string& str);
+
+	public:
+		static int			handleUpload(Client& client, Location& foundLocation);
+};

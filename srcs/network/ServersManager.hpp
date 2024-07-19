@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/19 15:38:39 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/19 17:22:56 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,8 +51,8 @@ class ServersManager
 
 	public:
 		~ServersManager();
-		static ServersManager*		getInstance();
+		static ServersManager*		getInstance(const char* argv0);
 
 		void						run();
-		static void					initConfig(const char *fileNameString);
+		static void					initConfig(const char *fileNameString, const char* argv0);
 };

@@ -6,15 +6,16 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/11 22:06:13 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/17 20:04:13 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Config.hpp"
 
-Config::Config(std::string filePath)
+Config::Config(std::string filePath, const char* argv0)
 {
-	_configString = Utility::readFile(filePath);
+	_argv0 = argv0;
+	_configString = Utility::readFile(normalizeFilePath(filePath, false));
 
 	// std::cout << TEXT_YELLOW;
 	// std::cout << "=== Config file read === " << std::endl;
@@ -42,7 +43,7 @@ void Config::printConfig()
 			LOG_DEBUG(TEXT_YELLOW, "\tport: ", server.port, RESET);
 			LOG_DEBUG(TEXT_YELLOW, "\tserverName: ", server.serverName, RESET);
 			LOG_DEBUG(TEXT_YELLOW, "\tclientMaxBodySize: ", server.clientMaxBodySize, RESET);
-			for (auto& error : server.defaultErrorPages)
+			for (auto& error : server.defaultPages)
 				LOG_DEBUG(TEXT_YELLOW, "\tdefaultError: ", error.first, " ", error.second, RESET);
 			for (auto& error : server.errorPages)
 				LOG_DEBUG(TEXT_YELLOW, "\terror: ", error.first, " ", error.second, RESET);
@@ -220,7 +221,7 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 				std::vector<std::string> errorCodesString = Utility::splitString(value, ",");
 				for (std::string code : errorCodesString)
 				{
-					serverConfig.errorPages[std::stoi(code)] = keyValue[2];
+					serverConfig.errorPages[std::stoi(code)] = normalizeFilePath(keyValue[2], false);
 				}
 			}
 			else if (key == "cgis")
@@ -229,6 +230,10 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 				for (std::string cgi : cgis)
 					serverConfig.cgis[cgi] = true;
 			}
+		}
+		for (auto& page : serverConfig.defaultPages)
+		{
+			page.second = normalizeFilePath(page.second, false);
 		}
 
 		parseLocations(serverConfig, locationStrings);
@@ -246,6 +251,30 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 			LOG_DEBUG("ServerName: ", serverConfig.serverName);
 		}
 	}
+}
+
+
+fs::path Config::getExecutablePath()
+{
+	fs::path executablePath = fs::current_path() / _argv0;
+		
+	if (fs::exists(executablePath)) {
+		return fs::canonical(executablePath).parent_path();
+	}
+
+	// Handle the case where argv0 is an absolute path or relative path
+	executablePath = fs::canonical(_argv0);
+	return executablePath.parent_path();
+}
+
+std::string Config::normalizeFilePath(std::string filePathStr, bool closePath)
+{
+	fs::path filePath(filePathStr);
+	fs::path executableDir = getExecutablePath();
+	fs::path normalizedfilePath = filePath.is_absolute() ? filePath : executableDir / filePath;
+	normalizedfilePath = fs::canonical(normalizedfilePath);
+
+	return closePath ? normalizedfilePath.string() + "/" : normalizedfilePath.string();
 }
 
 void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string> locationStrings)
@@ -277,9 +306,7 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 				else if (key == "redirect")
 					serverConfig.locations[j].redirect = value;
 				else if (key == "root")
-					serverConfig.locations[j].root = value;
-				// else if (key == "uploadPath")
-				// 	serverConfig.locations[j].uploadPath = value;
+					serverConfig.locations[j].root = normalizeFilePath(value, true); // normalize root to absolute
 				else if (key == "upload" && value == "on")
 					serverConfig.locations[j].upload = true;
 				else if (key == "autoindex" && value == "on")
@@ -295,6 +322,7 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 						serverConfig.locations[j].methods[method] = true;
 				}
 			}
+			serverConfig.locations[j].defaultListingTemplate = normalizeFilePath(serverConfig.locations[j].defaultListingTemplate, false);
 			j++;
 		}
 }

@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/19 15:49:17 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/19 17:52:19 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,29 +79,23 @@ int	Server::accepter()
 
 	Client newClient;
 	newClient.setFd(clientSockfd);
-
 	_clients.push_back(newClient);
-	// _clients.push_back((t_client){clientSockfd,
-	// 								nullptr, nullptr,
-	// 								READING,
-	// 								"", 
-	// 								std::numeric_limits<std::size_t>::max(),
-	// 								"", 0});
+
 	return clientSockfd;
 }
 
 int findContentLength(std::string request)
 {
-	std::string contentLength = "content-length: ";
+	std::string contentLength = "content-length:";
 
-	Utility::strToLower(request);
+	request = Utility::strToLower(request);
 	unsigned long contentLengthPos = request.find(contentLength);
 	if (contentLengthPos != std::string::npos)
 	{
 		std::string contentLengthValue = request.substr(contentLengthPos + contentLength.length());
 		int contentLengthValueEnd = contentLengthValue.find("\r\n");
 		contentLengthValue = contentLengthValue.substr(0, contentLengthValueEnd);
-		return std::stoi(contentLengthValue);
+		return std::stoi(Utility::trim(contentLengthValue));
 	}
 	return -1;
 }
@@ -111,7 +105,6 @@ size_t Server::findMaxClientBodyBytes(Request request)
 {
 	ServerConfig* serverConfig = findServerConfig(&request);
 	std::string sizeString = serverConfig->clientMaxBodySize;
-	// std::string sizeString = serverConfig ? serverConfig->clientMaxBodySize : "100M";
 
 	// Parse the numeric part of the string
 	size_t multiplier = 1;
@@ -122,10 +115,13 @@ size_t Server::findMaxClientBodyBytes(Request request)
 	switch (suffix) {
 		case 'G':
 			multiplier *= 1024;
+			[[fallthrough]];
 		case 'M':
 			multiplier *= 1024;
+			[[fallthrough]];
 		case 'K':
 			multiplier *= 1024;
+			[[fallthrough]];
 		case 'B':
 			break;
 		default:
@@ -208,6 +204,7 @@ bool Server::receiveRequest(Client& client)
 	LOG_INFO("Request read");
 	LOG_DEBUG(TEXT_YELLOW, client.getRequestString().substr(0, 1000), "\n...\n", RESET, "\n");
 	// std::cout << TEXT_YELLOW << client.requestString << RESET << std::endl;
+	// int limitRequestString = 2000;
 	// LOG_DEBUG_MULTILINE(TEXT_YELLOW, client.requestString, RESET);
 	return true;
 }
@@ -280,10 +277,19 @@ void	Server::handleNonCGIResponse(Client& client, Server &server)
 	LOG_DEBUG(TEXT_GREEN, "Location: ", foundLocation.path, RESET);
 	
 	checkIfMethodAllowed(client, foundLocation);
+
 	if (foundLocation.redirect != "")
 		handleRedirect(client, foundLocation);
 	else if (foundLocation.upload && client.getRequest()->getStartLine()["method"] == "POST")
-		handleUpload(client, foundLocation);
+	{
+		LOG_INFO("Handling file upload...");
+		client.setResponse(createResponse(client.getRequest(), Uploader::handleUpload(client, foundLocation)));
+	}
+	else if (client.getRequest()->getStartLine()["method"] == "DELETE")
+	{
+		LOG_INFO("Handling file deletion...");
+		client.setResponse(createResponse(client.getRequest(), handleDelete(client, foundLocation)));
+	}
 	else
 		handleStaticFiles(client, foundLocation);
 }
@@ -305,37 +311,6 @@ void	Server::checkIfMethodAllowed(Client& client, Location& foundLocation)
 	}
 }
 
-std::string findUplooadFormBoundary(Client& client)
-{
-	std::string boundary;
-	std::string contentTypeValue = client.getRequest()->getHeaders().at("content-type");
-
-	if (contentTypeValue.find("multipart/form-data") != std::string::npos)
-	{
-		
-	}
-
-	return boundary;
-}
-
-void Server:: handleUpload(Client& client, Location& foundLocation)
-{
-	LOG_INFO("Handling upload...");
-	// // Handle upload from API app (Thunder Client for example)
-	// if (client.request->getHeaders().at("content-type") == "application/octet-stream")
-	// {
-		
-	// }
-	// // Handle upload from the HTML form
-	// else if (client.request->getHeaders())
-	// {
-	// 	/* code */
-	// }
-	
-	(void)foundLocation;
-	(void)client;
-}
-
 void	Server::handleRedirect(Client& client, Location& foundLocation)
 {
 	std::string pagePath = client.getRequest()->getStartLine()["path"].substr(foundLocation.path.length());
@@ -348,6 +323,24 @@ void	Server::handleRedirect(Client& client, Location& foundLocation)
 	LOG_DEBUG("Redirect URL: ", redirectUrl);
 	LOG_DEBUG("Page path: ", pagePath);
 	client.setResponse(createResponse(client.getRequest(), 307, {{"Location", redirectUrl}}));
+}
+
+int Server::handleDelete(Client& client, Location& foundLocation)
+{
+	std::string filePathString = foundLocation.root
+		+ client.getRequest()->getStartLine()["path"].substr(foundLocation.path.length());
+	std::filesystem::path filePath = filePathString;
+
+	if (access(filePathString.c_str(), F_OK) != 0)
+		return 404;
+	else if (access(filePathString.c_str(), W_OK) != 0)
+		return 403;
+	else if (std::filesystem::remove(filePath))
+	{
+		LOG_INFO("File ", filePathString, " deleted successfully.");
+		return 204;
+	}
+	return 500;
 }
 
 void	Server::handleStaticFiles(Client& client, Location& foundLocation)
@@ -418,6 +411,8 @@ void	Server::responder(Client& client, Server& server)
 {
 	LOG_DEBUG("Server::responder() called");
 	// if (formRequestErrorResponse(client)) return; // TODO: remove this line later
+	client.getRequest()->printRequest(); // can flood the Terminal if a file is uploaded
+	
 	if ((client.getResponse() && !client.getResponse()->getBody().empty())
 		|| formCGIConfigAbsenceResponse(client, server))
 	{

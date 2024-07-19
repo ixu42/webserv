@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/19 15:47:00 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/19 17:22:33 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,18 +59,17 @@ int main(int argc, char *argv[])
 	{
 		LOG_ERROR("Too many arguments");
 		LOG_INFO("Usage: ./webserv <config>");
+		LOG_INFO("<config> - absolute path or relative path to the executable directory");
 		return EXIT_FAILURE;
 	}
-
-	// bool serverManagerInstanceCreated = false; // wtf? where is it used?
-
+	
 	try
 	{
-		ServersManager::initConfig(configFile.c_str());
-		ServersManager* manager = ServersManager::getInstance();
-		// serverManagerInstanceCreated = true; // wtf? where is it used?
+		// std::cout << TEXT_MAGENTA << getExecutablePath(argv[0]) << RESET;
+		ServersManager::initConfig(configFile.c_str(), argv[0]);
+		ServersManager* manager = ServersManager::getInstance(argv[0]);
 		manager->run();
-		delete manager->getInstance();
+		delete manager->getInstance(argv[0]);
 	}
 	catch(const ServerException& e)
 	{

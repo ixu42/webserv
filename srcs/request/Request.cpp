@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/15 00:44:39 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/15 16:54:11 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -159,14 +159,16 @@ std::string Request::getBody()
 
 void	Request::printRequest()
 {
+	int limitRequestString = 2000;
+
 	LOG_DEBUG("Request::printRequest() called");
 	for (auto& kv : getStartLine())
 		LOG_DEBUG("Start Line: ", kv.first, " = ", kv.second);
 	for (auto& [key, value] : getHeaders())
 		LOG_DEBUG("Header: ", key, " = ", value);
 	LOG_DEBUG_RAW("[DEBUG] Body: ", "\n");
-	LOG_DEBUG_RAW(getBody().substr(0, 500));
-	LOG_DEBUG_RAW("...\n");
+	LOG_DEBUG_RAW(getBody().substr(0, limitRequestString));
+	LOG_DEBUG_RAW("\n...\n");
 }
 
 // Request should be at least start line, Host, Connection

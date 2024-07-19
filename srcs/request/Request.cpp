@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/19 14:50:59 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/19 20:46:44 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,10 +71,14 @@ void Request::parse(std::string request)
 		{
 			// if (headerLines[i].empty())
 			// 	continue;
-			std::vector<std::string> headerSplit = Utility::splitString(headerLines[i], ": ");
-			std::string key = Utility::strToLower(Utility::trim(headerSplit[0]));
-			std::string value = Utility::trim(headerSplit[1]);
-			_headers[key] = value;
+			size_t colonPos = headerLines[i].find(':');
+			if (colonPos != std::string::npos) {
+				std::string key = headerLines[i].substr(0, colonPos);
+				std::string value = headerLines[i].substr(colonPos + 1);
+				key = Utility::strToLower(Utility::trim(key));
+				value = Utility::trim(value);
+				_headers[key] = value;
+			}
 			// LOG_DEBUG("Header: ", key, " Value: ", value);
 		}
 

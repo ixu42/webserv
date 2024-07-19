@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/17 20:04:13 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/19 20:41:52 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@ Config::Config(std::string filePath, const char* argv0)
 {
 	_argv0 = argv0;
 	_configString = Utility::readFile(normalizeFilePath(filePath, false));
+	_configString = filterOutComments(_configString);
 
 	// std::cout << TEXT_YELLOW;
 	// std::cout << "=== Config file read === " << std::endl;
@@ -25,6 +26,22 @@ Config::Config(std::string filePath, const char* argv0)
 	parse();
 
 	printConfig();
+}
+
+std::string Config::filterOutComments(std::string configString)
+{
+	std::stringstream filteredConfig;
+	std::istringstream stream(configString);
+	std::string line;
+
+	std::regex linePattern(R"(\s*#+.*)");
+	while (std::getline(stream, line))
+	{
+		if (std::regex_match(line, linePattern))
+			continue;
+		filteredConfig << line << "\n";
+	}
+	return filteredConfig.str();
 }
 
 void Config::printConfig()
@@ -184,7 +201,6 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 
 		// Get  server locations string
 		std::vector<std::string> locationStrings(split.begin() + 1, split.end());
-
 		// Reading line by line
 		std::istringstream stream(generalConfig);
 		std::string line;

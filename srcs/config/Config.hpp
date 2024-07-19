@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:20 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/17 20:02:35 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/19 20:39:38 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,6 +85,7 @@ class Config
 		std::vector<std::string>	filterOutInvalidServerStrings(std::vector<std::string> serverStrings);
 		fs::path					getExecutablePath();
 		std::string					normalizeFilePath(std::string rootStr, bool closePath);
+		std::string					filterOutComments(std::string configString);
 
 	public:
 		Config(std::string filePath, const char*argv0);

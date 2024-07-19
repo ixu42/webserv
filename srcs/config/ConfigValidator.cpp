@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:11 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/19 13:02:36 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/19 20:40:49 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -146,7 +146,7 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 	auto [cgisString, cgisCount] = contructCgiString();
 	std::string cgiPatternStr = "\\s*cgis\\s+\\b(" + cgisString + ")(?:,(" + cgisString + ")){0," + std::to_string(cgisCount - 1) +"}\\b\\s*";
 
-	std::regex linePattern(R"((ipAddress|port|serverName|clientMaxBodySize|error|cgis)\s+[a-zA-Z0-9~\-_.,]+\s*[a-zA-Z0-9~\-_.,\/]*\s*)");
+	std::regex linePattern(R"(\s*(ipAddress|port|serverName|clientMaxBodySize|error|cgis|)\s+[a-zA-Z0-9~\-_.,]+\s*[a-zA-Z0-9~\-_.,\/]*\s*)");
 	std::map<std::string, std::regex> patterns = {
 		{"ipAddress", std::regex(R"(\s*ipAddress\s+((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}\s*)")},
 		{"port", std::regex(R"(\s*port\s+[0-9]+\s*)")},
@@ -226,7 +226,7 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 */
 int ConfigValidator::validateLocationConfig(std::string locationString)
 {
-	std::regex linePattern(R"(\s*#*\s*(path|redirect|index|root|methods|upload|autoindex)\s+[a-zA-Z0-9~\-_./,:$]+\s*)");
+	std::regex linePattern(R"(\s*(path|redirect|index|root|methods|upload|autoindex)\s+[a-zA-Z0-9~\-_./,:$]+\s*)");
 	std::map<std::string, std::regex> patterns = {
 		{"path", std::regex(R"(\s*path\s+\/([a-zA-Z0-9_\-~.]+\/?)*([a-zA-Z0-9_\-~.]+\.[a-zA-Z0-9_\-~.]+)?\s*)")},
 		{"index", std::regex(R"(\s*index\s+([^,\s]+(?:\.html|\.htm))\s*)")},

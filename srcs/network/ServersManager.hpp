@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.hpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/19 17:22:56 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/20 01:58:53 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,9 @@ class ServersManager
 		ServersManager(const ServersManager&) = delete;
 		ServersManager& operator=(const ServersManager&) = delete;
 
+		Server*						findNoIpServerByPort(int port);
+		bool						checkUniqueNameServer(ServerConfig& serverConfig, std::vector<ServerConfig>& targetServerconfigs);
+		void						moveServerConfigsToNoIpServer(int port, std::vector<ServerConfig>& serverConfigs);
 		void						handleRead(struct pollfd& pfdReadyForRead);
 		void						handleWrite(int fdReadyForWrite);
 		void						removeFromPollfd(int fd);

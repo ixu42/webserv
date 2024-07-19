@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/19 17:52:19 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/20 01:13:24 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -570,7 +570,7 @@ Location Server::findLocation(Request* req)
  * Getters
 */
 
-std::vector<ServerConfig> Server::getConfigs()
+std::vector<ServerConfig>& Server::getConfigs()
 {
 	return _configs;
 }

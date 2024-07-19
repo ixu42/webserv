@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/19 17:15:08 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/20 01:13:28 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,7 @@ class Server
 		std::vector<Client>&		getClients();
 		std::string					getIpAddress();
 		int							getPort();
-		std::vector<ServerConfig>	getConfigs();
+		std::vector<ServerConfig>&	getConfigs();
 		std::vector<struct pollfd>*	getFds();
 
 		int							accepter();

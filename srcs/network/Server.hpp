@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/22 19:41:45 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/23 01:57:08 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,8 @@
 #include <filesystem>
 
 #include <fstream> //open file
+
+#include <regex> // to match header of chunked request
 
 class Server
 {
@@ -89,6 +91,7 @@ class Server
 
 		void						validateRequest(Client& client);
 		// bool						formRequestErrorResponse(t_client& client);
+		int							findContentLength(std::string request);
 		bool						formCGIConfigAbsenceResponse(Client& client, Server &server);
 		void						handleUpload(Client& client, Location& foundLocation);
 		void						handleNonCGIResponse(Client& client, Server &server);

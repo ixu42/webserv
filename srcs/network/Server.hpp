@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/22 19:35:39 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/22 19:41:45 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,6 +79,7 @@ class Server
 		bool						receiveRequest(Client& client);
 		bool						sendResponse(Client& client);
 		void						finalizeResponse(Client& client);
+		ServerConfig*				findServerConfig(Request* req);
 
 	private:
 		std::string					whoAmI() const;
@@ -99,7 +100,6 @@ class Server
 		void						listCGIFiles();
 		bool						isCGIBinExistAndReadable();
 		
-		ServerConfig*				findServerConfig(Request* req);
 		size_t						findMaxClientBodyBytes(Request request);
 
 		Response*					createResponse(Request* request, int code, std::map<std::string,

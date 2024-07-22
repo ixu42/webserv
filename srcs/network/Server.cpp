@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/22 19:35:40 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/22 20:24:15 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -386,6 +386,7 @@ void	Server::finalizeResponse(Client& client)
 	client.setRequest(nullptr);
 	client.setResponse(nullptr);
 	close(client.getFd());
+	CGIServer::closeFds(client);
 	removeFromClients(client);
 }
 

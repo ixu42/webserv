@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/22 14:27:48 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/22 20:28:27 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ class CGIServer {
 		const static int					_in = 0;
 		const static int					_out = 1;
 
-		static	std::string					determineInterpreter(const std::string& filePath, Server& server);
+		static	std::string					determineInterpreter(Client& client, const std::string& filePath, Server& server);
 		static	std::vector<std::string>	setEnvironmentVariables(Request* request);
 		static	void						handleProcesses(Client& client, const std::string& interpreter,
 												const std::vector<std::string>& envVars);
@@ -46,14 +46,15 @@ class CGIServer {
 												const std::string& filePath, const std::vector<std::string>& envVars);
 		static	void						handleParentProcess(Client& client, const std::string& body);
 		static	void						checkResponseHeaders(const std::string& result, Response* response);
-		static	void						closeFds(Client& client);
 		static	void						registerCGIPollFd(Server& server, int fd, short events);
 		static	void						unregisterCGIPollFd(Server& server, int fd);
-		static	void						fcntlSet(int fd);
+		static	void						changeToErrorState(Client& client);
+		// static	void						fcntlSet(int fd);
 
 	public:
 		CGIServer()							= delete;
 		static void							handleCGI(Client& client, Server& server);
 		static	void						InitCGI(Client& client, Server& server);
 		static	bool						readScriptOutput(Client& client, Server*& server);
+		static	void						closeFds(Client& client);
 };

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/22 18:06:48 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/22 20:28:25 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,17 +19,18 @@ void CGIServer::handleCGI(Client& client, Server& server)
 {
 	LOG_INFO(TEXT_GREEN, "Running CGI", RESET);
 	LOG_DEBUG("handleCGI function started");
-	std::string interpreter = determineInterpreter(client.getRequest()->getStartLine()["path"], server);
+	std::string interpreter = determineInterpreter(client, client.getRequest()->getStartLine()["path"], server);
 	std::vector<std::string> envVars = setEnvironmentVariables(client.getRequest());
 	LOG_DEBUG("Enviroment has been set");
 	handleProcesses(client, interpreter, envVars);
 	LOG_DEBUG("handleCGI function ended");
 }
 
-std::string CGIServer::determineInterpreter(const std::string& filePath, Server& server)
+std::string CGIServer::determineInterpreter(Client& client, const std::string& filePath, Server& server)
 {
 	if (server.getcgiBinFiles().size() == 0)
 	{
+		changeToErrorState(client);
 		throw ResponseError(404, {}, "cgi-bin/ folder is empty or does not exist");
 	}
 
@@ -45,32 +46,41 @@ std::string CGIServer::determineInterpreter(const std::string& filePath, Server&
 	// check if the file exists
 	if (access(fullPath.c_str(), F_OK) != 0)
 	{
+		changeToErrorState(client);
 		throw ResponseError(404, {}, "File does not exist");
 	}
 	// check if the file has read permissions
 	if (access(fullPath.c_str(), R_OK) != 0)
 	{
+		changeToErrorState(client);
 		throw ResponseError(403, {}, "File is not readable");
 	}
 
 	std::string extension = fileName.substr(fileName.find_last_of(".") + 1);
-
-	// return server.mimelist[extension] == "" ? throw ResponseError(404, {}, "Unknown file extension") : server.mimelist[extension];
+	std::string cgiPath = (*(server.findServerConfig(client.getRequest())->cgis))[extension];
 	
-	if (extension == "py")
+	if (cgiPath == "")
 	{
-		LOG_DEBUG("Python specificator found");
-		return _python_interpr;
-	}
-	else if (extension == "php")
-	{
-		LOG_DEBUG("PHP specificator found");
-		return _php_interpr;
-	}
-	else
-	{
+		changeToErrorState(client);
 		throw ResponseError(404, {}, "Unknown file extension");
 	}
+
+	return cgiPath;
+	
+	// if (extension == "py")
+	// {
+	// 	LOG_DEBUG("Python specificator found");
+	// 	return _python_interpr;
+	// }
+	// else if (extension == "php")
+	// {
+	// 	LOG_DEBUG("PHP specificator found");
+	// 	return _php_interpr;
+	// }
+	// else
+	// {
+	// 	throw ResponseError(404, {}, "Unknown file extension");
+	// }
 }
 
 std::vector<std::string> CGIServer::setEnvironmentVariables(Request* request)
@@ -100,6 +110,7 @@ void CGIServer::handleChildProcess(Client& client, const std::string& interprete
 		dup2(client.getChildPipe(_out), STDOUT_FILENO) < 0)
 	{
 		closeFds(client);
+		changeToErrorState(client);
 		throw ResponseError(500, {}, "Exception (dup2) has been thrown in handleChildProcess() "
 			"method of CGIServer class");
 	}
@@ -125,6 +136,7 @@ void CGIServer::handleChildProcess(Client& client, const std::string& interprete
 	execve(interpreter.c_str(), args.data(), envp.data());
 	close(client.getParentPipe(_in));
 	close(client.getChildPipe(_out));
+	changeToErrorState(client);
 	throw ResponseError(500, {}, "Exception (execve) has been thrown in handleChildProcess() "
 		"method of CGIServer class");
 }
@@ -149,6 +161,7 @@ void CGIServer::handleProcesses(Client& client, const std::string& interpreter,
 	if (client.getPid() == -1)
 	{
 		closeFds(client);
+		changeToErrorState(client);
 		throw ResponseError(500, {}, "Exception (fork) has been thrown in handleParentProcess() "
 			"method of CGIServer class");
 	}
@@ -238,6 +251,7 @@ void CGIServer::InitCGI(Client& client, Server& server)
 		client.setResponse(response);
 		if (pipe(client.getParentPipeWhole()) == -1 || pipe(client.getChildPipeWhole()) == -1)
 		{
+			changeToErrorState(client);
 			throw ResponseError(500, {}, "Exception (pipe) has been thrown in InitCGI() "
 				"method of CGIServer class");
 		}
@@ -252,23 +266,23 @@ void CGIServer::InitCGI(Client& client, Server& server)
 	}
 }
 
-void CGIServer::fcntlSet(int fd)
-{
-	LOG_DEBUG("Setting CGI as non-blocking with fd: ", fd);
-	int flags = fcntl(fd, F_GETFL, 0);
-	if (flags < 0)
-	{
-		throw ResponseError(500, {}, "Exception  has been thrown in fcntlSet() "
-			"method of CGIServer class");
-	}
+// void CGIServer::fcntlSet(int fd)
+// {
+// 	LOG_DEBUG("Setting CGI as non-blocking with fd: ", fd);
+// 	int flags = fcntl(fd, F_GETFL, 0);
+// 	if (flags < 0)
+// 	{
+// 		throw ResponseError(500, {}, "Exception  has been thrown in fcntlSet() "
+// 			"method of CGIServer class");
+// 	}
 
-	int ret = fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-	if (ret < 0)
-	{
-		throw ResponseError(500, {}, "Exception  has been thrown in fcntlSet() "
-			"method of CGIServer class");
-	}
-}
+// 	int ret = fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+// 	if (ret < 0)
+// 	{
+// 		throw ResponseError(500, {}, "Exception  has been thrown in fcntlSet() "
+// 			"method of CGIServer class");
+// 	}
+// }
 
 bool CGIServer::readScriptOutput(Client& client, Server*& server)
 {
@@ -302,4 +316,10 @@ bool CGIServer::readScriptOutput(Client& client, Server*& server)
 	if (it != g_childPids.end())
 		g_childPids.erase(it);
 	return true;
+}
+
+void CGIServer::changeToErrorState(Client& client)
+{
+	client.setState(Client::ClientState::BUILDING);
+	client.setCGIState(Client::CGIState::FINISHED_SET);
 }

@@ -1,13 +1,7 @@
 import cgi
 import os
 from datetime import datetime
-# import time
 
-<<<<<<< HEAD:cgi-bin/script.py
-# time.sleep(50000)
-
-=======
->>>>>>> nikkxll/cgi-format-improvements:cgi-bin/default.py
 current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 print("Content-Type: text/html")

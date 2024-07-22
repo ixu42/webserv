@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   SessionsManager.hpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/12 12:23:32 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/19 13:36:07 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/22 21:11:57 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 

@@ -47,8 +47,11 @@ echo <<<HTML
 		<ul>
 HTML;
 
-foreach ($_SERVER as $key => $value) {
-	echo "<li>$key = $value</li>";
+foreach ($_SERVER as $key => $value)
+{
+	if (is_array($value))
+		$value = implode(', ', $value);
+	echo "<li>" . htmlspecialchars($key) . " = " . htmlspecialchars($value) . "</li>";
 }
 
 echo <<<HTML

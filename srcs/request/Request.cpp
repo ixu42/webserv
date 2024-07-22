@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/19 14:50:59 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/22 17:59:05 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,7 @@ void Request::parse(std::string request)
 
  		_startLine["method"] = Utility::trim(startLineSplit[0]);
 		_startLine["path"] = UrlEncoder::decode(Utility::trim(querySplit[0]));
+		_startLine["path_info"] = UrlEncoder::decode(Utility::trim(startLineSplit[1]));
 		_startLine["version"] = Utility::trim(startLineSplit[2]);
 		if (querySplit.size() == 2)
 			_startLine["query"] = Utility::trim(querySplit[1]);

@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/22 14:30:20 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/22 18:06:48 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,7 +82,8 @@ std::vector<std::string> CGIServer::setEnvironmentVariables(Request* request)
 	env.push_back("QUERY_STRING=" + request->getStartLine()["query"]);
 	env.push_back("SCRIPT_NAME=" + request->getStartLine()["path"].erase(0, 1));
 	env.push_back("SERVER_PROTOCOL=" + request->getStartLine()["version"]);
-
+	env.push_back("PATH_INFO=" + request->getStartLine()["path_info"]);
+	
 	if (request->getStartLine()["method"] == "POST")
 	{
 		env.push_back("CONTENT_TYPE=application/x-www-form-urlencoded");

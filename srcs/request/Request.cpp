@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/19 14:50:59 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/22 19:35:49 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ void Request::parse(std::string request)
 		std::string headers = Utility::trim(request.substr(0, emptyLinePosition));
 		std::string body = Utility::trim(request.substr(emptyLinePosition + 2));
 		// Split headers into lines
-		std::vector<std::string> headerLines = Utility::splitString(headers, "\n");
+		std::vector<std::string> headerLines = Utility::splitStr(headers, "\n");
 		LOG_DEBUG("Request::parse() splitting headerLines");
 		
 		// Check if headers are not empty
@@ -52,14 +52,15 @@ void Request::parse(std::string request)
 			return;
 
 		// Parse the start line
-		std::vector<std::string> startLineSplit = Utility::splitString(headerLines[0], " ");
+		std::vector<std::string> startLineSplit = Utility::splitStr(headerLines[0], " ");
 		// Check start line after split
 		if (startLineSplit.size() != 3)
 			return;
-		std::vector<std::string> querySplit = Utility::splitString(startLineSplit[1], "?");
+		std::vector<std::string> querySplit = Utility::splitStr(startLineSplit[1], "?");
 
  		_startLine["method"] = Utility::trim(startLineSplit[0]);
 		_startLine["path"] = UrlEncoder::decode(Utility::trim(querySplit[0]));
+		_startLine["path_info"] = UrlEncoder::decode(Utility::trim(startLineSplit[1]));
 		_startLine["version"] = Utility::trim(startLineSplit[2]);
 		if (querySplit.size() == 2)
 			_startLine["query"] = Utility::trim(querySplit[1]);
@@ -71,10 +72,14 @@ void Request::parse(std::string request)
 		{
 			// if (headerLines[i].empty())
 			// 	continue;
-			std::vector<std::string> headerSplit = Utility::splitString(headerLines[i], ": ");
-			std::string key = Utility::strToLower(Utility::trim(headerSplit[0]));
-			std::string value = Utility::trim(headerSplit[1]);
-			_headers[key] = value;
+			size_t colonPos = headerLines[i].find(':');
+			if (colonPos != std::string::npos) {
+				std::string key = headerLines[i].substr(0, colonPos);
+				std::string value = headerLines[i].substr(colonPos + 1);
+				key = Utility::strToLower(Utility::trim(key));
+				value = Utility::trim(value);
+				_headers[key] = value;
+			}
 			// LOG_DEBUG("Header: ", key, " Value: ", value);
 		}
 

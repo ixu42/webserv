@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/19 18:29:13 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/22 20:36:19 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
 
 std::atomic<bool> g_signalReceived(false);
 std::vector<pid_t> g_childPids;
-const size_t g_bufferSize = 10240;
+const size_t g_bufferSize = 102400;
 
 static void signalHandler(int signal)
 {

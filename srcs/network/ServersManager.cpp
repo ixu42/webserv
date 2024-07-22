@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/19 17:48:18 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/20 01:58:39 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,9 @@ ServersManager::ServersManager()
 			}
 			catch (const std::exception& e)
 			{
-				LOG_DEBUG("Failed to launch server: ", e.what());
+				LOG_ERROR("Failed to launch server: ", e.what());
+				if (errno == EADDRINUSE)
+					moveServerConfigsToNoIpServer(serverConfigs[0].port, serverConfigs);
 			}
 		}
 		if (foundServer)
@@ -83,6 +85,40 @@ ServersManager::~ServersManager()
 		delete server;
 	}
 	delete _webservConfig;
+}
+
+Server* ServersManager::findNoIpServerByPort(int port)
+{
+	for (Server*& server : _servers)
+	{
+		if (server->getIpAddress().empty() && server->getPort() == port)
+			return server;
+	}
+	return nullptr;
+}
+
+
+bool ServersManager::checkUniqueNameServer(ServerConfig& serverConfig, std::vector<ServerConfig>& targetServerconfigs)
+{
+	for (ServerConfig& targetConfig : targetServerconfigs)
+	{
+		if (targetConfig.serverName == serverConfig.serverName)
+			return false;
+	}
+	return true;
+
+}
+void ServersManager::moveServerConfigsToNoIpServer(int port, std::vector<ServerConfig>& serverConfigs)
+{
+	LOG_INFO("Address already in use. All the configs will be moved to the no ip server.");
+	Server* noIpServer = findNoIpServerByPort(port);
+	if (noIpServer == nullptr)
+		return ;
+	for (ServerConfig& serverConfig : serverConfigs)
+	{
+		if (checkUniqueNameServer(serverConfig, noIpServer->getConfigs()))
+			noIpServer->getConfigs().push_back(serverConfig);
+	}
 }
 
 void ServersManager::initConfig(const char *fileNameString, const char*argv0)

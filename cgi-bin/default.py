@@ -1,16 +1,20 @@
-<?php
+import cgi
+import os
+from datetime import datetime
 
-$current_time = date("Y-m-d H:i:s");
+current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-echo <<<HTML
-<!DOCTYPE html>
+print("Content-Type: text/html")
+print()
+
+print(f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>webserv</title>
 	<style>
-		body {
+		body {{
 			font-family: Arial, sans-serif;
 			margin: 0;
 			padding: 0;
@@ -19,42 +23,37 @@ echo <<<HTML
 			align-items: center;
 			height: 100vh;
 			background-color: #f0f0f0;
-		}
-		.container {
+		}}
+		.container {{
 			text-align: center;
-		}
-		h1 {
+		}}
+		h1 {{
 			color: #333;
-		}
-		p {
+		}}
+		p {{
 			color: #666;
-		}
-		span {
+		}}
+		span {{
 			font-weight: bold;
-		}
-		img {
+		}}
+		img {{
 			width: 300px;
 			height: auto;
-		}
+		}}
 	</style>
 </head>
 <body>
 	<div class="container">
-		<h1>&#128187 Welcome to the PHP generated HTML page &#128187</h1>
+		<h1>&#128187 Welcome to the Python-generated HTML page &#128187</h1>
 		<p>Project was made by Hive Helsinki students: <span>ixu</span>, <span>vshchuki</span> and <span>dnikifor</span></p>
-		<p>This is a CGI-ran PHP script</p>
+		<p>This is a CGI-ran Python script</p>
 		<h2>Environment Variables:</h2>
-		<ul>
-HTML;
+		<ul>""")
 
-foreach ($_SERVER as $key => $value) {
-	echo "<li>$key = $value</li>";
-}
+for key, value in os.environ.items():
+    print(f"<li>{key} = {value}</li>")
 
-echo <<<HTML
-		</ul>
+print(f"""		</ul>
 	</div>
 </body>
-</html>
-HTML;
-?>
+</html>""")

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/16 17:53:36 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/19 18:27:45 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/22 16:11:22 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,20 +66,20 @@ int Uploader::handleUpload(Client& client, Location& foundLocation)
 {
 	LOG_DEBUG("handleUpload() called");
 	size_t filesCreated = 0;
-	// Handle upload from API app (Thunder Client for example)
+/* 	// Handle upload from API app (Thunder Client for example)
 	if (client.getRequest()->getHeaders().at("content-type") == "application/octet-stream")
 	{
 		// check query string for filename
 		LOG_INFO(TEXT_CYAN, "API Client upload...", RESET);
-	}
+	} */
 	// Handle upload from the HTML form
-	else if (client.getRequest()->getHeaders().at("content-type").find("multipart/form-data") != std::string::npos)
+	if (client.getRequest()->getHeaders().at("content-type").find("multipart/form-data") != std::string::npos)
 	{
 		LOG_INFO(TEXT_CYAN, "HTML Form upload...", RESET);
 		std::string boundary = findUploadFormBoundary(client);
 		LOG_DEBUG(TEXT_GREEN, boundary, RESET);
 		std::string requestBody = Utility::replaceStrInStr(client.getRequest()->getBody(), "--" + boundary + "--", "");
-		std::vector<std::string> multipartVec = Utility::splitString(requestBody, "--" + boundary);
+		std::vector<std::string> multipartVec = Utility::splitStr(requestBody, "--" + boundary);
 
 		for (std::string& part : multipartVec)
 		{

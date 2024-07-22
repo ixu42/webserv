@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/20 01:13:28 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/22 19:35:39 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@
 #include <signal.h> // signal()
 #include <poll.h> // poll()
 #include <unistd.h> // read(), write(), close()
+#include <dirent.h> // opendir(), readdir(), closedir()
 
 #include <limits> // for max size_t
 
@@ -47,7 +48,9 @@ class Server
 		std::vector<Client>			_clients;
 		std::vector<ServerConfig>	_configs;
 		std::vector<struct pollfd>*	_managerFds;
+		std::vector<std::string>	_cgiBinFiles;
 
+		const char *				_CGIBinFolder = "cgi-bin/";
 		int							_port;
 		std::string					_ipAddr;
 
@@ -65,6 +68,8 @@ class Server
 		int							getPort();
 		std::vector<ServerConfig>&	getConfigs();
 		std::vector<struct pollfd>*	getFds();
+		const char *				getCGIBinFolder();
+		std::vector<std::string>	getcgiBinFiles();
 
 		int							accepter();
 		void						handler(Server*& server, Client& client);
@@ -91,6 +96,8 @@ class Server
 		int							handleDelete(Client& client, Location& foundLocation);
 		void						handleStaticFiles(Client& client, Location& foundLocation);
 		Location					findLocation(Request* req);
+		void						listCGIFiles();
+		bool						isCGIBinExistAndReadable();
 		
 		ServerConfig*				findServerConfig(Request* req);
 		size_t						findMaxClientBodyBytes(Request request);

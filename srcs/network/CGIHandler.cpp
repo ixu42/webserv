@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/19 15:50:00 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/22 14:30:20 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,47 +15,61 @@
 const std::string CGIServer::_python_interpr = "/usr/bin/python3";
 const std::string CGIServer::_php_interpr = "/usr/bin/php";
 
-void CGIServer::handleCGI(Client& client)
+void CGIServer::handleCGI(Client& client, Server& server)
 {
 	LOG_INFO(TEXT_GREEN, "Running CGI", RESET);
 	LOG_DEBUG("handleCGI function started");
-	std::string interpreter = determineInterpreter(client.getRequest()->getStartLine()["path"]);
+	std::string interpreter = determineInterpreter(client.getRequest()->getStartLine()["path"], server);
 	std::vector<std::string> envVars = setEnvironmentVariables(client.getRequest());
 	LOG_DEBUG("Enviroment has been set");
 	handleProcesses(client, interpreter, envVars);
 	LOG_DEBUG("handleCGI function ended");
 }
 
-std::string CGIServer::readErrorPage(const std::string& errorPagePath)
+std::string CGIServer::determineInterpreter(const std::string& filePath, Server& server)
 {
-	std::ifstream file(errorPagePath);
-	
-	if (!file)
+	if (server.getcgiBinFiles().size() == 0)
 	{
-		throw ResponseError(404, {}, "Exception has been thrown in readErrorPage() "
-			"method of CGIServer class");
+		throw ResponseError(404, {}, "cgi-bin/ folder is empty or does not exist");
 	}
-	
-	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-	return content;
-}
 
-std::string CGIServer::determineInterpreter(const std::string& filePath)
-{
-	if (filePath.substr(filePath.find_last_of(".") + 1) == "py")
+	size_t cgiBinPos = filePath.find(server.getCGIBinFolder());
+	size_t fileStart = cgiBinPos + sizeof(server.getCGIBinFolder());
+	size_t fileEnd = filePath.find('/', fileStart);
+	std::string fileName = (fileEnd == std::string::npos) ?
+							filePath.substr(fileStart) :
+							filePath.substr(fileStart, fileEnd - fileStart);
+
+	std::string fullPath = static_cast<std::string>(server.getCGIBinFolder()) + fileName;
+
+	// check if the file exists
+	if (access(fullPath.c_str(), F_OK) != 0)
+	{
+		throw ResponseError(404, {}, "File does not exist");
+	}
+	// check if the file has read permissions
+	if (access(fullPath.c_str(), R_OK) != 0)
+	{
+		throw ResponseError(403, {}, "File is not readable");
+	}
+
+	std::string extension = fileName.substr(fileName.find_last_of(".") + 1);
+
+	// return server.mimelist[extension] == "" ? throw ResponseError(404, {}, "Unknown file extension") : server.mimelist[extension];
+	
+	if (extension == "py")
 	{
 		LOG_DEBUG("Python specificator found");
 		return _python_interpr;
 	}
-	else if (filePath.substr(filePath.find_last_of(".") + 1) == "php")
+	else if (extension == "php")
 	{
 		LOG_DEBUG("PHP specificator found");
 		return _php_interpr;
 	}
 	else
 	{
-		throw ResponseError(404, {}, "Exception has been thrown in determineInterpreter() "
-			"method of CGIServer class");
+		throw ResponseError(404, {}, "Unknown file extension");
 	}
 }
 
@@ -63,6 +77,7 @@ std::vector<std::string> CGIServer::setEnvironmentVariables(Request* request)
 {
 	std::vector<std::string> env;
 
+	// setting the enviroment for cgi
 	env.push_back("REQUEST_METHOD=" + request->getStartLine()["method"]);
 	env.push_back("QUERY_STRING=" + request->getStartLine()["query"]);
 	env.push_back("SCRIPT_NAME=" + request->getStartLine()["path"].erase(0, 1));

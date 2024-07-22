@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/19 17:52:19 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/22 12:38:20 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,9 @@ void	Server::initServer(const char* ipAddr, int port)
 	freeaddrinfo(_res);
 
 	_serverSocket.listenForConnections(10);
-
+	
+	if (isCGIBinExistAndReadable())
+		listCGIFiles();
 }
 
 Server::Server() : _serverSocket(Socket())
@@ -426,7 +428,7 @@ void	Server::responder(Client& client, Server& server)
 		if (client.getRequest()->getStartLine()["path"].find("/cgi-bin")
 			!= std::string::npos && client.getCGIState() == Client::CGIState::INIT)
 		{
-			CGIServer::handleCGI(client);
+			CGIServer::handleCGI(client, server);
 			client.setCGIState(Client::CGIState::FORKED);
 			LOG_DEBUG("cgi switched to forked");
 		}
@@ -566,6 +568,36 @@ Location Server::findLocation(Request* req)
 	return foundLocation;
 }
 
+bool Server::isCGIBinExistAndReadable()
+{
+	if (access(_CGIBinFolder, F_OK) != 0 || access(_CGIBinFolder, R_OK) != 0)
+	{
+		LOG_WARNING("cgi-bin/ directory doesn't exist or forbidden to access");
+		return false;
+	}
+	
+	return true;
+}
+
+void Server::listCGIFiles()
+{
+	struct dirent *entry;
+
+	DIR *dp = opendir(_CGIBinFolder);
+	if (dp == NULL)
+	{
+		throw ResponseError(500, {}, "Error occured on opendir() function");
+	}
+
+	while ((entry = readdir(dp)))
+	{
+		if (entry->d_name[0] != '.')
+			_cgiBinFiles.push_back(entry->d_name);
+	}
+	
+	closedir(dp);
+}
+
 /**
  * Getters
 */
@@ -598,6 +630,16 @@ int Server::getPort()
 std::vector<struct pollfd>* Server::getFds()
 {
 	return _managerFds;
+}
+
+const char * Server::getCGIBinFolder()
+{
+	return _CGIBinFolder;
+}
+
+std::vector<std::string> Server::getcgiBinFiles()
+{
+	return _cgiBinFiles;
 }
 
 /**

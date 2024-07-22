@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/19 21:14:49 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/22 17:21:44 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,8 +64,10 @@ void Config::printConfig()
 				LOG_DEBUG(TEXT_YELLOW, "\tdefaultError: ", error.first, " ", error.second, RESET);
 			for (auto& error : server.errorPages)
 				LOG_DEBUG(TEXT_YELLOW, "\terror: ", error.first, " ", error.second, RESET);
-			for (auto& cgi : server.cgis)
-				LOG_DEBUG(TEXT_YELLOW, "\tcgi: ", cgi.first, " ", std::boolalpha, cgi.second, RESET);
+			// for (auto& cgi : server.cgis)
+			// 	LOG_DEBUG(TEXT_YELLOW, "\tcgi: ", cgi.first, " ", std::boolalpha, cgi.second, RESET);
+			for (auto& [cgi, path] : _cgis)
+				LOG_DEBUG(TEXT_YELLOW, "\t" + cgi + ": " + path, RESET);
 			for (auto& location : server.locations)
 			{
 				LOG_DEBUG(TEXT_YELLOW, TEXT_UNDERLINE, "\tLocation: ", location.path, RESET_UNDERLINE, RESET);
@@ -87,21 +89,20 @@ void Config::printConfig()
 	}
 }
 
-std::vector<std::string> Config::filterOutInvalidServerStrings(std::vector<std::string> serverStrings)
+std::vector<std::string> Config::filterOutInvalidServerStrings(std::vector<std::string> serverStringsVec)
 {
 	int j = 0;
-	// for (std::string server : serverStrings)
-	for (size_t i = 0; i < serverStrings.size();)
+	for (size_t i = 0; i < serverStringsVec.size();)
 	{
 		LOG_DEBUG("Filtering server #", i);
 		std::string generalConfig;
-		if (serverStrings[i].empty())
+		if (serverStringsVec[i].empty())
 		{
-			serverStrings.erase(serverStrings.begin() + i);
+			serverStringsVec.erase(serverStringsVec.begin() + i);
 			continue;
 		}
 		
-		std::vector<std::string> split = Utility::splitString(serverStrings[i], "[location]");
+		std::vector<std::string> split = Utility::splitStr(serverStringsVec[i], "[location]");
 
 		// Get server general config string
 		generalConfig = split[0];
@@ -111,7 +112,7 @@ std::vector<std::string> Config::filterOutInvalidServerStrings(std::vector<std::
 		std::vector<std::string> locationStrings(split.begin() + 1, split.end());
 
 		// Validate general config
-		int configErrorsFound = ConfigValidator::validateGeneralConfig(generalConfig, serverStrings, i);
+		int configErrorsFound = ConfigValidator::validateGeneralConfig(generalConfig, serverStringsVec, i);
 		// Validate locations
 		for (std::string& locationString : locationStrings)
 		{
@@ -123,14 +124,14 @@ std::vector<std::string> Config::filterOutInvalidServerStrings(std::vector<std::
 			// decrease servers vector because config is faulty
 			LOG_WARNING("Server config (server #", j, ") has ", configErrorsFound, " config errors and will be ignored");
 			// _servers.resize(_servers.size() - 1);
-			serverStrings.erase(serverStrings.begin() + i);
+			serverStringsVec.erase(serverStringsVec.begin() + i);
 			j++;
 			continue;
 		}
 		j++;
 		i++;
 	}
-	return serverStrings;
+	return serverStringsVec;
 }
 
 std::string findIpPortKey(std::string generalConfig)
@@ -147,13 +148,13 @@ std::string findIpPortKey(std::string generalConfig)
 		if (std::regex_match(line, ipAddressPattern))
 		{
 			line = Utility::replaceWhiteSpaces(line, ' ');
-			std::vector<std::string> splitLine = Utility::splitString(line, " ");
+			std::vector<std::string> splitLine = Utility::splitStr(line, " ");
 			ipAddress = splitLine[1];
 		}
 		else if (std::regex_match(line, portPattern))
 		{
 			line = Utility::replaceWhiteSpaces(line, ' ');
-			std::vector<std::string> splitLine = Utility::splitString(line, " ");
+			std::vector<std::string> splitLine = Utility::splitStr(line, " ");
 			port = splitLine[1];
 		}
 	}
@@ -164,36 +165,61 @@ void Config::parse()
 {
 	LOG_DEBUG("=== Parsing the config ===");
 
-	/* Check if config has something above the first [server]*/
+	/* Check if config has something above the first [server] */
 	_configString = Utility::trim(_configString);
 	size_t pos = _configString.find("[server]");
+	std::string mainConfig;
+	std::string serversString;
 
 	if (pos == std::string::npos)
 		throw ServerException("Invalid config file format, missing [server] section");
 	if (pos != 0)
-		throw ServerException("Invalid config file format, [server] section should be at the beginning of the file");
+	{
+		mainConfig = _configString.substr(0, pos);
+		// throw ServerException("Invalid config file format, [server] section should be at the beginning of the file");
+	}
+	serversString = _configString.substr(pos);
 
-	std::vector<std::string> serverStrings = Utility::splitString(_configString, "[server]");
+	parseMainConfig(mainConfig);
 
-	// Filter out invalid server configs
-	serverStrings = filterOutInvalidServerStrings(serverStrings);
-
-	parseServers(serverStrings);
+	std::vector<std::string> serverStringsVec = Utility::splitStr(serversString, "[server]");
+	/* Filter out invalid server configs */
+	serverStringsVec = filterOutInvalidServerStrings(serverStringsVec);
+	parseServers(serverStringsVec);
 
 	LOG_INFO("Config file parsed");
 }
 
-void Config::parseServers(std::vector<std::string> serverStrings)
+void Config::parseMainConfig(std::string mainConfig)
+{
+	if (!ConfigValidator::validateMainConfig(mainConfig))
+	{
+		std::istringstream stream(mainConfig);
+		std::string line;
+		std::getline(stream, line); // skip the first line [main]
+		while (std::getline(stream, line))
+		{
+			line = Utility::replaceWhiteSpaces(line, ' ');
+			line = Utility::trim(line);
+			if (line.empty()) continue;
+			std::vector<std::string> lineSplit = Utility::splitStr(line, " ");
+			if (lineSplit.size() == 2)
+				_cgis[lineSplit[0]] = normalizeFilePath(lineSplit[1], false);
+		}
+	}
+}
+
+void Config::parseServers(std::vector<std::string> serverStringsVec)
 {
 
 	int i = 0;
-	for (std::string server : serverStrings)
+	for (std::string server : serverStringsVec)
 	{
 		LOG_DEBUG("Parsing server #", i);
 		ServerConfig serverConfig;
 		std::string generalConfig;
 		
-		std::vector<std::string> split = Utility::splitString(server, "[location]");
+		std::vector<std::string> split = Utility::splitStr(server, "[location]");
 
 		// Get server general config string
 		generalConfig = split[0];
@@ -206,12 +232,13 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 		std::string line;
 		while (std::getline(stream, line))
 		{	
-			if (line.empty() || line[0] == '#') continue;
+			line = Utility::trim(line);
+			if (line.empty()) continue;
 			// std::cout << "Line: " << line << std::endl;
 
 			// Split line into keys and values
 			line = Utility::replaceWhiteSpaces(line, ' ');
-			std::vector<std::string> keyValue = Utility::splitString(line, " ");
+			std::vector<std::string> keyValue = Utility::splitStr(line, " ");
 
 			if (keyValue.size() < 2)
 				throw ServerException("Invalid config file format, missing value for key: " + keyValue[0]);
@@ -231,17 +258,11 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 			else if (key == "error")
 			{
 				// std::cout << "error: " << value << std::endl;
-				std::vector<std::string> errorCodesString = Utility::splitString(value, ",");
+				std::vector<std::string> errorCodesString = Utility::splitStr(value, ",");
 				for (std::string code : errorCodesString)
 				{
 					serverConfig.errorPages[std::stoi(code)] = normalizeFilePath(keyValue[2], false);
 				}
-			}
-			else if (key == "cgis")
-			{
-				std::vector<std::string> cgis = Utility::splitString(value, ",");
-				for (std::string cgi : cgis)
-					serverConfig.cgis[cgi] = true;
 			}
 		}
 		for (auto& page : serverConfig.defaultPages)
@@ -251,6 +272,7 @@ void Config::parseServers(std::vector<std::string> serverStrings)
 		parseLocations(serverConfig, locationStrings);
 
 		std::string ipPort = findIpPortKey(generalConfig);
+		serverConfig.cgis = &_cgis; // assign cgi map to each server config
 		_serversConfigsMap[ipPort].push_back(serverConfig);
 
 		if (_serversConfigsMap[ipPort].size() == 1) // only unique keys will be saved
@@ -306,12 +328,13 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 			std::string line;
 			while (std::getline(stream, line))
 			{	
+				line = Utility::trim(line);
 				if (line.empty()) continue;
 
 				// std::cout << "Line: " << line << std::endl;
 
 				// Split line into keys and values
-				std::vector<std::string> keyValue = Utility::splitString(line, " ");
+				std::vector<std::string> keyValue = Utility::splitStr(line, " ");
 				std::string key = Utility::trim(keyValue[0]);
 				std::string value = Utility::trim(keyValue[1]);
 
@@ -334,7 +357,7 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 				{
 					for (auto& methodPair : serverConfig.locations[j].methods)
 						methodPair.second = false;
-					std::vector<std::string> methods = Utility::splitString(value, ",");
+					std::vector<std::string> methods = Utility::splitStr(value, ",");
 					for (std::string method : methods)
 						serverConfig.locations[j].methods[method] = true;
 				}

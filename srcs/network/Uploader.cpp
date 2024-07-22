@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/16 17:53:36 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/19 20:56:02 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/22 16:11:22 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,7 +79,7 @@ int Uploader::handleUpload(Client& client, Location& foundLocation)
 		std::string boundary = findUploadFormBoundary(client);
 		LOG_DEBUG(TEXT_GREEN, boundary, RESET);
 		std::string requestBody = Utility::replaceStrInStr(client.getRequest()->getBody(), "--" + boundary + "--", "");
-		std::vector<std::string> multipartVec = Utility::splitString(requestBody, "--" + boundary);
+		std::vector<std::string> multipartVec = Utility::splitStr(requestBody, "--" + boundary);
 
 		for (std::string& part : multipartVec)
 		{

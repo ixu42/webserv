@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/20 01:13:24 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/22 17:03:35 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -260,12 +260,14 @@ bool Server::sendResponse(Client& client)
 
 bool	Server::formCGIConfigAbsenceResponse(Client& client, Server& server)
 {
-	if (!server.findServerConfig(client.getRequest())->cgis["php"]
-		&& !server.findServerConfig(client.getRequest())->cgis["py"]
+	// if (!server.findServerConfig(client.getRequest())->cgis["php"]
+	// 	&& !server.findServerConfig(client.getRequest())->cgis["py"]
+	// 	&& client.getRequest()->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
+	// {
+	if (server.findServerConfig(client.getRequest())->cgis->size() < 1
 		&& client.getRequest()->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
 	{
 		client.setResponse(createResponse(client.getRequest(), 404));
-		// finalizeResponse(client);
 		return true;
 	}
 	return false;
@@ -483,7 +485,7 @@ ServerConfig* Server::findServerConfig(Request* req)
 	if(!req || req->getHeaders()["host"].empty())
 		return &_configs[0];
 
-	std::vector<std::string> hostSplit = Utility::splitString(req->getHeaders()["host"], ":");
+	std::vector<std::string> hostSplit = Utility::splitStr(req->getHeaders()["host"], ":");
 
 	std::string reqHost = Utility::trim(hostSplit[0]);
 	std::string reqPort = Utility::trim(hostSplit[1]);

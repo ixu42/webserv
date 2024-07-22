@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/19 20:46:44 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/22 16:11:22 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ void Request::parse(std::string request)
 		std::string headers = Utility::trim(request.substr(0, emptyLinePosition));
 		std::string body = Utility::trim(request.substr(emptyLinePosition + 2));
 		// Split headers into lines
-		std::vector<std::string> headerLines = Utility::splitString(headers, "\n");
+		std::vector<std::string> headerLines = Utility::splitStr(headers, "\n");
 		LOG_DEBUG("Request::parse() splitting headerLines");
 		
 		// Check if headers are not empty
@@ -52,11 +52,11 @@ void Request::parse(std::string request)
 			return;
 
 		// Parse the start line
-		std::vector<std::string> startLineSplit = Utility::splitString(headerLines[0], " ");
+		std::vector<std::string> startLineSplit = Utility::splitStr(headerLines[0], " ");
 		// Check start line after split
 		if (startLineSplit.size() != 3)
 			return;
-		std::vector<std::string> querySplit = Utility::splitString(startLineSplit[1], "?");
+		std::vector<std::string> querySplit = Utility::splitStr(startLineSplit[1], "?");
 
  		_startLine["method"] = Utility::trim(startLineSplit[0]);
 		_startLine["path"] = UrlEncoder::decode(Utility::trim(querySplit[0]));

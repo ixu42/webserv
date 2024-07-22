@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/22 17:21:44 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/22 22:45:09 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -308,12 +308,20 @@ fs::path Config::getExecutablePath()
 
 std::string Config::normalizeFilePath(std::string filePathStr, bool closePath)
 {
-	fs::path filePath(filePathStr);
-	fs::path executableDir = getExecutablePath();
-	fs::path normalizedfilePath = filePath.is_absolute() ? filePath : executableDir / filePath;
-	normalizedfilePath = fs::canonical(normalizedfilePath);
+	try
+	{
+		fs::path filePath(filePathStr);
+		fs::path executableDir = getExecutablePath();
+		fs::path normalizedfilePath = filePath.is_absolute() ? filePath : executableDir / filePath;
+		normalizedfilePath = fs::canonical(normalizedfilePath);
 
-	return closePath ? normalizedfilePath.string() + "/" : normalizedfilePath.string();
+		return closePath ? normalizedfilePath.string() + "/" : normalizedfilePath.string();
+	}
+	catch(const std::exception& e)
+	{
+		LOG_WARNING("File path \"", filePathStr, "\" can not be normalized: ", e.what());
+		return filePathStr;
+	}
 }
 
 void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string> locationStrings)

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/20 01:58:39 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/23 13:39:09 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -169,7 +169,7 @@ void ServersManager::run()
 			}
 			// if (pfd.revents & (POLLERR | POLLHUP | POLLNVAL))
 			// if the page refreshed, device has been disconnected or an error has occurred on the file descriptor
-			if (pfd.revents & (POLLERR | POLLHUP)) 
+			if (pfd.revents & (POLLERR | POLLHUP | POLLNVAL)) 
 			{
 				LOG_DEBUG("Error or hangup on fd: ", pfd.fd);
 				if (pfd.revents & POLLERR )
@@ -178,13 +178,13 @@ void ServersManager::run()
 					LOG_DEBUG("POLLHUP");
 				if (pfd.revents & POLLNVAL)
 					LOG_DEBUG("POLLNVAL");
-				removeClientByFd(pfd.fd);
-				removeFromPollfd(pfd.fd);
 				if (close(pfd.fd) == -1) {
 					LOG_DEBUG("Failed to close fd: ", pfd.fd, " Error: ", strerror(errno));
 				} else {
 					LOG_DEBUG("Closed fd: ", pfd.fd);
 				}
+				removeClientByFd(pfd.fd);
+				removeFromPollfd(pfd.fd);
 			}
 		}
 	}
@@ -206,7 +206,7 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 			// Onlu POLLIN? or both?
 			// _fds.push_back({clientSockfd, POLLIN | POLLERR | POLLHUP | POLLNVAL, 0});
 			// Onlu POLLIN? or both?
-			_fds.push_back({clientSockfd, POLLIN | POLLOUT | POLLERR | POLLHUP, 0}); 
+			_fds.push_back({clientSockfd, POLLIN | POLLOUT | POLLERR | POLLHUP | POLLNVAL, 0}); 
 			break ;
 		}
 		for (Client& client : server->getClients())

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Colors.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:28 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 13:44:06 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/23 12:11:24 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 #define TEXT_CYAN          "\033[36m"
 #define TEXT_WHITE         "\033[37m"
 #define TEXT_BRIGHT_YELLOW "\033[0;93m"
+#define TEXT_GREY          "\033[90m"
 
 // Background color macros
 #define BG_BLACK   "\033[40m"

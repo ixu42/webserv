@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/23 02:01:43 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/23 18:56:39 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,7 +131,7 @@ size_t Server::findMaxClientBodyBytes(Request request)
 		break;
 	}
 
-	return static_cast<std::size_t>(numericValue * multiplier);
+	return static_cast<size_t>(numericValue * multiplier);
 }
 
 // Request* Server::receiveRequest(int clientSockfd)
@@ -140,13 +140,12 @@ bool Server::receiveRequest(Client &client)
 	LOG_DEBUG("Server::receiveRequest called for fd: ", client.getFd());
 	char buffer[g_bufferSize];
 	int bytesRead;
-	// std::string request;
 	int emptyLinePos = -1;
 	int emptyLinesSize = 0;
 
 	std::fill(buffer, buffer + g_bufferSize, 0);
 	bool isHeadersRead = false;
-	std::size_t contentLengthNum = std::string::npos;
+	size_t contentLengthNum = std::string::npos;
 
 	// std::size_t maxClientBodyBytes = std::numeric_limits<std::size_t>::max();
 
@@ -157,6 +156,7 @@ bool Server::receiveRequest(Client &client)
 	// for (int i = 0; i < bytesRead; i++)
 	// 	LOG_DEBUG_RAW(buffer[i], "(", int(buffer[i]), "),");
 	// LOG_DEBUG_RAW("\n");
+
 
 	if (bytesRead < 0)
 		return false;
@@ -179,7 +179,7 @@ bool Server::receiveRequest(Client &client)
 			}
 			// Find maxClientBodySize
 			// only calculate if the value is initial
-			if (client.getMaxClientBodyBytes() == std::numeric_limits<std::size_t>::max())
+			if (client.getMaxClientBodyBytes() == std::numeric_limits<size_t>::max())
 				client.setMaxClientBodyBytes(findMaxClientBodyBytes(Request(client.getRequestString())));
 		}
 

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/23 01:57:08 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/23 18:57:17 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,6 @@ class Server
 		void						handler(Server*& server, Client& client);
 		void						responder(Client& client, Server &server);
 
-		// Request*					receiveRequest(int clientSockfd);
 		bool						receiveRequest(Client& client);
 		bool						sendResponse(Client& client);
 		void						finalizeResponse(Client& client);
@@ -90,10 +89,8 @@ class Server
 
 
 		void						validateRequest(Client& client);
-		// bool						formRequestErrorResponse(t_client& client);
 		int							findContentLength(std::string request);
 		bool						formCGIConfigAbsenceResponse(Client& client, Server &server);
-		void						handleUpload(Client& client, Location& foundLocation);
 		void						handleNonCGIResponse(Client& client, Server &server);
 		void						checkIfMethodAllowed(Client& client, Location& foundLocation);
 		void						handleRedirect(Client& client, Location& foundLocation);

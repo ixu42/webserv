@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/23 17:49:43 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/23 19:15:39 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@ std::string CGIServer::determineInterpreter(Client& client, const std::string& f
 	if (cgiPath == "")
 	{
 		changeToErrorState(client);
-		throw ResponseError(404, {}, "Unknown file extension");
+		throw ResponseError(500, {}, "Unknown file extension");
 	}
 
 	return cgiPath;

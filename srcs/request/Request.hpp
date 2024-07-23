@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:40 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/19 14:51:25 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/23 18:32:03 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,26 +29,22 @@ class Request
 	private:
 		QueryStringParameters	_startLine;
 		QueryStringParameters	_headers;
-		std::string				_body; // ???
+		std::string				_body;
 
-		Location* location;
-
+		/* Unchunk request */
+		size_t					hexStringToSizeT(const std::string &hexStr);
+		std::string				unchunkBody(std::string& body);
+		
 	public:
 		Request();
 		Request(std::string request);
 
 		void					parse(std::string request);
 
-		/* Unchunk request */
-		size_t					hexStringToSizeT(const std::string &hexStr);
-		std::string				unchunkBody(std::string& body);
-
 		/* Getters and setters */
 		QueryStringParameters	getStartLine();
 		QueryStringParameters	getHeaders();
 		std::string				getBody();
-
-		void					setLocation(Location* location);
 
 		void					printRequest();
 };

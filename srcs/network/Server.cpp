@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/22 20:24:15 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/23 18:39:41 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,7 +130,7 @@ size_t Server::findMaxClientBodyBytes(Request request)
 			break;
 	}
 
-	return static_cast<std::size_t>(numericValue * multiplier);
+	return static_cast<size_t>(numericValue * multiplier);
 }
 
 // Request* Server::receiveRequest(int clientSockfd)
@@ -145,9 +145,9 @@ bool Server::receiveRequest(Client& client)
 
 	std::fill(buffer, buffer + g_bufferSize, 0);
 	bool isHeadersRead = false;
-	std::size_t contentLengthNum = std::string::npos;
+	size_t contentLengthNum = std::string::npos;
 
-	// std::size_t maxClientBodyBytes = std::numeric_limits<std::size_t>::max();
+	// size_t maxClientBodyBytes = std::numeric_limits<size_t>::max();
 	
 		bytesRead = read(client.getFd(), buffer, sizeof(buffer));
 		LOG_DEBUG(TEXT_YELLOW, "bytesRead in receiveRequest())): ", bytesRead, RESET);
@@ -181,7 +181,7 @@ bool Server::receiveRequest(Client& client)
 			}
 			// Find maxClientBodySize
 			// only calculate if the value is initial
-			if (client.getMaxClientBodyBytes() == std::numeric_limits<std::size_t>::max())
+			if (client.getMaxClientBodyBytes() == std::numeric_limits<size_t>::max())
 				client.setMaxClientBodyBytes(findMaxClientBodyBytes(Request(client.getRequestString())));
 		}
 

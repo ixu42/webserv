@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/19 12:29:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/22 21:11:43 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/23 18:39:20 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ Client::Client() :
 		_response(nullptr),
 		_state(ClientState::READING),
 		_stateCGI(CGIState::INIT),
-		_maxClientBodyBytes(std::numeric_limits<std::size_t>::max()),
+		_maxClientBodyBytes(std::numeric_limits<size_t>::max()),
 		_totalBytesWritten(0) {}
 
 Client::~Client() {}
@@ -94,7 +94,7 @@ std::string Client::getRequestString()
 	return _requestString;
 }
 
-std::size_t Client::getMaxClientBodyBytes()
+size_t Client::getMaxClientBodyBytes()
 {
 	return _maxClientBodyBytes;
 }
@@ -169,7 +169,7 @@ void Client::setRequestString(const std::string& requestString)
 	_requestString = requestString;
 }
 
-void Client::setMaxClientBodyBytes(std::size_t maxClientBodyBytes)
+void Client::setMaxClientBodyBytes(size_t maxClientBodyBytes)
 {
 	_maxClientBodyBytes = maxClientBodyBytes;
 }

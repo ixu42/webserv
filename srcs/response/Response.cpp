@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/23 13:07:24 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/23 18:39:41 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -197,7 +197,7 @@ void Response::setHeader(const std::string& key, std::string& value)
 	_headers[key] = value;
 }
 
-void Response::appendToBody(char* data, std::size_t length)
+void Response::appendToBody(char* data, size_t length)
 {
 	_body.append(data, length);
 }

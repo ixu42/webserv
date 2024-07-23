@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/19 12:27:08 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/22 21:11:48 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/23 18:40:00 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ class Client
 		ClientState	_state;
 		CGIState	_stateCGI;
 		std::string	_requestString;
-		std::size_t	_maxClientBodyBytes;
+		size_t		_maxClientBodyBytes;
 		std::string	_responseString;
 		size_t		_totalBytesWritten;
 
@@ -68,7 +68,7 @@ class Client
 		ClientState	getState();
 		CGIState	getCGIState();
 		std::string	getRequestString();
-		std::size_t	getMaxClientBodyBytes();
+		size_t		getMaxClientBodyBytes();
 		std::string	getResponseString();
 		size_t		getTotalBytesWritten();
 		
@@ -82,7 +82,7 @@ class Client
 		void		setState(ClientState state);
 		void		setCGIState(CGIState state);
 		void		setRequestString(const std::string& requestString);
-		void		setMaxClientBodyBytes(std::size_t maxClientBodyBytes);
+		void		setMaxClientBodyBytes(size_t maxClientBodyBytes);
 		void		setResponseString(const std::string& responseString);
 		void		setTotalBytesWritten(size_t totalBytesWritten);
 };

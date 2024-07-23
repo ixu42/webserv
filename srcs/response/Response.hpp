@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:51 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/23 18:29:03 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/23 18:39:41 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ class Response
 		std::map<std::string, std::string>	_headers;
 		int									_contentLength = 0;
 
-		void								appendToBody(char* data, std::size_t length);
+		void								appendToBody(char* data, size_t length);
 	public:
 		Response();
 		Response(int code, ServerConfig* serverConfig, std::map<std::string, std::string> optionalHeaders = {});

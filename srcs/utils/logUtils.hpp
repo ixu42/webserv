@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/13 11:05:45 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/23 13:04:43 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/23 18:34:37 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,8 +51,8 @@ void LogDebug(Args... args)
 {
 	std::ostringstream oss;
 	// Fold expression to concatenate all arguments
+	std::cerr << TEXT_WHITE << "[" << getCurrentTime() << "] " << RESET;
 	std::cerr << "[DEBUG] ";
-	std::cerr << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
 	(oss << ... << args);
 	std::cerr << oss.str() << std::endl;
 }
@@ -61,8 +61,8 @@ template<typename... Args>
 void LogDebugMultiline(Args... args)
 {
 	std::ostringstream oss;
+	std::cerr << TEXT_WHITE << "[" << getCurrentTime() << "] " << RESET;
 	std::cerr << "[DEBUG] ";
-	std::cerr << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
 	(oss << ... << args);
 	std::cerr << std::endl << oss.str() << std::endl;
 }
@@ -71,7 +71,7 @@ template<typename... Args>
 void LogDebugRaw(Args... args)
 {
 	std::ostringstream oss;
-	oss << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
+	oss << TEXT_WHITE << "[" << getCurrentTime() << "] " << RESET;
 	// Fold expression to print all arguments
 	(std::cerr << ... << args);
 }
@@ -80,8 +80,8 @@ template<typename... Args>
 void LogInfo(Args... args)
 {
 	std::ostringstream oss;
+	std::cout << TEXT_WHITE << "[" << getCurrentTime() << "] " << RESET;
 	std::cout << TEXT_CYAN << "[INFO] " << RESET;
-	std::cout << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
 	(oss << ... << args);
 	std::cout << TEXT_CYAN << oss.str() << RESET << std::endl;
 }
@@ -90,8 +90,8 @@ template<typename... Args>
 void LogWarning(Args... args)
 {
 	std::ostringstream oss;
+	std::cout << TEXT_WHITE << "[" << getCurrentTime() << "] " << RESET;
 	std::cout << TEXT_BRIGHT_YELLOW << "[WARNING] " << RESET;
-	std::cout << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
 	(oss << ... << args);
 	std::cout << TEXT_BRIGHT_YELLOW << oss.str() << RESET << std::endl;
 }
@@ -100,8 +100,8 @@ template<typename... Args>
 void LogError(Args... args)
 {
 	std::ostringstream oss;
+	std::cout << TEXT_WHITE << "[" << getCurrentTime() << "] " << RESET;
 	std::cout << TEXT_RED << "[ERROR] " << RESET;
-	std::cout << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
 	(oss << ... << args);
 	std::cout << TEXT_RED << oss.str() << RESET << std::endl;
 }

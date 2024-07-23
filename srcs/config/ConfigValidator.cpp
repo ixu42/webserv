@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:11 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/22 17:17:41 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/23 18:29:02 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,7 +119,6 @@ int ConfigValidator::validateMandatoryFields(std::string str,
 
 int ConfigValidator::validateMainConfig(std::string mainConfig)
 {
-	// std::cout << mainConfig << std::endl;
 	std::regex cgiPattern(R"(\s*[a-z]+\s+(\.\.\/|\/)*([a-zA-Z0-9-_~.]+(\/[a-zA-Z0-9-_~.]+))*\s*)");
 	int errorsCount = 0;
 	int cgisCount = 0;
@@ -131,8 +130,7 @@ int ConfigValidator::validateMainConfig(std::string mainConfig)
 	{
 		line = Utility::trim(line);
 		if (line.empty()) continue;
-		// std::cout << line << std::endl;
-		// std::cout << lineCount << std::endl;
+
 		if (lineCount == 0)
 		{
 			if (line == "[main]")
@@ -171,14 +169,13 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 {
 	int generalConfigErrorsCount = 0;
 
-	std::regex linePattern(R"(\s*(ipAddress|port|serverName|clientMaxBodySize|error|cgis|)\s+[a-zA-Z0-9~\-_.,]+\s*[a-zA-Z0-9~\-_.,\/]*\s*)");
+	std::regex linePattern(R"(\s*(ipAddress|port|serverName|clientMaxBodySize|error|cgis|)\s+[a-zA-Z0-9~\-_.,]+\s*[a-zA-Z0-9~\-_.,\/"' ]*\s*)");
 	std::map<std::string, std::regex> patterns = {
 		{"ipAddress", std::regex(R"(\s*ipAddress\s+((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}\s*)")},
 		{"port", std::regex(R"(\s*port\s+[0-9]+\s*)")},
 		{"serverName", std::regex(R"(\s*serverName\s+(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\s*)")},
 		{"clientMaxBodySize", std::regex(R"(\s*clientMaxBodySize\s+[1-9]+[0-9]*(G|M|K|B))")},
-		{"error", std::regex(R"(\s*error\s+[4-5][0-9]{2}(?:,[4-5][0-9]{2})*\s+([^,\s]+(?:\.html|\.htm))\s*)")},
-		// {"cgis",std::regex(cgiPatternStr)},
+		{"error", std::regex(R"(\s*error\s+[4-5][0-9]{2}(?:,[4-5][0-9]{2})*\s+((["'])*[^,]+(?:\.html|\.htm)(\2)*)\s*)")}
 	};
 
 	std::vector<std::string> oneAllowed = {"ipAddress", "port", "serverName", "clientMaxBodySize"};
@@ -227,7 +224,7 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 						break;
 					}
 				}
-				else if ((pattern.first == "error" || pattern.first == "cgis") && (errorCaught = checkUnique(line)) == 1)
+				else if (pattern.first == "error" && (errorCaught = checkUnique(line)) == 1)
 				{
 					generalConfigErrorsCount++;
 					break;
@@ -251,13 +248,17 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 */
 int ConfigValidator::validateLocationConfig(std::string locationString)
 {
-	std::regex linePattern(R"(\s*(path|redirect|index|root|methods|upload|autoindex)\s+[a-zA-Z0-9~\-_./,:$]+\s*)");
+	// linePattern is more broad and should have characters from more specific cases
+	std::regex linePattern(R"(\s*(path|redirect|index|root|methods|upload|autoindex)\s+[a-zA-Z0-9~\-_./,:$"' ]+\s*)");
 	std::map<std::string, std::regex> patterns = {
 		{"path", std::regex(R"(\s*path\s+\/([a-zA-Z0-9_\-~.]+\/?)*([a-zA-Z0-9_\-~.]+\.[a-zA-Z0-9_\-~.]+)?\s*)")},
 		{"index", std::regex(R"(\s*index\s+([^,\s]+(?:\.html|\.htm))\s*)")},
 		{"redirect", std::regex(R"(\s*redirect\s+((\w+:(\/\/[^\/\s]+)?[^\s]*)|(\/([a-zA-Z0-9-_~.]*\/)))\s*)")},
-		{"root", std::regex(R"(\s*root\s+(\.\.\/|\/)*([a-zA-Z0-9-_~.]*\/)*\s*)")}, 
-		// {"uploadPath", std::regex(R"(\s*uploadPath\s+\/([a-zA-Z0-9-_~.]*\/)*\s*)")}, // remove later
+		// {"root", std::regex(R"(\s*root\s+(\.\.\/|\/)*([a-zA-Z0-9-_~. ]+\/)+\s*)")},
+		// {"root", std::regex(R"(\s*root\s+(?:(\.\.\/|\/)*([a-zA-Z0-9-_~. ]*\/)*\s*|(['"])((?:\.\.\/|\/)*([a-zA-Z0-9-_~. ]*\/)*\3)\s*))")},
+
+		{"root", std::regex(R"(\s*root\s+(['"]*)((?:\.\.\/|\/)*([a-zA-Z0-9-_~. ]+\/)+\1)\s*)")},
+
 		{"upload", std::regex(R"(\s*upload\s+(on|off)\s*)")},
 		{"methods", std::regex(R"(\s*methods\s+(get|post|delete)(,(get|post|delete)){0,2}\s*)")},
 		{"autoindex", std::regex(R"(\s*autoindex\s+(on|off)\s*)")},

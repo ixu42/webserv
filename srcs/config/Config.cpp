@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/22 17:21:44 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/23 18:39:37 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,11 +48,12 @@ void Config::printConfig()
 {
 	LOG_DEBUG(TEXT_YELLOW, "=== Printing parsed config ===", RESET);
 	int i = 0;
-	for (auto& key : _serversConfigsMapKeys) // also should go through the map of configs
+	for (auto& key : _serversConfigsMapKeys) 
 	{
 		std::vector<ServerConfig> serversConfigs = _serversConfigsMap[key];
 		int j = 0;
 		LOG_DEBUG(BG_YELLOW, TEXT_BLACK, TEXT_BOLD, "Server #", i, RESET);
+		// For each ip server go through name server configs:
 		for (ServerConfig server : serversConfigs)
 		{
 			LOG_DEBUG(TEXT_BOLD, TEXT_UNDERLINE, TEXT_YELLOW,"Named Server #", j, RESET);
@@ -64,8 +65,6 @@ void Config::printConfig()
 				LOG_DEBUG(TEXT_YELLOW, "\tdefaultError: ", error.first, " ", error.second, RESET);
 			for (auto& error : server.errorPages)
 				LOG_DEBUG(TEXT_YELLOW, "\terror: ", error.first, " ", error.second, RESET);
-			// for (auto& cgi : server.cgis)
-			// 	LOG_DEBUG(TEXT_YELLOW, "\tcgi: ", cgi.first, " ", std::boolalpha, cgi.second, RESET);
 			for (auto& [cgi, path] : _cgis)
 				LOG_DEBUG(TEXT_YELLOW, "\t" + cgi + ": " + path, RESET);
 			for (auto& location : server.locations)
@@ -73,7 +72,6 @@ void Config::printConfig()
 				LOG_DEBUG(TEXT_YELLOW, TEXT_UNDERLINE, "\tLocation: ", location.path, RESET_UNDERLINE, RESET);
 				LOG_DEBUG(TEXT_YELLOW, "\t\tredirect: ", location.redirect, RESET);
 				LOG_DEBUG(TEXT_YELLOW, "\t\troot: ", location.root, RESET);
-				// LOG_DEBUG(TEXT_YELLOW, "\t\tuploadPath: ", location.uploadPath, RESET); // remove, now handled with upload
 				LOG_DEBUG(TEXT_YELLOW, "\t\tupload: ", location.upload, RESET);
 				LOG_DEBUG(TEXT_YELLOW, "\t\tautoindex: ", std::boolalpha, location.autoindex, RESET);
 				LOG_DEBUG(TEXT_YELLOW, "\t\tindex: ", location.index, RESET);
@@ -237,13 +235,23 @@ void Config::parseServers(std::vector<std::string> serverStringsVec)
 			// std::cout << "Line: " << line << std::endl;
 
 			// Split line into keys and values
-			line = Utility::replaceWhiteSpaces(line, ' ');
-			std::vector<std::string> keyValue = Utility::splitStr(line, " ");
+			std::string::const_iterator keyEndPos = std::find_if(line.begin(), line.end(), [](int c){
+				return std::isspace(c);
+			});
+			std::string key = Utility::trim(std::string(line.cbegin(), keyEndPos));
+			line = Utility::trim(std::string(keyEndPos, line.cend()));
+			std::string::const_iterator valueEndPos = std::find_if(line.begin(), line.end(), [](int c){
+				return std::isspace(c);
+			});
+			std::string value = std::string(line.cbegin(), valueEndPos);
+			std::string value2 = Utility::trimChars(Utility::trim(std::string(valueEndPos, line.cend())), "\"'");
 
-			if (keyValue.size() < 2)
-				throw ServerException("Invalid config file format, missing value for key: " + keyValue[0]);
-			std::string key = keyValue[0];
-			std::string value = keyValue[1];
+			// line = Utility::replaceWhiteSpaces(line, ' ');
+			// std::vector<std::string> keyValue = Utility::splitStr(line, " ");
+
+			// if (keyValue.size() < 2)
+			if (value.empty())
+				throw ServerException("Invalid config file format, missing value for key: " + key);
 			
 			if (key == "ipAddress")
 				serverConfig.ipAddress = value;
@@ -261,7 +269,7 @@ void Config::parseServers(std::vector<std::string> serverStringsVec)
 				std::vector<std::string> errorCodesString = Utility::splitStr(value, ",");
 				for (std::string code : errorCodesString)
 				{
-					serverConfig.errorPages[std::stoi(code)] = normalizeFilePath(keyValue[2], false);
+					serverConfig.errorPages[std::stoi(code)] = normalizeFilePath(value2, false);
 				}
 			}
 		}
@@ -308,12 +316,20 @@ fs::path Config::getExecutablePath()
 
 std::string Config::normalizeFilePath(std::string filePathStr, bool closePath)
 {
-	fs::path filePath(filePathStr);
-	fs::path executableDir = getExecutablePath();
-	fs::path normalizedfilePath = filePath.is_absolute() ? filePath : executableDir / filePath;
-	normalizedfilePath = fs::canonical(normalizedfilePath);
+	try
+	{
+		fs::path filePath(filePathStr);
+		fs::path executableDir = getExecutablePath();
+		fs::path normalizedfilePath = filePath.is_absolute() ? filePath : executableDir / filePath;
+		normalizedfilePath = fs::canonical(normalizedfilePath);
 
-	return closePath ? normalizedfilePath.string() + "/" : normalizedfilePath.string();
+		return closePath ? normalizedfilePath.string() + "/" : normalizedfilePath.string();
+	}
+	catch(const std::exception& e)
+	{
+		LOG_WARNING("File path \"", filePathStr, "\" can not be normalized: ", e.what());
+		return filePathStr;
+	}
 }
 
 void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string> locationStrings)
@@ -334,9 +350,17 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 				// std::cout << "Line: " << line << std::endl;
 
 				// Split line into keys and values
-				std::vector<std::string> keyValue = Utility::splitStr(line, " ");
-				std::string key = Utility::trim(keyValue[0]);
-				std::string value = Utility::trim(keyValue[1]);
+				std::string::const_iterator keyEndPos = std::find_if(line.begin(), line.end(), [](int c){
+					return std::isspace(c);
+				});
+				std::string key = Utility::trim(std::string(line.cbegin(), keyEndPos));
+				std::string value = Utility::trimChars(Utility::trim(std::string(keyEndPos, line.cend())), "\"'");
+
+				
+				// std::cout << TEXT_RED << value << RESET << std::endl;
+				// std::vector<std::string> keyValue = Utility::splitStr(line, " ");
+				// std::string key = Utility::trim(keyValue[0]);
+				// std::string value = Utility::trim(keyValue[1]);
 
 				if (key == "path")
 				{

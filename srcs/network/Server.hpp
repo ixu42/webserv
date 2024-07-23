@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/22 21:11:50 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/23 18:57:17 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,8 @@
 #include <filesystem>
 
 #include <fstream> //open file
+
+#include <regex> // to match header of chunked request
 
 class Server
 {
@@ -75,7 +77,6 @@ class Server
 		void						handler(Server*& server, Client& client);
 		void						responder(Client& client, Server &server);
 
-		// Request*					receiveRequest(int clientSockfd);
 		bool						receiveRequest(Client& client);
 		bool						sendResponse(Client& client);
 		void						finalizeResponse(Client& client);
@@ -88,9 +89,8 @@ class Server
 
 
 		void						validateRequest(Client& client);
-		// bool						formRequestErrorResponse(t_client& client);
+		int							findContentLength(std::string request);
 		bool						formCGIConfigAbsenceResponse(Client& client, Server &server);
-		void						handleUpload(Client& client, Location& foundLocation);
 		void						handleNonCGIResponse(Client& client, Server &server);
 		void						checkIfMethodAllowed(Client& client, Location& foundLocation);
 		void						handleRedirect(Client& client, Location& foundLocation);

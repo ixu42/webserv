@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/18 19:37:08 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/23 18:39:41 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,7 +89,7 @@ Response::Response(int code, ServerConfig* serverConfig, std::map<std::string, s
 	}
 	else if (defaultIt != serverConfig->defaultPages.end())
 	{
-		std::cout << TEXT_GREEN << "default page found" << std::endl;
+		LOG_DEBUG(TEXT_GREEN, "default page found", RESET);
 		errorPagePath = serverConfig->defaultPages[code];
 	}
 	*this = Response(code, errorPagePath, optionalHeaders);
@@ -197,7 +197,7 @@ void Response::setHeader(const std::string& key, std::string& value)
 	_headers[key] = value;
 }
 
-void Response::appendToBody(char* data, std::size_t length)
+void Response::appendToBody(char* data, size_t length)
 {
 	_body.append(data, length);
 }
@@ -224,9 +224,9 @@ std::string Response::buildResponse(Response& response)
 	{
 
 		responseNew << headerKey << ": " << headerValue << "\r\n";
-		LOG_INFO("headerKey: ", headerKey, ", headerValue: ", headerValue);
+		LOG_DEBUG("headerKey: ", headerKey, ", headerValue: ", headerValue);
 	}
-	LOG_INFO("response so far: ", responseNew.str());
+	LOG_DEBUG("response so far: ", responseNew.str());
 	responseNew << "\r\n";
 
 	/* Not adding extra line if body is empty*/

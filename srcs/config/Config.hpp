@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:20 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/22 17:07:38 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/23 15:00:39 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,9 @@
 #include <sstream>
 
 #include <filesystem>  // getExecutablePath
+
+#include <algorithm>
+#include <cctype>
 
 namespace fs = std::filesystem;
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/22 20:36:19 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/23 12:22:14 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,11 +32,15 @@ static void signalHandler(int signal)
 	{
 		if (pid > 0)
 		{
-			std::cout << TEXT_MAGENTA << "\n[INFO] Terminating the child process with pid [" << pid << "]" << RESET;
+			std::cout << TEXT_MAGENTA << "\n[INFO] " << RESET;
+			std::cout << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
+			std::cout << TEXT_MAGENTA << "Terminating the child process with pid [" << pid << "]" << RESET;
 			kill(pid, SIGTERM);
 		}
 	}
-	std::cout << TEXT_MAGENTA << "\n[INFO] Shutting down the server(s)..." << RESET << std::endl;
+	std::cout << TEXT_MAGENTA << "\n[INFO] " << RESET;
+	std::cout << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
+	std::cout << TEXT_MAGENTA << "Shutting down the server(s)..." << RESET << std::endl;
 }
 
 int main(int argc, char *argv[])

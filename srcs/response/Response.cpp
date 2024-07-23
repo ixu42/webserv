@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/18 19:37:08 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/23 12:23:51 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -224,9 +224,9 @@ std::string Response::buildResponse(Response& response)
 	{
 
 		responseNew << headerKey << ": " << headerValue << "\r\n";
-		LOG_INFO("headerKey: ", headerKey, ", headerValue: ", headerValue);
+		LOG_DEBUG("headerKey: ", headerKey, ", headerValue: ", headerValue);
 	}
-	LOG_INFO("response so far: ", responseNew.str());
+	LOG_DEBUG("response so far: ", responseNew.str());
 	responseNew << "\r\n";
 
 	/* Not adding extra line if body is empty*/

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   logUtils.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/13 11:05:45 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/08 13:50:23 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/23 12:17:04 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 
 #include <iostream>
 #include <sstream>
+#include <chrono>
+#include <iomanip>
 #include "Colors.hpp"
 
 /**
@@ -30,11 +32,26 @@
  * Simple data types or objects can be passed as args, not function template such as std::endl
  */
 
+inline std::string getCurrentTime()
+{
+	auto now = std::chrono::system_clock::now();
+	std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
+	std::tm now_tm;
+	
+	localtime_r(&now_time_t, &now_tm);
+	
+	std::ostringstream oss;
+	oss << std::put_time(&now_tm, "%Y-%m-%d %H:%M:%S");
+	
+	return oss.str();
+}
+
 template<typename... Args>
 void LogDebug(Args... args)
 {
 	std::ostringstream oss;
 	// Fold expression to concatenate all arguments
+	oss << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
 	(oss << ... << args);
 	std::cerr << "[DEBUG] " << oss.str() << std::endl;
 }
@@ -43,6 +60,7 @@ template<typename... Args>
 void LogDebugMultiline(Args... args)
 {
 	std::ostringstream oss;
+	oss << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
 	(oss << ... << args);
 	std::cerr << "[DEBUG] " << std::endl << oss.str() << std::endl;
 }
@@ -51,6 +69,7 @@ template<typename... Args>
 void LogDebugRaw(Args... args)
 {
 	std::ostringstream oss;
+	oss << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
 	// Fold expression to print all arguments
 	(std::cerr << ... << args);
 }
@@ -59,6 +78,7 @@ template<typename... Args>
 void LogInfo(Args... args)
 {
 	std::ostringstream oss;
+	oss << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
 	(oss << ... << args);
 	std::cout << TEXT_CYAN << "[INFO] " << oss.str() << RESET << std::endl;
 }
@@ -67,6 +87,7 @@ template<typename... Args>
 void LogWarning(Args... args)
 {
 	std::ostringstream oss;
+	oss << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
 	(oss << ... << args);
 	std::cout << TEXT_BRIGHT_YELLOW << "[WARNING] " << oss.str() << RESET << std::endl;
 }
@@ -75,6 +96,7 @@ template<typename... Args>
 void LogError(Args... args)
 {
 	std::ostringstream oss;
+	oss << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
 	(oss << ... << args);
 	std::cout << TEXT_RED << "[ERROR] " << oss.str() << RESET << std::endl;
 }

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/22 20:28:25 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/23 17:49:43 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -298,7 +298,7 @@ bool CGIServer::readScriptOutput(Client& client, Server*& server)
 		oss.write(buffer, bytesRead);
 	}
 	
-	LOG_DEBUG(TEXT_YELLOW, "bytesRead in readScriptOutput: ", bytesRead, RESET);
+	LOG_INFO(TEXT_YELLOW, "bytesRead in readScriptOutput: ", bytesRead, RESET);
 
 	if (bytesRead != 0)
 	{

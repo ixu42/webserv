@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:11:26 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/22 16:11:22 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/23 15:04:38 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ class Utility
 	public:
 		static std::string								replaceWhiteSpaces(std::string str, char newChar);
 		static std::string								trim(std::string str);
+		static std::string								trimChars(std::string str, std::string chars);
 		static std::vector<std::string>					splitStr(const std::string &str, const std::string &delimiter);
 		static std::string								strToLower(std::string str);
 		static std::string								strToUpper(std::string str);

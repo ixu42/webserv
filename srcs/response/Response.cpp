@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/23 12:23:51 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/23 13:07:24 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,7 +89,7 @@ Response::Response(int code, ServerConfig* serverConfig, std::map<std::string, s
 	}
 	else if (defaultIt != serverConfig->defaultPages.end())
 	{
-		std::cout << TEXT_GREEN << "default page found" << std::endl;
+		LOG_DEBUG(TEXT_GREEN, "default page found", RESET);
 		errorPagePath = serverConfig->defaultPages[code];
 	}
 	*this = Response(code, errorPagePath, optionalHeaders);

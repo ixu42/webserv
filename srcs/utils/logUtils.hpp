@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/13 11:05:45 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/23 12:17:04 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/23 13:04:43 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,18 +51,20 @@ void LogDebug(Args... args)
 {
 	std::ostringstream oss;
 	// Fold expression to concatenate all arguments
-	oss << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
+	std::cerr << "[DEBUG] ";
+	std::cerr << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
 	(oss << ... << args);
-	std::cerr << "[DEBUG] " << oss.str() << std::endl;
+	std::cerr << oss.str() << std::endl;
 }
 
 template<typename... Args>
 void LogDebugMultiline(Args... args)
 {
 	std::ostringstream oss;
-	oss << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
+	std::cerr << "[DEBUG] ";
+	std::cerr << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
 	(oss << ... << args);
-	std::cerr << "[DEBUG] " << std::endl << oss.str() << std::endl;
+	std::cerr << std::endl << oss.str() << std::endl;
 }
 
 template<typename... Args>
@@ -78,27 +80,30 @@ template<typename... Args>
 void LogInfo(Args... args)
 {
 	std::ostringstream oss;
-	oss << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
+	std::cout << TEXT_CYAN << "[INFO] " << RESET;
+	std::cout << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
 	(oss << ... << args);
-	std::cout << TEXT_CYAN << "[INFO] " << oss.str() << RESET << std::endl;
+	std::cout << TEXT_CYAN << oss.str() << RESET << std::endl;
 }
 
 template<typename... Args>
 void LogWarning(Args... args)
 {
 	std::ostringstream oss;
-	oss << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
+	std::cout << TEXT_BRIGHT_YELLOW << "[WARNING] " << RESET;
+	std::cout << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
 	(oss << ... << args);
-	std::cout << TEXT_BRIGHT_YELLOW << "[WARNING] " << oss.str() << RESET << std::endl;
+	std::cout << TEXT_BRIGHT_YELLOW << oss.str() << RESET << std::endl;
 }
 
 template<typename... Args>
 void LogError(Args... args)
 {
 	std::ostringstream oss;
-	oss << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
+	std::cout << TEXT_RED << "[ERROR] " << RESET;
+	std::cout << TEXT_GREY << "[" << getCurrentTime() << "] " << RESET;
 	(oss << ... << args);
-	std::cout << TEXT_RED << "[ERROR] " << oss.str() << RESET << std::endl;
+	std::cout << TEXT_RED << oss.str() << RESET << std::endl;
 }
 
 // Define a macro to cast a single element to void

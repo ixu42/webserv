@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/24 15:36:44 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/24 18:33:48 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -206,8 +206,6 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 		}
 		for (Client& client : server->getClients())
 		{
-			LOG_DEBUG("client.state: ", client.getState());
-			LOG_DEBUG("client.stateCGI: ", client.getCGIState());
 			if (pfdReadyForRead.fd == client.getFd()
 				&& client.getState() == Client::ClientState::READING)
 			{
@@ -226,7 +224,6 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 				fdFound = true;
 				break ;
 			}
-			LOG_DEBUG("client.stateCGI ", client.getCGIState());
 			if (ifCGIsFd(client, pfdReadyForRead.fd) && client.getCGIState() == Client::CGIState::FORKED)
 			{
 				LOG_DEBUG("Now forked and reading");

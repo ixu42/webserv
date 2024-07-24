@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/24 15:27:10 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/24 20:09:46 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,8 +100,8 @@ void CGIServer::handleChildProcess(Client& client, const std::string& interprete
 			"method of CGIServer class");
 	}
 
-	client.getParentPipe(_out);
-	client.getChildPipe(_in);
+	close(client.getParentPipe(_out));
+	close(client.getChildPipe(_in));
 
 	std::vector<char*> args;
 	args.push_back(const_cast<char*>(interpreter.c_str()));
@@ -261,7 +261,7 @@ bool CGIServer::readScriptOutput(Client& client, Server*& server)
 		LOG_DEBUG(TEXT_GREEN, "Populating response body with: ", bytesRead, RESET);
 		oss.write(buffer, bytesRead);
 	}
-	
+
 	LOG_INFO(TEXT_YELLOW, "bytesRead in readScriptOutput: ", bytesRead, RESET);
 
 	if (bytesRead != 0)

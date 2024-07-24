@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/23 18:39:41 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/24 15:54:22 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include "../config/Config.hpp"
 
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+
 static const std::string serverName = "webserv";
 static const std::string charset = "; charset=UTF-8";
 static const std::map<int, std::string> statusMessages = {
@@ -75,9 +76,6 @@ static const std::map<std::string, std::string> mimeTypes = {
 
 Response::Response() {}
 
-/**
- * optionalHeaders: {{ "headerKey1": "headerValue1" }, { "headerKey2": "headerValue2}}
-*/
 Response::Response(int code, ServerConfig* serverConfig, std::map<std::string, std::string> optionalHeaders)
 {
 	std::string errorPagePath = serverConfig->defaultPages[404]; // fallback for not legit error codes

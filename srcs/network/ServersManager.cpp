@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/23 18:57:26 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/24 15:36:44 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,7 +130,6 @@ ServersManager* ServersManager::getInstance(const char* argv0)
 {
 	// if config is not initialized with initConfig, DEFAULT_CONFIG will be used
 	if (_webservConfig == nullptr)
-	// if config is not initialized with initConfig, DEFAULT_CONFIG will be used
 		_webservConfig = new Config(DEFAULT_CONFIG, argv0);
 	if (_instance == nullptr)
 		_instance = new ServersManager();
@@ -142,9 +141,9 @@ void ServersManager::run()
 {
 	while (!g_signalReceived.load())
 	{
-		// LOG_DEBUG("poll() waiting for an fd to be ready...");
+		LOG_DEBUG("poll() waiting for an fd to be ready...");
 		int ready = poll(_fds.data(), _fds.size(), -1);
-		// LOG_DEBUG("poll() returned: ", ready);
+		LOG_DEBUG("poll() returned: ", ready);
 		if (ready == -1)
 		{
 			if (errno == EINTR)
@@ -154,20 +153,19 @@ void ServersManager::run()
 		}
 		for (struct pollfd& pfd : _fds)
 		{
-		// LOG_DEBUG("Checking pollfds...");
+			LOG_DEBUG("Checking pollfds...");
+			
 			if (pfd.revents & POLLIN)
 			{
-				// LOG_DEBUG("if POLLIN for fd: ", pfd.fd);
+				LOG_DEBUG("if POLLIN for fd: ", pfd.fd);
 				handleRead(pfd);
-				// break ; // should it break?
 			}
 			if (pfd.revents & POLLOUT)
 			{
-				// LOG_DEBUG("if POLLOUT for fd: ", pfd.fd);
+				LOG_DEBUG("if POLLOUT for fd: ", pfd.fd);
 				handleWrite(pfd.fd);
-				// break ; // should it break?
 			}
-			// if (pfd.revents & (POLLERR | POLLHUP | POLLNVAL))
+			
 			// if the page refreshed, device has been disconnected or an error has occurred on the file descriptor
 			if (pfd.revents & (POLLERR | POLLHUP | POLLNVAL)) 
 			{
@@ -201,22 +199,18 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 			int clientSockfd = server->accepter();
 			if (clientSockfd == -1)
 				throw ServerException("Server failed to accept a connection");
+				
 			// Add connected client fd to pollfd vector
-			// _fds.push_back({clientSockfd, POLLIN, 0}); // Only POLLIN? or both?
-			// Onlu POLLIN? or both?
-			// _fds.push_back({clientSockfd, POLLIN | POLLERR | POLLHUP | POLLNVAL, 0});
-			// Onlu POLLIN? or both?
 			_fds.push_back({clientSockfd, POLLIN | POLLOUT | POLLERR | POLLHUP | POLLNVAL, 0}); 
 			break ;
 		}
 		for (Client& client : server->getClients())
 		{
-			// LOG_DEBUG("client.state: ", client.getState());
-			// LOG_DEBUG("client.stateCGI: ", client.getCGIState());
+			LOG_DEBUG("client.state: ", client.getState());
+			LOG_DEBUG("client.stateCGI: ", client.getCGIState());
 			if (pfdReadyForRead.fd == client.getFd()
 				&& client.getState() == Client::ClientState::READING)
 			{
-				// client.request = server->receiveRequest(pfdReadyForRead.fd);
 				server->handler(server, client);
 				if (client.getState() == Client::ClientState::READY_TO_WRITE)
 				{
@@ -227,18 +221,16 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 					{
 						CGIServer::InitCGI(client, *server);
 					}
-					// pfdReadyForRead.events = POLLOUT;
-					// pfdReadyForRead.events = POLLOUT | POLLERR | POLLHUP | POLLNVAL;
-					// pfdReadyForRead.events = POLLOUT | POLLERR | POLLHUP;
 				}
 
 				fdFound = true;
 				break ;
 			}
-			// LOG_DEBUG("client.stateCGI ", client.getCGIState());
+			LOG_DEBUG("client.stateCGI ", client.getCGIState());
 			if (ifCGIsFd(client, pfdReadyForRead.fd) && client.getCGIState() == Client::CGIState::FORKED)
 			{
 				LOG_DEBUG("Now forked and reading");
+				
 				// after forking reading from the file and set lockers for CGIHandler
 				if (CGIServer::readScriptOutput(client, server)) // read in CGI
 				{
@@ -283,6 +275,7 @@ void	ServersManager::handleWrite(int fdReadyForWrite)
 					|| (ifCGIsFd(client, fdReadyForWrite) && client.getCGIState() == Client::CGIState::FINISHED_SET))
 				{
 					client.setResponseString(Response::buildResponse(*client.getResponse()));
+					
 					// Can be really huge for huge files and can interrupt the Terminal
 					LOG_DEBUG("response: ", client.getResponseString().substr(0, limitResponseString), "\n...\n");
 					client.setState(Client::ClientState::WRITING);

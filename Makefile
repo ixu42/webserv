@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+         #
+#    By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/08 17:44:55 by ixu               #+#    #+#              #
-#    Updated: 2024/07/19 18:28:53 by vshchuki         ###   ########.fr        #
+#    Updated: 2024/07/24 15:13:46 by dnikifor         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -36,7 +36,9 @@ DEBUG_FLAGS := -DDEBUG_MODE
 
 # Color scheme for terminal output
 BRIGHT_YELLOW := \033[0;93m
+RED := \033[31m
 YELLOW := \033[0;33m
+GREEN := \033[32m
 COLOR_RESET := \033[0m
 
 # Default target
@@ -44,7 +46,7 @@ all: $(NAME)
 
 $(NAME): $(OBJS_DIR) $(OBJS)
 	@$(COMPILER) -o $(NAME) $(OBJS)
-	@echo "$(BRIGHT_YELLOW)Built $(NAME)$(COLOR_RESET)"
+	@echo "$(GREEN)Built $(NAME)$(COLOR_RESET)"
 
 # Debug target
 debug: FLAGS += $(DEBUG_FLAGS)
@@ -89,11 +91,11 @@ $(OBJS_DIR)%.o: $(UTILS_DIR)%.cpp .flags
 
 clean:
 	@rm -fr $(OBJS_DIR) .debug .flags .flags_current
-	@echo "$(YELLOW)Removed object files$(COLOR_RESET)"
+	@echo "$(RED)Removed object files$(COLOR_RESET)"
 
 fclean: clean
 	@rm -f $(NAME)
-	@echo "$(YELLOW)Removed executable(s)$(COLOR_RESET)"
+	@echo "$(RED)Removed executable(s)$(COLOR_RESET)"
 
 re: fclean all
 

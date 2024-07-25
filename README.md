@@ -27,7 +27,7 @@ php /usr/bin/php
 
 ### Defining a server
 
-Allowed fields: `ipAddress`, `port`, `serverName`, `error`
+Allowed fields: `ipAddress`, `port`, `serverName`, `error`, `clientMaxBodySize`
 
 If no `ipAddress` is provided, webserv will try to create server on all the interfaces available.
 
@@ -37,6 +37,15 @@ ipAddress 127.0.0.1
 port 8006
 serverName host2.website1.com
 error 404 "user-pages copy/404.html"
+```
+
+#### Defining client max body size
+
+
+`clientMaxBodySize` can be set in `G`, `M`, `KB`, `B`
+
+```
+clientMaxBodySize 100KB
 ```
 
 #### Defining user error pages
@@ -51,7 +60,7 @@ error 405 user-pages/405.html
 error 500,501,505 other-user-pages/500.html
 ```
 
-### Defining location
+### Defining locations
 
 The priority order: redirect -> user defined index -> index.html (default) -> directory listing
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:46 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/13 23:31:02 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/24 15:51:48 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,14 +69,14 @@ bool	Socket::bindAddress(struct addrinfo* res)
 		return false;
 	}
 
-	// socklen_t addrlen = sizeof(addr);
 	ret = bind(_sockfd, res->ai_addr, res->ai_addrlen);
 	if (ret < 0)
 	{
 		freeaddrinfo(res);
 		close(_sockfd);
 		printError("bind() error: ");
-		throw ServerException("could not bind socket to address"); // This line should be refactored not to use inet_ntoa
+		// This line should be refactored not to use inet_ntoa
+		throw ServerException("could not bind socket to address");
 		return false;
 	}
 	return true;	
@@ -113,13 +113,7 @@ int	Socket::acceptConnection(struct sockaddr_in addr)
 		printError("accept() error: ");
 		return -1;
 	}
-/* 	int opt = 1;
-	int ret = setsockopt(_sockfd, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(opt));
-	if (ret < 0)
-	{
-		printError("setsockopt() error: ");
-		return false;
-	} */
+	
 	return acceptedSocketFd;
 }
 

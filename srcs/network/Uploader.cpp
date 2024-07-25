@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Uploader.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/16 17:53:36 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/22 16:11:22 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/24 15:52:45 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,8 @@
  * For Content-Disposition: form-data; name="file1"; filename="favicon.ico"
  * pass value and field as "filename", it will extract: "favicon.ico"
 */
-std::string Uploader::extractFromMultiValue(const std::string value, const std::string field) {
+std::string Uploader::extractFromMultiValue(const std::string value, const std::string field)
+{
 	std::string extract;
 	std::regex regex(field + R"(=\"([^\"]*)\")"); // Regex to find field="value" pattern
 
@@ -66,12 +67,7 @@ int Uploader::handleUpload(Client& client, Location& foundLocation)
 {
 	LOG_DEBUG("handleUpload() called");
 	size_t filesCreated = 0;
-/* 	// Handle upload from API app (Thunder Client for example)
-	if (client.getRequest()->getHeaders().at("content-type") == "application/octet-stream")
-	{
-		// check query string for filename
-		LOG_INFO(TEXT_CYAN, "API Client upload...", RESET);
-	} */
+	
 	// Handle upload from the HTML form
 	if (client.getRequest()->getHeaders().at("content-type").find("multipart/form-data") != std::string::npos)
 	{
@@ -96,9 +92,10 @@ int Uploader::handleUpload(Client& client, Location& foundLocation)
 								part.substr(emptyLinePos + emptyLinesSize) :
 								"";
 
-			// LOG_DEBUG("body: \n", body);
+			LOG_DEBUG("body: \n", body);
 			std::istringstream stream(headers);
 			std::string line;
+			
 			// Process headers
 			while (std::getline(stream, line))
 			{
@@ -118,6 +115,7 @@ int Uploader::handleUpload(Client& client, Location& foundLocation)
 					}
 				}
 			}
+			
 			// Process body
 			if (!filename.empty())
 			{

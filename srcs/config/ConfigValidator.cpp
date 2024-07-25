@@ -3,17 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   ConfigValidator.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:11 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/23 18:29:02 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/24 15:26:12 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ConfigValidator.hpp"
 
 // Check if the serverName per ip:port is unique
-int ConfigValidator::validateServerNamePerIpPort(std::vector<std::string> serverStrings, size_t i, std::map<std::string, std::regex> patterns)
+int ConfigValidator::validateServerNamePerIpPort(std::vector<std::string> serverStrings,
+	size_t i, std::map<std::string, std::regex> patterns)
 {
 	std::string ipAddress = "";
 	std::string port = "";
@@ -52,7 +53,8 @@ int ConfigValidator::validateServerNamePerIpPort(std::vector<std::string> server
 		}
 		if (serverName == currServerName && port == currPort && ipAddress == currIpAddress)
 		{
-			LOG_DEBUG("Config not valid: ", TEXT_RED, "Server name ", serverName, " is not unique for ", currIpAddress, ":", currPort, RESET);
+			LOG_DEBUG("Config not valid: ", TEXT_RED, "Server name ", serverName,
+				" is not unique for ", currIpAddress, ":", currPort, RESET);
 			return 1;
 		}
 	}
@@ -100,9 +102,8 @@ int ConfigValidator::countMatchInRegex(std::string str, std::regex pattern)
 
 	return std::distance(words_begin, words_end);
 }
-int ConfigValidator::validateMandatoryFields(std::string str,
-											std::vector<std::string> mandatoryFields,
-											std::map<std::string, std::regex> patterns)
+int ConfigValidator::validateMandatoryFields(std::string str, std::vector<std::string> mandatoryFields,
+	std::map<std::string, std::regex> patterns)
 {
 	int stringErrorsCount = 0;
 
@@ -198,10 +199,8 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 			{
 				// Check for repeating only one time allowed fields
 				auto it = std::find(oneAllowed.begin(), oneAllowed.end(), pattern.first);
-				// std::cout << "count matches for " << pattern.first << ": " << countMatchInRegex(generalConfig, patterns[pattern.first]) << std::endl;
 				if (it != oneAllowed.end() && countMatchInRegex(generalConfig, patterns[pattern.first]) > 1)
 				{
-					// std::cout << "Match found for repeating field" << std::endl;
 					LOG_DEBUG("Line not valid: ", TEXT_RED, line, RESET);
 					errorCaught = 1;
 					generalConfigErrorsCount++;
@@ -254,8 +253,6 @@ int ConfigValidator::validateLocationConfig(std::string locationString)
 		{"path", std::regex(R"(\s*path\s+\/([a-zA-Z0-9_\-~.]+\/?)*([a-zA-Z0-9_\-~.]+\.[a-zA-Z0-9_\-~.]+)?\s*)")},
 		{"index", std::regex(R"(\s*index\s+([^,\s]+(?:\.html|\.htm))\s*)")},
 		{"redirect", std::regex(R"(\s*redirect\s+((\w+:(\/\/[^\/\s]+)?[^\s]*)|(\/([a-zA-Z0-9-_~.]*\/)))\s*)")},
-		// {"root", std::regex(R"(\s*root\s+(\.\.\/|\/)*([a-zA-Z0-9-_~. ]+\/)+\s*)")},
-		// {"root", std::regex(R"(\s*root\s+(?:(\.\.\/|\/)*([a-zA-Z0-9-_~. ]*\/)*\s*|(['"])((?:\.\.\/|\/)*([a-zA-Z0-9-_~. ]*\/)*\3)\s*))")},
 
 		{"root", std::regex(R"(\s*root\s+(['"]*)((?:\.\.\/|\/)*([a-zA-Z0-9-_~. ]+\/)+\1)\s*)")},
 

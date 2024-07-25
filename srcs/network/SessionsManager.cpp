@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/12 15:02:01 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/22 21:11:56 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/24 16:50:50 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,16 +14,32 @@
 
 const std::string SessionsManager::_filename = "sessions";
 std::string SessionsManager::_session;
-static const std::vector<std::string> mediaExtensions = {
-		".jpg",
-		".jpeg",
-		".png",
-		".gif",
-		".ico",
-		".svg",
-		".mp3",
-		".mp4",
-		".webm"
+static const std::vector<std::string> mediaExtensions =
+{
+	".jpg",
+	".jpeg",
+	".png",
+	".gif",
+	".ico",
+	".svg",
+	".mp3",
+	".mp4",
+	".webm",
+	".bmp",
+	".webp",
+	".wav",
+	".ogg",
+	".txt",
+	".sitemap",
+	".json",
+	".xml",
+	".csv",
+	".markdown",
+	".pdf",
+	".zip",
+	".gzip",
+	".css",
+	".js",
 };
 
 void SessionsManager::handleSessions(Client& client)

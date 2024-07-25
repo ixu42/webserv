@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/23 19:15:39 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/24 20:09:46 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,21 +66,6 @@ std::string CGIServer::determineInterpreter(Client& client, const std::string& f
 	}
 
 	return cgiPath;
-	
-	// if (extension == "py")
-	// {
-	// 	LOG_DEBUG("Python specificator found");
-	// 	return _python_interpr;
-	// }
-	// else if (extension == "php")
-	// {
-	// 	LOG_DEBUG("PHP specificator found");
-	// 	return _php_interpr;
-	// }
-	// else
-	// {
-	// 	throw ResponseError(404, {}, "Unknown file extension");
-	// }
 }
 
 std::vector<std::string> CGIServer::setEnvironmentVariables(Request* request)
@@ -115,8 +100,8 @@ void CGIServer::handleChildProcess(Client& client, const std::string& interprete
 			"method of CGIServer class");
 	}
 
-	client.getParentPipe(_out);
-	client.getChildPipe(_in);
+	close(client.getParentPipe(_out));
+	close(client.getChildPipe(_in));
 
 	std::vector<char*> args;
 	args.push_back(const_cast<char*>(interpreter.c_str()));
@@ -176,7 +161,6 @@ void CGIServer::handleProcesses(Client& client, const std::string& interpreter,
 		LOG_DEBUG("Parent started");
 		g_childPids.push_back(client.getPid());
 		handleParentProcess(client, client.getRequest()->getBody());
-		// waitpid(pid, nullptr, 0);
 	}
 	LOG_INFO(TEXT_GREEN, "CGI script executed", RESET);
 }
@@ -256,33 +240,13 @@ void CGIServer::InitCGI(Client& client, Server& server)
 				"method of CGIServer class");
 		}
 
-		LOG_DEBUG("Pipes numbers: ",client.getParentPipe(0)," ",client.getParentPipe(1)," ",client.getChildPipe(0)," ",client.getChildPipe(1));
-		
-		// fcntlSet(client.childPipe[_in]); // works without non-blocking ??
+		LOG_DEBUG("Pipes numbers: ",client.getParentPipe(0)," ",client.getParentPipe(1),
+			" ", client.getChildPipe(0)," ",client.getChildPipe(1));
 		
 		registerCGIPollFd(server, client.getChildPipe(0), POLLIN);
-		// registerCGIPollFd(server, client.parentPipe[_out], POLLOUT);
 		LOG_DEBUG("Finished InitCGI()");
 	}
 }
-
-// void CGIServer::fcntlSet(int fd)
-// {
-// 	LOG_DEBUG("Setting CGI as non-blocking with fd: ", fd);
-// 	int flags = fcntl(fd, F_GETFL, 0);
-// 	if (flags < 0)
-// 	{
-// 		throw ResponseError(500, {}, "Exception  has been thrown in fcntlSet() "
-// 			"method of CGIServer class");
-// 	}
-
-// 	int ret = fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-// 	if (ret < 0)
-// 	{
-// 		throw ResponseError(500, {}, "Exception  has been thrown in fcntlSet() "
-// 			"method of CGIServer class");
-// 	}
-// }
 
 bool CGIServer::readScriptOutput(Client& client, Server*& server)
 {
@@ -297,7 +261,7 @@ bool CGIServer::readScriptOutput(Client& client, Server*& server)
 		LOG_DEBUG(TEXT_GREEN, "Populating response body with: ", bytesRead, RESET);
 		oss.write(buffer, bytesRead);
 	}
-	
+
 	LOG_INFO(TEXT_YELLOW, "bytesRead in readScriptOutput: ", bytesRead, RESET);
 
 	if (bytesRead != 0)

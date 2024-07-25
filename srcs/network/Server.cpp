@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/23 18:56:39 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/25 15:52:12 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -223,6 +223,23 @@ void Server::handler(Server *&server, Client &client)
 	catch (ResponseError &e)
 	{
 		LOG_ERROR("Request can not be handled: ", e.what(), ": ", e.getCode());
+		// client.setResponse(createResponse(client.getRequest(), e.getCode()));
+	}
+	catch (std::exception &e)
+	{
+		if (!client.getRequest())
+			client.setRequest(new Request(client.getRequestString()));
+		LOG_ERROR("Request handle threw an exception");
+		LOG_DEBUG("host: ", client.getRequest()->getHeaders()["host"]);
+		// if (client.getRequest()->getHeaders()["host"].empty())
+		// {
+		// 	LOG_DEBUG("Caught. Host is empty!");
+		client.getRequest()->setHeader("host", getIpAddress()+ ":" + std::to_string(getPort())); // Fallback to default host
+		// }
+		LOG_DEBUG("About to createResponse!");
+		client.setResponse(createResponse(client.getRequest(), 400)); // ???
+		LOG_DEBUG("createResponse done!");
+		
 	}
 }
 
@@ -483,15 +500,23 @@ ServerConfig *Server::findServerConfig(Request *req)
 		return &_configs[0];
 
 	std::vector<std::string> hostSplit = Utility::splitStr(req->getHeaders()["host"], ":");
+	std::string reqPort = "80"; // Default port for HTTP
+	std::string reqHost;
 
-	std::string reqHost = Utility::trim(hostSplit[0]);
-	std::string reqPort = Utility::trim(hostSplit[1]);
 
-	if (reqPort.empty())
-		reqPort = "80";
+	LOG_DEBUG("Before trim");
+	if (hostSplit.size() > 0) {
+		reqHost = Utility::trim(hostSplit.at(0));
+		if (hostSplit.size() > 1)
+		{
+			LOG_DEBUG("access hostSplit.at(1)");
+			reqPort = Utility::trim(hostSplit.at(1));
+		}
+	}
+	LOG_DEBUG("After trim");
 
 	if (whoAmI() == req->getHeaders()["host"] ||
-		// Also additional check can be needed for the port 80. The port might be not specified in the request. Check with sudo ./webserv
+		// Also additional check can be needed for the port 80. The port might be not specified in the request
 		(_ipAddr.empty() && std::to_string(_port) == reqPort))
 	{
 		if (!_configs.empty())

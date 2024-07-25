@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/22 21:12:00 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/25 15:21:14 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -160,6 +160,12 @@ Request::QueryStringParameters Request::getHeaders()
 std::string Request::getBody()
 {
 	return _body;
+}
+
+
+void	Request::setHeader(std::string key, std::string value)
+{
+	_headers[key] = value;
 }
 
 void	Request::printRequest()

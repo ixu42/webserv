@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:40 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/23 18:32:03 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/25 15:21:11 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ class Request
 		QueryStringParameters	getStartLine();
 		QueryStringParameters	getHeaders();
 		std::string				getBody();
+		void					setHeader(std::string key, std::string value);
 
 		void					printRequest();
 };

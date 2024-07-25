@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/23 18:39:37 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/24 15:24:53 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,11 +17,6 @@ Config::Config(std::string filePath, const char* argv0)
 	_argv0 = argv0;
 	_configString = Utility::readFile(normalizeFilePath(filePath, false));
 	_configString = filterOutComments(_configString);
-
-	// std::cout << TEXT_YELLOW;
-	// std::cout << "=== Config file read === " << std::endl;
-	// std::cout << _configString << std::endl;
-	// std::cout << RESET;
 
 	parse();
 
@@ -53,6 +48,7 @@ void Config::printConfig()
 		std::vector<ServerConfig> serversConfigs = _serversConfigsMap[key];
 		int j = 0;
 		LOG_DEBUG(BG_YELLOW, TEXT_BLACK, TEXT_BOLD, "Server #", i, RESET);
+		
 		// For each ip server go through name server configs:
 		for (ServerConfig server : serversConfigs)
 		{
@@ -104,13 +100,13 @@ std::vector<std::string> Config::filterOutInvalidServerStrings(std::vector<std::
 
 		// Get server general config string
 		generalConfig = split[0];
-		// std::cout << "generalConfig: " << generalConfig << std::endl;
 
 		// Get server locations string
 		std::vector<std::string> locationStrings(split.begin() + 1, split.end());
 
 		// Validate general config
 		int configErrorsFound = ConfigValidator::validateGeneralConfig(generalConfig, serverStringsVec, i);
+		
 		// Validate locations
 		for (std::string& locationString : locationStrings)
 		{
@@ -121,7 +117,6 @@ std::vector<std::string> Config::filterOutInvalidServerStrings(std::vector<std::
 		{
 			// decrease servers vector because config is faulty
 			LOG_WARNING("Server config (server #", j, ") has ", configErrorsFound, " config errors and will be ignored");
-			// _servers.resize(_servers.size() - 1);
 			serverStringsVec.erase(serverStringsVec.begin() + i);
 			j++;
 			continue;
@@ -174,13 +169,13 @@ void Config::parse()
 	if (pos != 0)
 	{
 		mainConfig = _configString.substr(0, pos);
-		// throw ServerException("Invalid config file format, [server] section should be at the beginning of the file");
 	}
 	serversString = _configString.substr(pos);
 
 	parseMainConfig(mainConfig);
 
 	std::vector<std::string> serverStringsVec = Utility::splitStr(serversString, "[server]");
+	
 	/* Filter out invalid server configs */
 	serverStringsVec = filterOutInvalidServerStrings(serverStringsVec);
 	parseServers(serverStringsVec);
@@ -221,10 +216,10 @@ void Config::parseServers(std::vector<std::string> serverStringsVec)
 
 		// Get server general config string
 		generalConfig = split[0];
-		// std::cout << "generalConfig: " << generalConfig << std::endl;
 
 		// Get  server locations string
 		std::vector<std::string> locationStrings(split.begin() + 1, split.end());
+		
 		// Reading line by line
 		std::istringstream stream(generalConfig);
 		std::string line;
@@ -232,7 +227,6 @@ void Config::parseServers(std::vector<std::string> serverStringsVec)
 		{	
 			line = Utility::trim(line);
 			if (line.empty()) continue;
-			// std::cout << "Line: " << line << std::endl;
 
 			// Split line into keys and values
 			std::string::const_iterator keyEndPos = std::find_if(line.begin(), line.end(), [](int c){
@@ -246,10 +240,6 @@ void Config::parseServers(std::vector<std::string> serverStringsVec)
 			std::string value = std::string(line.cbegin(), valueEndPos);
 			std::string value2 = Utility::trimChars(Utility::trim(std::string(valueEndPos, line.cend())), "\"'");
 
-			// line = Utility::replaceWhiteSpaces(line, ' ');
-			// std::vector<std::string> keyValue = Utility::splitStr(line, " ");
-
-			// if (keyValue.size() < 2)
 			if (value.empty())
 				throw ServerException("Invalid config file format, missing value for key: " + key);
 			
@@ -265,7 +255,6 @@ void Config::parseServers(std::vector<std::string> serverStringsVec)
 				serverConfig.clientMaxBodySize = value;
 			else if (key == "error")
 			{
-				// std::cout << "error: " << value << std::endl;
 				std::vector<std::string> errorCodesString = Utility::splitStr(value, ",");
 				for (std::string code : errorCodesString)
 				{
@@ -338,16 +327,12 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 		int j = 0;
 		for (std::string location : locationStrings)
 		{
-			// std::cout << "location: " << location << std::endl;
-			
 			std::istringstream stream(location);
 			std::string line;
 			while (std::getline(stream, line))
 			{	
 				line = Utility::trim(line);
 				if (line.empty()) continue;
-
-				// std::cout << "Line: " << line << std::endl;
 
 				// Split line into keys and values
 				std::string::const_iterator keyEndPos = std::find_if(line.begin(), line.end(), [](int c){
@@ -356,15 +341,8 @@ void Config::parseLocations(ServerConfig& serverConfig, std::vector<std::string>
 				std::string key = Utility::trim(std::string(line.cbegin(), keyEndPos));
 				std::string value = Utility::trimChars(Utility::trim(std::string(keyEndPos, line.cend())), "\"'");
 
-				
-				// std::cout << TEXT_RED << value << RESET << std::endl;
-				// std::vector<std::string> keyValue = Utility::splitStr(line, " ");
-				// std::string key = Utility::trim(keyValue[0]);
-				// std::string value = Utility::trim(keyValue[1]);
-
 				if (key == "path")
 				{
-					// std::cout << "path: " << value << std::endl;
 					serverConfig.locations[j].path = value;
 				}
 				else if (key == "redirect")

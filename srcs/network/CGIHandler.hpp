@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/22 20:28:27 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/24 15:27:16 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,6 @@ class CGIServer {
 		static	void						registerCGIPollFd(Server& server, int fd, short events);
 		static	void						unregisterCGIPollFd(Server& server, int fd);
 		static	void						changeToErrorState(Client& client);
-		// static	void						fcntlSet(int fd);
 
 	public:
 		CGIServer()							= delete;

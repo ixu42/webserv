@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/23 18:54:31 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/24 15:56:01 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 	signal(SIGTSTP, signalHandler); /* ctrl + z */
 	signal(SIGQUIT, signalHandler); /* ctrl + \ */
 	signal(SIGTERM, signalHandler); /* kill -15 pid */
-	signal(SIGPIPE, SIG_IGN);
+	signal(SIGPIPE, SIG_IGN); /* cancelling request */
 
 	std::string configFile = DEFAULT_CONFIG;
 
@@ -69,7 +69,6 @@ int main(int argc, char *argv[])
 	
 	try
 	{
-		// std::cout << TEXT_MAGENTA << getExecutablePath(argv[0]) << RESET;
 		ServersManager::initConfig(configFile.c_str(), argv[0]);
 		ServersManager* manager = ServersManager::getInstance(argv[0]);
 		manager->run();

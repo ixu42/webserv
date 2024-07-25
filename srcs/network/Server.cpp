@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/25 16:43:55 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/25 17:58:54 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,16 +147,8 @@ bool Server::receiveRequest(Client &client)
 	bool isHeadersRead = false;
 	size_t contentLengthNum = std::string::npos;
 
-	// std::size_t maxClientBodyBytes = std::numeric_limits<std::size_t>::max();
-
 	bytesRead = read(client.getFd(), buffer, sizeof(buffer));
 	LOG_DEBUG(TEXT_YELLOW, "bytesRead in receiveRequest())): ", bytesRead, RESET);
-	// LOG_DEBUG("=== Reading in chunks bytes: ", bytesRead); // too much debug lol
-	// LOG_DEBUG_RAW("[DEBUG] ");
-	// for (int i = 0; i < bytesRead; i++)
-	// 	LOG_DEBUG_RAW(buffer[i], "(", int(buffer[i]), "),");
-	// LOG_DEBUG_RAW("\n");
-
 
 	if (bytesRead < 0)
 		return false;
@@ -177,6 +169,7 @@ bool Server::receiveRequest(Client &client)
 			{
 				client.setState(Client::ClientState::READY_TO_WRITE);
 			}
+			
 			// Find maxClientBodySize
 			// only calculate if the value is initial
 			if (client.getMaxClientBodyBytes() == std::numeric_limits<size_t>::max())
@@ -200,15 +193,11 @@ bool Server::receiveRequest(Client &client)
 			}
 		}
 		if (client.getState() != Client::ClientState::READY_TO_WRITE)
-			// std::cout << TEXT_CYAN << client.requestString.substr(0, 500) << "\n...\n" << RESET << std::endl;
 			return false;
 	}
 
 	LOG_INFO("Request read");
 	LOG_DEBUG(TEXT_YELLOW, client.getRequestString().substr(0, 1000), "\n...\n", RESET, "\n");
-	// std::cout << TEXT_YELLOW << client.requestString << RESET << std::endl;
-	// int limitRequestString = 2000;
-	// LOG_DEBUG_MULTILINE(TEXT_YELLOW, client.requestString, RESET);
 	return true;
 }
 
@@ -248,40 +237,34 @@ Response *Server::createResponse(Request *request, int code, std::map<std::strin
 
 bool Server::sendResponse(Client &client)
 {
-	// size_t totalBytesWritten = 0;
 	size_t bytesToWrite = client.getResponseString().length(); // maybe copy to struct to optimize
-	// const char*	buffer = client.responseString.c_str(); // maybe copy to struct to optimize
 
 	// Calculate the remaining bytes to write
 	size_t remainingBytes = bytesToWrite - client.getTotalBytesWritten();
 	// Limit the chunk size to the remaining bytes
 	size_t bytesToWriteNow = remainingBytes < g_bufferSize ? remainingBytes : g_bufferSize;
 
-	// ssize_t bytesWritten = write(client.fd, buffer + client.totalBytesWritten, bytesToWrite - client.totalBytesWritten);
 	ssize_t bytesWritten = write(client.getFd(), client.getResponseString().c_str() + client.getTotalBytesWritten(), bytesToWriteNow);
 	LOG_DEBUG(TEXT_GREEN, "Bytes written: ", bytesWritten, RESET);
 	if (bytesWritten == -1) // We can not use EAGAIN or EWOULDBLOCK here
 		return false;
 	client.setTotalBytesWritten(client.getTotalBytesWritten() + bytesWritten);
 	LOG_DEBUG(TEXT_GREEN, "client.totalBytesWritten: ", client.getTotalBytesWritten(), RESET);
+	
 	// Handle case where write returns 0 (should not happen with regular sockets)
 	if (bytesWritten == 0 || client.getTotalBytesWritten() == bytesToWrite)
 	{
 		LOG_INFO(TEXT_GREEN, "Response written with length: ", client.getTotalBytesWritten(), RESET);
 		return true;
 	}
-	// else if (client.totalBytesWritten < bytesToWrite)
+
 	return false;
-	// LOG_DEBUG(TEXT_GREEN, "client.responseString.length(): ", client.responseString.length(), RESET);
 }
 
 bool Server::formCGIConfigAbsenceResponse(Client &client, Server &server)
 {
-	// if (!server.findServerConfig(client.getRequest())->cgis["php"]
-	// 	&& !server.findServerConfig(client.getRequest())->cgis["py"]
-	// 	&& client.getRequest()->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
-	// {
-	if (server.findServerConfig(client.getRequest())->cgis->size() < 1 && client.getRequest()->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
+	if (server.findServerConfig(client.getRequest())->cgis->size() < 1
+		&& client.getRequest()->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
 	{
 		client.setResponse(createResponse(client.getRequest(), 404));
 		return true;
@@ -413,20 +396,12 @@ void Server::validateRequest(Client &client)
 		throw ResponseError(400, {}, "Request does not have mandatory fields");
 	if (client.getRequest()->getStartLine()["version"] != "HTTP/1.1")
 		throw ResponseError(505, {}, "Wrong HTTP version in the start line");
-	// try
-	// {
-	// 	client.request->getStartLine().at("content-length");
-	// }
-	// catch(const std::exception& e)
-	// {
-	// 	throw ResponseError(411, {}, "No content length provided");
-	// }
 }
 
 void Server::responder(Client &client, Server &server)
 {
 	LOG_DEBUG("Server::responder() called");
-	// if (formRequestErrorResponse(client)) return; // TODO: remove this line later
+	
 	client.getRequest()->printRequest(); // can flood the Terminal if a file is uploaded
 
 	if ((client.getResponse() && !client.getResponse()->getBody().empty()) || formCGIConfigAbsenceResponse(client, server))
@@ -485,14 +460,8 @@ std::string Server::whoAmI() const
 /** If no match found, the first config will be used */
 ServerConfig *Server::findServerConfig(Request *req)
 {
-	// If request host is an ip address:port or if the ip is not specified for current server, the first config for the server is used
-	/* 	if(!req)
-			throw ResponseError(400, {}, "Exception has been thrown in findServerConfig() "
-				"method of Server class");
-		if (req->getHeaders()["host"].empty())
-			throw ResponseError(400, {}, "Exception (empty host) has been thrown in findServerConfig() "
-				"method of Server class"); // Bad request */
-
+	// If request host is an ip address:port or if the ip is not specified for current server,
+	// the first config for the server is used
 	if (!req || req->getHeaders()["host"].empty())
 		return &_configs[0];
 
@@ -506,8 +475,9 @@ ServerConfig *Server::findServerConfig(Request *req)
 					reqPort = Utility::trim(hostSplit.at(1));
 	}
 
+	// Also additional check can be needed for the port 80. The port might be not specified in the request.
+	// Check with sudo ./webserv
 	if (whoAmI() == req->getHeaders()["host"] ||
-		// Also additional check can be needed for the port 80. The port might be not specified in the request
 		(_ipAddr.empty() && std::to_string(_port) == reqPort))
 	{
 		if (!_configs.empty())
@@ -538,7 +508,8 @@ Location Server::findLocation(Request *req)
 									 "method of Server class");
 
 	ServerConfig *namedServerConfig = findServerConfig(req);
-	// This block might be redundant as we always have a server config???f
+	
+	// This block might be redundant as we always have a server config
 	if (!namedServerConfig)
 	{
 		throw ResponseError(404, {}, "Exception (no ServerConfig) has been thrown in findLocation() "
@@ -552,6 +523,7 @@ Location Server::findLocation(Request *req)
 	}
 
 	LOG_INFO("Server found. Searching for location...");
+	
 	// Find the longest matching location
 	Location foundLocation;
 	size_t locationLength = 0;

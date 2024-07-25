@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/22 21:11:54 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/25 12:00:32 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,6 @@ class ServersManager
 		std::vector<struct pollfd>	_fds;
 
 		ServersManager();
-		// ServersManager(Config& webservConfig);
 		ServersManager(const ServersManager&) = delete;
 		ServersManager& operator=(const ServersManager&) = delete;
 

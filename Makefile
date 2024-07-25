@@ -6,7 +6,7 @@
 #    By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/08 17:44:55 by ixu               #+#    #+#              #
-#    Updated: 2024/07/24 15:13:46 by dnikifor         ###   ########.fr        #
+#    Updated: 2024/07/25 12:06:23 by dnikifor         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -100,43 +100,3 @@ fclean: clean
 re: fclean all
 
 .PHONY: flags
-
-# COMPILER = c++
-# FLAGS = -Wall -Wextra -Werror -std=c++17 -g
-
-# NAME = webserv
-
-# SRCS = main.cpp \
-# 		Server.cpp \
-# 		ServersManager.cpp \
-# 		Request.cpp \
-# 		Config.cpp \
-# 		Utility.cpp
-
-# OBJ_DIR = objs/
-# OBJS = $(addprefix $(OBJ_DIR), $(SRCS:.cpp=.o))
-
-# all: $(NAME)
-
-# $(NAME): $(OBJ_DIR) $(OBJS)
-# 	$(COMPILER) $(FLAGS) $(OBJS) -o $(NAME)
-
-# $(OBJ_DIR):
-# 	mkdir -p $(OBJ_DIR)
-
-# $(OBJ_DIR)%.o: %.cpp %.hpp | $(OBJ_DIR)
-# 	$(COMPILER) $(FLAGS) -c $< -o $@
-
-# $(OBJ_DIR)%.o: %.cpp | $(OBJ_DIR)
-# 	$(COMPILER) $(FLAGS) -c $< -o $@
-
-# clean:
-# 	rm -rf $(OBJ_DIR)
-
-# fclean: clean
-# 	rm -f $(NAME)
-
-# re: fclean all
-
-# .PHONY: all clean fclean re
-

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/25 15:52:12 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/25 16:43:55 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -216,30 +216,27 @@ void Server::handler(Server *&server, Client &client)
 {
 	try
 	{
-		// client.request = server->receiveRequest(client);
 		if (server->receiveRequest(client))
 			client.setRequest(new Request(client.getRequestString()));
 	}
-	catch (ResponseError &e)
+	catch (ResponseError &e) // For example, maxClientBodySize exceeded
 	{
 		LOG_ERROR("Request can not be handled: ", e.what(), ": ", e.getCode());
-		// client.setResponse(createResponse(client.getRequest(), e.getCode()));
+		std::cout << "Client state: " << int(client.getState()) << std::endl;
+		client.setState(Client::ClientState::READY_TO_WRITE);
+		client.setRequest(new Request(client.getRequestString()));
+		client.setResponse(createResponse(client.getRequest(), e.getCode()));
+		LOG_DEBUG("Response set for ResponseError catch");
 	}
 	catch (std::exception &e)
 	{
-		if (!client.getRequest())
-			client.setRequest(new Request(client.getRequestString()));
+		client.setRequest(new Request(client.getRequestString()));
 		LOG_ERROR("Request handle threw an exception");
+		std::cout << "Client state: " << int(client.getState()) << std::endl;
+		client.setState(Client::ClientState::READY_TO_WRITE);
 		LOG_DEBUG("host: ", client.getRequest()->getHeaders()["host"]);
-		// if (client.getRequest()->getHeaders()["host"].empty())
-		// {
-		// 	LOG_DEBUG("Caught. Host is empty!");
 		client.getRequest()->setHeader("host", getIpAddress()+ ":" + std::to_string(getPort())); // Fallback to default host
-		// }
-		LOG_DEBUG("About to createResponse!");
-		client.setResponse(createResponse(client.getRequest(), 400)); // ???
-		LOG_DEBUG("createResponse done!");
-		
+		client.setResponse(createResponse(client.getRequest(), 400));
 	}
 }
 
@@ -503,17 +500,11 @@ ServerConfig *Server::findServerConfig(Request *req)
 	std::string reqPort = "80"; // Default port for HTTP
 	std::string reqHost;
 
-
-	LOG_DEBUG("Before trim");
 	if (hostSplit.size() > 0) {
 		reqHost = Utility::trim(hostSplit.at(0));
 		if (hostSplit.size() > 1)
-		{
-			LOG_DEBUG("access hostSplit.at(1)");
-			reqPort = Utility::trim(hostSplit.at(1));
-		}
+					reqPort = Utility::trim(hostSplit.at(1));
 	}
-	LOG_DEBUG("After trim");
 
 	if (whoAmI() == req->getHeaders()["host"] ||
 		// Also additional check can be needed for the port 80. The port might be not specified in the request

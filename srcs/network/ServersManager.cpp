@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/24 18:33:48 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/25 18:21:13 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,15 +167,15 @@ void ServersManager::run()
 			}
 			
 			// if the page refreshed, device has been disconnected or an error has occurred on the file descriptor
-			if (pfd.revents & (POLLERR | POLLHUP | POLLNVAL)) 
+			if (pfd.revents & (POLLERR | POLLHUP)) 
 			{
 				LOG_DEBUG("Error or hangup on fd: ", pfd.fd);
 				if (pfd.revents & POLLERR )
 					LOG_DEBUG("POLLERR");
 				if (pfd.revents & POLLHUP)
 					LOG_DEBUG("POLLHUP");
-				if (pfd.revents & POLLNVAL)
-					LOG_DEBUG("POLLNVAL");
+				// if (pfd.revents & POLLNVAL)
+				// 	LOG_DEBUG("POLLNVAL");
 				if (close(pfd.fd) == -1) {
 					LOG_DEBUG("Failed to close fd: ", pfd.fd, " Error: ", strerror(errno));
 				} else {
@@ -201,7 +201,8 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 				throw ServerException("Server failed to accept a connection");
 				
 			// Add connected client fd to pollfd vector
-			_fds.push_back({clientSockfd, POLLIN | POLLOUT | POLLERR | POLLHUP | POLLNVAL, 0}); 
+			// _fds.push_back({clientSockfd, POLLIN | POLLOUT | POLLERR | POLLHUP | POLLNVAL, 0}); 
+			_fds.push_back({clientSockfd, POLLIN | POLLOUT | POLLERR | POLLHUP, 0}); 
 			break ;
 		}
 		for (Client& client : server->getClients())

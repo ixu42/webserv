@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/19 12:29:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/23 18:39:20 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/26 17:49:52 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,10 @@ Client::Client() :
 		_response(nullptr),
 		_state(ClientState::READING),
 		_stateCGI(CGIState::INIT),
+		_emptyLinePos(-1),
+		_emptyLinesSize(0),
+		_contentLengthNum(std::string::npos),
+		_isHeadersRead(false),
 		_maxClientBodyBytes(std::numeric_limits<size_t>::max()),
 		_totalBytesWritten(0) {}
 
@@ -92,6 +96,25 @@ Client::CGIState Client::getCGIState()
 std::string Client::getRequestString()
 {
 	return _requestString;
+}
+
+bool Client::getIsHeadersRead()
+{
+	return _isHeadersRead;
+}
+
+int Client::getEmptyLinePos()
+{
+	return _emptyLinePos;
+}
+int Client::getEmptyLinesSize()
+{
+	return _emptyLinesSize;
+}
+
+size_t Client::getContentLengthNum()
+{
+	return _contentLengthNum;
 }
 
 size_t Client::getMaxClientBodyBytes()
@@ -167,6 +190,26 @@ void Client::setCGIState(CGIState stateCGI)
 void Client::setRequestString(const std::string& requestString)
 {
 	_requestString = requestString;
+}
+
+void Client::setIsHeadersRead(bool isHeaderRead)
+{
+	_isHeadersRead = isHeaderRead;
+}
+
+void		Client::setEmptyLinePos(int emptyLinePos)
+{
+	_emptyLinePos = emptyLinePos;
+}
+
+void		Client::setEmptyLinesSize(int emptyLinesSize)
+{
+	_emptyLinesSize = emptyLinesSize;
+}
+
+void		Client::setContentLengthNum(size_t contentLengthNum)
+{
+	_contentLengthNum = contentLengthNum;
 }
 
 void Client::setMaxClientBodyBytes(size_t maxClientBodyBytes)

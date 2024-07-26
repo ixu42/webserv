@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Uploader.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/16 17:53:36 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/24 15:52:45 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/26 17:08:58 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,5 +127,5 @@ int Uploader::handleUpload(Client& client, Location& foundLocation)
 	}
 	if (filesCreated)
 		return 201;
-	return 500;
+	return 400;
 }

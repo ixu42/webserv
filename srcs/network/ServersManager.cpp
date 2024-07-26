@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/25 18:21:13 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/26 15:29:51 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -141,9 +141,9 @@ void ServersManager::run()
 {
 	while (!g_signalReceived.load())
 	{
-		LOG_DEBUG("poll() waiting for an fd to be ready...");
+		// LOG_DEBUG("poll() waiting for an fd to be ready...");
 		int ready = poll(_fds.data(), _fds.size(), -1);
-		LOG_DEBUG("poll() returned: ", ready);
+		// LOG_DEBUG("poll() returned: ", ready);
 		if (ready == -1)
 		{
 			if (errno == EINTR)
@@ -153,7 +153,7 @@ void ServersManager::run()
 		}
 		for (struct pollfd& pfd : _fds)
 		{
-			LOG_DEBUG("Checking pollfds...");
+			// LOG_DEBUG("Checking pollfds...");
 			
 			if (pfd.revents & POLLIN)
 			{

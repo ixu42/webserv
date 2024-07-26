@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/25 18:22:37 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/26 19:55:04 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,7 +99,7 @@ int Server::findContentLength(std::string request)
 		contentLengthValue = contentLengthValue.substr(0, contentLengthValueEnd);
 		return std::stoi(Utility::trim(contentLengthValue));
 	}
-	return -1;
+	return 0;
 }
 
 /* When headers and start line are read in receiveRequest, maxClientBodySize can be found */
@@ -140,12 +140,9 @@ bool Server::receiveRequest(Client &client)
 	LOG_DEBUG("Server::receiveRequest called for fd: ", client.getFd());
 	char buffer[g_bufferSize];
 	int bytesRead;
-	int emptyLinePos = -1;
-	int emptyLinesSize = 0;
-
 	std::fill(buffer, buffer + g_bufferSize, 0);
-	bool isHeadersRead = false;
-	size_t contentLengthNum = std::string::npos;
+	std::regex pattern(R"(\s*transfer-encoding:\s*chunked\s*)", std::regex_constants::icase);
+
 
 	bytesRead = read(client.getFd(), buffer, sizeof(buffer));
 	LOG_DEBUG(TEXT_YELLOW, "bytesRead in receiveRequest())): ", bytesRead, RESET);
@@ -154,18 +151,19 @@ bool Server::receiveRequest(Client &client)
 		return false;
 	if (bytesRead == 0)
 		client.setState(Client::ClientState::READY_TO_WRITE);
+
 	if (client.getState() == Client::ClientState::READING)
 	{
 		client.setRequestString(client.getRequestString() + std::string(buffer, bytesRead));
 
 		// Check if the request is complete (ends with "\r\n\r\n")
-		if (!isHeadersRead && (client.getRequestString().find("\r\n\r\n") != std::string::npos || client.getRequestString().find("\n\n") != std::string::npos))
+		if (!client.getIsHeadersRead() && (client.getRequestString().find("\r\n\r\n") != std::string::npos || client.getRequestString().find("\n\n") != std::string::npos))
 		{
-			emptyLinePos = client.getRequestString().find("\r\n\r\n") ? client.getRequestString().find("\r\n\r\n") : client.getRequestString().find("\n\n");
-			emptyLinesSize = client.getRequestString().find("\r\n\r\n") ? 4 : 2;
-			isHeadersRead = true;
-			contentLengthNum = findContentLength(client.getRequestString());
-			if (contentLengthNum == std::string::npos)
+			client.setEmptyLinePos(client.getRequestString().find("\r\n\r\n") ? client.getRequestString().find("\r\n\r\n") : client.getRequestString().find("\n\n"));
+			client.setEmptyLinesSize(client.getRequestString().find("\r\n\r\n") ? 4 : 2);
+			client.setIsHeadersRead(true);
+			client.setContentLengthNum(findContentLength(client.getRequestString()));
+			if (!std::regex_search(client.getRequestString(), pattern) && client.getContentLengthNum() == 0)
 			{
 				client.setState(Client::ClientState::READY_TO_WRITE);
 			}
@@ -176,21 +174,31 @@ bool Server::receiveRequest(Client &client)
 				client.setMaxClientBodyBytes(findMaxClientBodyBytes(Request(client.getRequestString())));
 		}
 
-		std::regex pattern(R"(\s*transfer-encoding:\s*chunked\s*)", std::regex_constants::icase);
 
-		if (isHeadersRead && (contentLengthNum != std::string::npos || std::regex_match(client.getRequestString(), pattern)))
+		LOG_DEBUG("Matched regex for chunked: ", std::regex_search(client.getRequestString(), pattern));
+		LOG_DEBUG("Request: ", client.getRequestString());
+
+		if (client.getIsHeadersRead() && (client.getContentLengthNum() != std::string::npos || std::regex_search(client.getRequestString(), pattern)))
 		{
-			size_t currRequestBodyBytes = client.getRequestString().length() - emptyLinePos - emptyLinesSize;
+			size_t currRequestBodyBytes = client.getRequestString().length() - client.getEmptyLinePos() - client.getEmptyLinesSize();
+			LOG_DEBUG("Receiving body... contentLengthNum: ", client.getContentLengthNum());
+			LOG_DEBUG("Receiving body... currRequestBodyBytes: ", currRequestBodyBytes);
 
 			if (currRequestBodyBytes > client.getMaxClientBodyBytes())
 				throw ResponseError(413, {}, "Exception has been thrown in receiveRequest() "
 											 "method of Server class");
+			// Find end of chunked body
 			size_t endOfChunkedBody = client.getRequestString().find("\r\n0\r\n\r\n");
-			endOfChunkedBody = endOfChunkedBody != std::string::npos ? client.getRequestString().find("\n0\n\n") : endOfChunkedBody;
-			if (currRequestBodyBytes >= contentLengthNum || endOfChunkedBody != std::string::npos)
+			endOfChunkedBody = endOfChunkedBody == std::string::npos ? client.getRequestString().find("\n0\n\n") : endOfChunkedBody;
+
+			LOG_DEBUG("Receiving body... endOfChunkedBody: ", endOfChunkedBody);
+			LOG_DEBUG("State receiveRequest: ", int(client.getState()));
+			if ((client.getContentLengthNum() != 0 && 
+					currRequestBodyBytes >= client.getContentLengthNum()) || endOfChunkedBody != std::string::npos)
 			{
 				client.setState(Client::ClientState::READY_TO_WRITE);
 			}
+			LOG_DEBUG("State receiveRequest: ", int(client.getState()));
 		}
 		if (client.getState() != Client::ClientState::READY_TO_WRITE)
 			return false;
@@ -402,7 +410,7 @@ void Server::responder(Client &client, Server &server)
 {
 	LOG_DEBUG("Server::responder() called");
 	
-	client.getRequest()->printRequest(); // can flood the Terminal if a file is uploaded
+	// client.getRequest()->printRequest(); // can flood the Terminal if a file is uploaded
 
 	if ((client.getResponse() && !client.getResponse()->getBody().empty()) || formCGIConfigAbsenceResponse(client, server))
 	{
@@ -412,7 +420,7 @@ void Server::responder(Client &client, Server &server)
 	try
 	{
 		validateRequest(client);
-		client.getRequest()->printRequest(); // can flood the Terminal if a file is uploaded
+		// client.getRequest()->printRequest(); // can flood the Terminal if a file is uploaded
 		if (client.getRequest()->getStartLine()["path"].find("/cgi-bin") != std::string::npos && client.getCGIState() == Client::CGIState::INIT)
 		{
 			CGIServer::handleCGI(client, server);

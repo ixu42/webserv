@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/19 12:27:08 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/23 18:40:00 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/26 19:47:57 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,8 +47,14 @@ class Client
 		Response*	_response;
 		ClientState	_state;
 		CGIState	_stateCGI;
+
 		std::string	_requestString;
+		int			_emptyLinePos;
+		int			_emptyLinesSize;
+		size_t		_contentLengthNum;
+		bool		_isHeadersRead;
 		size_t		_maxClientBodyBytes;
+
 		std::string	_responseString;
 		size_t		_totalBytesWritten;
 
@@ -68,6 +74,10 @@ class Client
 		ClientState	getState();
 		CGIState	getCGIState();
 		std::string	getRequestString();
+		bool		getIsHeadersRead();
+		int			getEmptyLinePos();
+		int			getEmptyLinesSize();
+		size_t		getContentLengthNum();
 		size_t		getMaxClientBodyBytes();
 		std::string	getResponseString();
 		size_t		getTotalBytesWritten();
@@ -82,6 +92,10 @@ class Client
 		void		setState(ClientState state);
 		void		setCGIState(CGIState state);
 		void		setRequestString(const std::string& requestString);
+		void		setEmptyLinePos(int emptyLinePos);
+		void		setEmptyLinesSize(int emptyLinesSize);
+		void		setContentLengthNum(size_t contentLengthNum);
+		void		setIsHeadersRead(bool isHeaderRead);
 		void		setMaxClientBodyBytes(size_t maxClientBodyBytes);
 		void		setResponseString(const std::string& responseString);
 		void		setTotalBytesWritten(size_t totalBytesWritten);

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/25 16:58:22 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/26 20:03:42 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,13 +81,16 @@ void Request::parse(std::string request)
 			}
 		}
 
-		// Parse the body
-		_body = Utility::trim(body);
 		
 		// Unchunk the body if necessary
 		if (_headers.find("transfer-encoding") != _headers.end() && Utility::strToLower(_headers["transfer-encoding"]) == "chunked")
 		{
 			_body = unchunkBody(body);
+		}
+		else
+		{
+			// Parse the body
+			_body = Utility::trim(body);
 		}
 	}
 }
@@ -110,6 +113,7 @@ size_t Request::hexStringToSizeT(const std::string &hexStr)
 
 std::string Request::unchunkBody(std::string& string)
 {
+	LOG_DEBUG("Request::unchunkBody() called");
 	std::string unchunkedData;
 	std::istringstream stream(string);
 
@@ -130,12 +134,12 @@ std::string Request::unchunkBody(std::string& string)
 			stream.get(c);
 			chunkData += c;
 		}
-
 		unchunkedData += chunkData;
 
 		// Read the trailing \r\n after chunk data
 		std::string crlf;
 		std::getline(stream, crlf);
+		LOG_DEBUG(unchunkedData);
 	}
 
 	return unchunkedData;

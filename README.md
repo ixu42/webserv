@@ -180,3 +180,27 @@ root website2/uploads/
 autoindex on
 upload on
 ```
+
+### Usage
+
+To run the program with default setting of the config
+
+```
+make && ./webserv
+```
+
+To run certain config file
+
+```
+make && ./webserv default/config_name.conf
+```
+
+To compile and run the program in DEBUG mode
+
+```
+make debug && ./webserv
+```
+---
+Developed by Hive Helsinki students
+
+ixu: ixu@student.hive.fi | dnikifor: dnikifor@student.hive.fi | vshchuki: vshchuki@student.hive.fi

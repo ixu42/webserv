@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/26 20:01:35 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/26 20:03:42 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,7 +117,6 @@ std::string Request::unchunkBody(std::string& string)
 	std::string unchunkedData;
 	std::istringstream stream(string);
 
-
 	while (true)
 	{
 		std::string chunkSizeStr = Utility::readLine(stream);
@@ -135,7 +134,6 @@ std::string Request::unchunkBody(std::string& string)
 			stream.get(c);
 			chunkData += c;
 		}
-
 		unchunkedData += chunkData;
 
 		// Read the trailing \r\n after chunk data

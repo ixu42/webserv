@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/26 19:55:04 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/26 20:03:12 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,7 +134,6 @@ size_t Server::findMaxClientBodyBytes(Request request)
 	return static_cast<size_t>(numericValue * multiplier);
 }
 
-// Request* Server::receiveRequest(int clientSockfd)
 bool Server::receiveRequest(Client &client)
 {
 	LOG_DEBUG("Server::receiveRequest called for fd: ", client.getFd());
@@ -174,15 +173,9 @@ bool Server::receiveRequest(Client &client)
 				client.setMaxClientBodyBytes(findMaxClientBodyBytes(Request(client.getRequestString())));
 		}
 
-
-		LOG_DEBUG("Matched regex for chunked: ", std::regex_search(client.getRequestString(), pattern));
-		LOG_DEBUG("Request: ", client.getRequestString());
-
 		if (client.getIsHeadersRead() && (client.getContentLengthNum() != std::string::npos || std::regex_search(client.getRequestString(), pattern)))
 		{
 			size_t currRequestBodyBytes = client.getRequestString().length() - client.getEmptyLinePos() - client.getEmptyLinesSize();
-			LOG_DEBUG("Receiving body... contentLengthNum: ", client.getContentLengthNum());
-			LOG_DEBUG("Receiving body... currRequestBodyBytes: ", currRequestBodyBytes);
 
 			if (currRequestBodyBytes > client.getMaxClientBodyBytes())
 				throw ResponseError(413, {}, "Exception has been thrown in receiveRequest() "
@@ -191,14 +184,11 @@ bool Server::receiveRequest(Client &client)
 			size_t endOfChunkedBody = client.getRequestString().find("\r\n0\r\n\r\n");
 			endOfChunkedBody = endOfChunkedBody == std::string::npos ? client.getRequestString().find("\n0\n\n") : endOfChunkedBody;
 
-			LOG_DEBUG("Receiving body... endOfChunkedBody: ", endOfChunkedBody);
-			LOG_DEBUG("State receiveRequest: ", int(client.getState()));
 			if ((client.getContentLengthNum() != 0 && 
 					currRequestBodyBytes >= client.getContentLengthNum()) || endOfChunkedBody != std::string::npos)
 			{
 				client.setState(Client::ClientState::READY_TO_WRITE);
 			}
-			LOG_DEBUG("State receiveRequest: ", int(client.getState()));
 		}
 		if (client.getState() != Client::ClientState::READY_TO_WRITE)
 			return false;

@@ -195,7 +195,7 @@ To run certain config file
 make && ./webserv default/config_name.conf
 ```
 
-To compile the program in DEBUG mode
+To compile and run the program in DEBUG mode
 
 ```
 make debug && ./webserv

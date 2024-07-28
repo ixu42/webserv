@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/19 12:27:08 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/26 19:47:57 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/28 16:51:21 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,11 @@
 #include "../response/Response.hpp"
 #include <limits>
 #include <string>
+
+// Forward declaration of the Request class
+class Request;
+// Forward declaration of the Response class
+class Response;
 
 class Client
 {
@@ -53,6 +58,7 @@ class Client
 		int			_emptyLinesSize;
 		size_t		_contentLengthNum;
 		bool		_isHeadersRead;
+		bool		_isBodyRead;
 		size_t		_maxClientBodyBytes;
 
 		std::string	_responseString;
@@ -75,6 +81,7 @@ class Client
 		CGIState	getCGIState();
 		std::string	getRequestString();
 		bool		getIsHeadersRead();
+		bool		getIsBodyRead();
 		int			getEmptyLinePos();
 		int			getEmptyLinesSize();
 		size_t		getContentLengthNum();
@@ -95,7 +102,8 @@ class Client
 		void		setEmptyLinePos(int emptyLinePos);
 		void		setEmptyLinesSize(int emptyLinesSize);
 		void		setContentLengthNum(size_t contentLengthNum);
-		void		setIsHeadersRead(bool isHeaderRead);
+		void		setIsHeadersRead(bool isHeadersRead);
+		void		setIsBodyRead(bool isBodyRead);
 		void		setMaxClientBodyBytes(size_t maxClientBodyBytes);
 		void		setResponseString(const std::string& responseString);
 		void		setTotalBytesWritten(size_t totalBytesWritten);

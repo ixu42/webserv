@@ -3,17 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   Config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:20 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/23 15:00:39 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/28 20:19:41 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 #include "../utils/ServerException.hpp"
-#include "../utils/Colors.hpp"
+#include "../utils/colors.hpp"
 #include "../utils/Utility.hpp"
 #include "../utils/logUtils.hpp"
 #include "ConfigValidator.hpp"

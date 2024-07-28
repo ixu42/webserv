@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/13 11:05:45 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/23 18:34:37 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/28 20:19:50 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 #include <sstream>
 #include <chrono>
 #include <iomanip>
-#include "Colors.hpp"
+#include "colors.hpp"
 
 /**
  * Utilities for logging four levels of messages: DEBUG, INFO, WARNING, ERROR

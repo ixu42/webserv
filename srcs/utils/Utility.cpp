@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Utility.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:11:23 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/23 17:35:20 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/28 20:33:41 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -172,4 +172,25 @@ void Utility::createFile(std::string filename, std::string content)
 	}
 	outFile << content;
 	outFile.close();
+}
+
+bool Utility::argvCheck(int argc, char *argv[], std::string& configFile)
+{
+	if (argc == 1)
+	{
+		LOG_INFO("No file provided. Default config will be used from default/config.conf");
+		return false;
+	}
+	else if (argc == 2)
+	{
+		configFile = argv[1];
+		return false;
+	}
+	else
+	{
+		LOG_ERROR("Too many arguments");
+		LOG_INFO("Usage: ./webserv <config>");
+		LOG_INFO("<config> - absolute path or relative path to the executable directory");
+		return true;
+	}
 }

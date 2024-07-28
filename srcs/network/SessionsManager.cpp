@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/12 15:02:01 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/24 16:50:50 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/28 21:01:07 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,8 @@ void SessionsManager::handleSessions(Client& client)
 	checkPermissions();
 	if (isHTMLRequest(client))
 	{
-		if (cookie.empty() || !sessionExistsCheck(cookie))
+		if ((cookie.empty() || !sessionExistsCheck(cookie))
+			&& client.getResponse()->getHeader("Set-Cookie").empty())
 		{
 			generateSession(client.getRequest());
 			addSessionToFile(getSession());

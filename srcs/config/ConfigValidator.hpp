@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ConfigValidator.hpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:16 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/23 18:54:11 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/28 20:19:44 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@
 #include <regex>
 #include <iostream>
 
-#include "../utils/Colors.hpp"
+#include "../utils/colors.hpp"
 #include "../utils/Utility.hpp"
 #include "Config.hpp"
 

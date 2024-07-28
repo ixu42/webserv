@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/26 20:03:12 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/28 21:05:05 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -419,7 +419,6 @@ void Server::responder(Client &client, Server &server)
 		}
 		else if (client.getRequest()->getStartLine()["path"].find("/cgi-bin") == std::string::npos)
 			handleNonCGIResponse(client, server);
-		SessionsManager::handleSessions(client);
 	}
 	catch (ResponseError &e)
 	{

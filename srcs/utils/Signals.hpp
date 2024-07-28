@@ -1,20 +1,32 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   globals.hpp                                        :+:      :+:    :+:   */
+/*   Signals.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/19 17:16:12 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/28 20:27:05 by dnikifor         ###   ########.fr       */
+/*   Created: 2024/07/28 19:35:24 by dnikifor          #+#    #+#             */
+/*   Updated: 2024/07/28 20:25:17 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include <vector>
-#include <atomic>
+#include "colors.hpp"
+#include "logUtils.hpp"
+#include "globals.hpp"
 
-extern std::vector<pid_t>	g_childPids;
-extern std::atomic<bool>	g_signalReceived;
-extern const size_t			g_bufferSize;
+#include <csignal>
+#include <iostream>
+#include <atomic>
+#include <vector>
+#include <unistd.h>
+
+class Signals
+{
+	private:
+		static void signalHandler(int signal);
+		
+	public:
+		static void trackSignals();
+};

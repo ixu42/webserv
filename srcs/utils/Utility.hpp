@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Utility.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:11:26 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/23 15:04:38 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/28 20:33:58 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@
 #include <regex>
 
 #include "ServerException.hpp"
+#include "logUtils.hpp"
 
 class Utility
 {
@@ -41,8 +42,9 @@ class Utility
 		static std::string								strToUpper(std::string str);
 		static std::string								readFile(std::string filePath);
 		static std::string								getDate();
-		static std::string										replaceStrInStr(std::string dest, const std::string& str1, const std::string& str2);
+		static std::string								replaceStrInStr(std::string dest, const std::string& str1, const std::string& str2);
 		static std::string								readLine(std::istream &stream);
 		static std::pair<std::vector<uint8_t>, size_t>	readBinaryFile(const std::string& filePath);
 		static void										createFile(std::string filename, std::string content);
+		static bool										argvCheck(int argc, char *argv[], std::string& configFile);
 };

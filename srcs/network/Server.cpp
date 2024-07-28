@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/28 19:00:13 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/28 20:16:47 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -473,6 +473,20 @@ ServerConfig *Server::findServerConfig(Request *req)
 					reqPort = Utility::trim(hostSplit.at(1));
 	}
 
+	// If request is a servername, find the correct servername
+	if (!reqHost.empty())
+	{
+		for (ServerConfig &config : _configs)
+		{
+			LOG_DEBUG(config.serverName, ", ", reqHost);
+			if (config.serverName == reqHost)
+			{
+				LOG_DEBUG("config match!");
+				return &config;
+			}
+		}
+	}
+
 	// Also additional check can be needed for the port 80. The port might be not specified in the request.
 	// Check with sudo ./webserv
 	if (whoAmI() == req->getHeaders()["host"] ||
@@ -480,16 +494,6 @@ ServerConfig *Server::findServerConfig(Request *req)
 	{
 		if (!_configs.empty())
 			return &_configs[0];
-	}
-
-	// If request is a servername, find the correct servername
-	if (!reqHost.empty())
-	{
-		for (ServerConfig &config : _configs)
-		{
-			if (config.serverName == reqHost)
-				return &config;
-		}
 	}
 
 	if (_configs.empty())

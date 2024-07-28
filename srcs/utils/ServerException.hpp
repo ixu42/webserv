@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerException.hpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:43 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/09 21:37:28 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/28 20:53:46 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,11 +27,13 @@ class ServerException : public std::exception
 {
 	protected:
 		std::string _message;
+		int			_errno;
 
 	public:
 		explicit ServerException(const std::string message);
 
-		const char* what() const noexcept override;
+		const char*	what() const noexcept override;
+		int	getErrno() const;
 };
 
 class ResponseError: public ServerException

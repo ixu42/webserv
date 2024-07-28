@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:40 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/25 15:21:11 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/28 16:38:05 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,10 +18,14 @@
 #include <iostream>
 #include <vector>
 
+#include "../network/Client.hpp"
 #include "../utils/Utility.hpp"
 #include "../utils/logUtils.hpp"
 #include "../config/Config.hpp"
 #include "../utils/UrlEncoder.hpp"
+
+// Forward declaration of the Client class
+class Client;
 
 class Request
 {
@@ -37,9 +41,12 @@ class Request
 		
 	public:
 		Request();
-		Request(std::string request);
+		Request(Client& client);
+		// Request(std::string request);
 
-		void					parse(std::string request);
+
+		void					parse(Client& client);
+		// void					parse(std::string request);
 
 		/* Getters and setters */
 		QueryStringParameters	getStartLine();

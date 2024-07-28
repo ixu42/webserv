@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/28 21:05:05 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/28 21:13:27 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -156,10 +156,10 @@ bool Server::receiveRequest(Client &client)
 		client.setRequestString(client.getRequestString() + std::string(buffer, bytesRead));
 
 		// Check if the request is complete (ends with "\r\n\r\n")
-		if (!client.getIsHeadersRead() && (client.getRequestString().find("\r\n\r\n") != std::string::npos || client.getRequestString().find("\n\n") != std::string::npos))
+		if (!client.getIsHeadersRead() && client.getRequestString().find("\r\n\r\n") != std::string::npos)
 		{
-			client.setEmptyLinePos(client.getRequestString().find("\r\n\r\n") ? client.getRequestString().find("\r\n\r\n") : client.getRequestString().find("\n\n"));
-			client.setEmptyLinesSize(client.getRequestString().find("\r\n\r\n") ? 4 : 2);
+			client.setEmptyLinePos(client.getRequestString().find("\r\n\r\n"));
+			client.setEmptyLinesSize(4);
 			client.setIsHeadersRead(true);
 			client.setContentLengthNum(findContentLength(client.getRequestString()));
 			if (!std::regex_search(client.getRequestString(), pattern) && client.getContentLengthNum() == 0)
@@ -170,7 +170,7 @@ bool Server::receiveRequest(Client &client)
 			// Find maxClientBodySize
 			// only calculate if the value is initial
 			if (client.getMaxClientBodyBytes() == std::numeric_limits<size_t>::max())
-				client.setMaxClientBodyBytes(findMaxClientBodyBytes(Request(client.getRequestString())));
+				client.setMaxClientBodyBytes(findMaxClientBodyBytes(Request(client)));
 		}
 
 		if (client.getIsHeadersRead() && (client.getContentLengthNum() != std::string::npos || std::regex_search(client.getRequestString(), pattern)))
@@ -182,12 +182,12 @@ bool Server::receiveRequest(Client &client)
 											 "method of Server class");
 			// Find end of chunked body
 			size_t endOfChunkedBody = client.getRequestString().find("\r\n0\r\n\r\n");
-			endOfChunkedBody = endOfChunkedBody == std::string::npos ? client.getRequestString().find("\n0\n\n") : endOfChunkedBody;
 
-			if ((client.getContentLengthNum() != 0 && 
-					currRequestBodyBytes >= client.getContentLengthNum()) || endOfChunkedBody != std::string::npos)
+			if ((client.getContentLengthNum() != 0
+					&& currRequestBodyBytes >= client.getContentLengthNum()) || endOfChunkedBody != std::string::npos)
 			{
 				client.setState(Client::ClientState::READY_TO_WRITE);
+				client.setIsBodyRead(true);
 			}
 		}
 		if (client.getState() != Client::ClientState::READY_TO_WRITE)
@@ -204,20 +204,20 @@ void Server::handler(Server *&server, Client &client)
 	try
 	{
 		if (server->receiveRequest(client))
-			client.setRequest(new Request(client.getRequestString()));
+			client.setRequest(new Request(client));
 	}
 	catch (ResponseError &e) // For example, maxClientBodySize exceeded
 	{
 		LOG_ERROR("Request can not be handled: ", e.what(), ": ", e.getCode());
 		std::cout << "Client state: " << int(client.getState()) << std::endl;
 		client.setState(Client::ClientState::READY_TO_WRITE);
-		client.setRequest(new Request(client.getRequestString()));
+		client.setRequest(new Request(client));
 		client.setResponse(createResponse(client.getRequest(), e.getCode()));
 		LOG_DEBUG("Response set for ResponseError catch");
 	}
 	catch (std::exception &e)
 	{
-		client.setRequest(new Request(client.getRequestString()));
+		client.setRequest(new Request(client));
 		LOG_ERROR("Request handle threw an exception");
 		std::cout << "Client state: " << int(client.getState()) << std::endl;
 		client.setState(Client::ClientState::READY_TO_WRITE);
@@ -472,6 +472,20 @@ ServerConfig *Server::findServerConfig(Request *req)
 					reqPort = Utility::trim(hostSplit.at(1));
 	}
 
+	// If request is a servername, find the correct servername
+	if (!reqHost.empty())
+	{
+		for (ServerConfig &config : _configs)
+		{
+			LOG_DEBUG(config.serverName, ", ", reqHost);
+			if (config.serverName == reqHost)
+			{
+				LOG_DEBUG("config match!");
+				return &config;
+			}
+		}
+	}
+
 	// Also additional check can be needed for the port 80. The port might be not specified in the request.
 	// Check with sudo ./webserv
 	if (whoAmI() == req->getHeaders()["host"] ||
@@ -479,16 +493,6 @@ ServerConfig *Server::findServerConfig(Request *req)
 	{
 		if (!_configs.empty())
 			return &_configs[0];
-	}
-
-	// If request is a servername, find the correct servername
-	if (!reqHost.empty())
-	{
-		for (ServerConfig &config : _configs)
-		{
-			if (config.serverName == reqHost)
-				return &config;
-		}
 	}
 
 	if (_configs.empty())

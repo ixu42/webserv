@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:46 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/24 15:51:48 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/28 20:58:33 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ Socket::~Socket()
 		close(_sockfd);
 }
 
-bool	Socket::create()
+void Socket::create()
 {
 	LOG_DEBUG("Socket::create() called");
 
@@ -33,17 +33,16 @@ bool	Socket::create()
 	if (!isValidSocketFd())
 	{
 		printError("socket() error: ");
-		return false;
+		throw ServerException("Failed to create socket: " + std::string(strerror(errno)));
 	}
-	return true;
 }
 
-bool	Socket::bindAddress(struct addrinfo* res)
+void Socket::bindAddress(struct addrinfo* res)
 {
 	LOG_DEBUG("Socket::bindAddress() called");
 
 	if (!isValidSocketFd())
-		return false;
+		throw ServerException("Not a valid socket fd while binding");
 
 	// make address in TIME_WAIT state reusable immediately 
 	int opt = 1;
@@ -51,7 +50,7 @@ bool	Socket::bindAddress(struct addrinfo* res)
 	if (ret < 0)
 	{
 		printError("setsockopt() error: ");
-		return false;
+		throw ServerException("Failed to set socket options: " + std::string(strerror(errno)));
 	}
 
 	// set socket to non-blocking mode
@@ -59,47 +58,41 @@ bool	Socket::bindAddress(struct addrinfo* res)
 	if (flags < 0)
 	{
 		printError("fcntl F_GETFL error: ");
-		return false;
+		throw ServerException("fcntl F_GETFL error: " + std::string(strerror(errno)));
 	}
 
 	ret = fcntl(_sockfd, F_SETFL, flags | O_NONBLOCK);
 	if (ret < 0)
 	{
 		printError("fcntl F_SETFL error: ");
-		return false;
+		throw ServerException("fcntl F_SETFL error: " + std::string(strerror(errno)));
 	}
 
 	ret = bind(_sockfd, res->ai_addr, res->ai_addrlen);
 	if (ret < 0)
 	{
 		freeaddrinfo(res);
-		close(_sockfd);
 		printError("bind() error: ");
-		// This line should be refactored not to use inet_ntoa
-		throw ServerException("could not bind socket to address");
-		return false;
-	}
-	return true;	
+		throw ServerException("could not bind socket to address: " + std::string(strerror(errno)));
+	}	
 }
 
-bool	Socket::listenForConnections(int backlog)
+void Socket::listenForConnections(int backlog)
 {
 	LOG_DEBUG("Socket::listenForConnections() called");
 
 	if (!isValidSocketFd())
-		return false;
+		throw ServerException("Not a valid socket fd while listening");
 
 	int ret = listen(_sockfd, backlog);
 	if (ret < 0)
 	{
 		printError("listen() error: ");
-		throw ServerException("could not start listening for connections");
-		return false;
+		throw ServerException("could not start listening for connections: " + std::string(strerror(errno)));
 	}
-	return true;
 }
 
-int	Socket::acceptConnection(struct sockaddr_in addr)
+int Socket::acceptConnection(struct sockaddr_in addr)
 {
 	LOG_DEBUG("Socket::acceptConnection() called");
 
@@ -117,20 +110,20 @@ int	Socket::acceptConnection(struct sockaddr_in addr)
 	return acceptedSocketFd;
 }
 
-int	Socket::getSockfd()
+int Socket::getSockfd()
 {
 	LOG_DEBUG("Socket::getSockFd() called");
 	return _sockfd;
 }
 
-bool	Socket::isValidSocketFd()
+bool Socket::isValidSocketFd()
 {
 	if (_sockfd < 0)
 		return false;
 	return true;
 }
 
-void	Socket::printError(const std::string& msg)
+void Socket::printError(const std::string& msg)
 {
 	LOG_DEBUG(msg, strerror(errno));
 	if (isValidSocketFd())

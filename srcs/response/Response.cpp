@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/24 15:54:22 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/28 20:13:57 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,6 +79,8 @@ Response::Response() {}
 Response::Response(int code, ServerConfig* serverConfig, std::map<std::string, std::string> optionalHeaders)
 {
 	std::string errorPagePath = serverConfig->defaultPages[404]; // fallback for not legit error codes
+	if (code >= 300 && code <= 399)
+		errorPagePath = "";
 	auto errorIt = serverConfig->errorPages.find(code);
 	auto defaultIt = serverConfig->defaultPages.find(code);
 	if (errorIt != serverConfig->errorPages.end() && access(errorIt->second.c_str(), R_OK) == 0)
@@ -99,30 +101,39 @@ Response::Response(int code, std::string filePath, std::map<std::string, std::st
 		_headers.insert(optionalHeaders.begin(), optionalHeaders.end());
 
 	std::string fileContent;
-	size_t size;
-	
-	if (access(filePath.c_str(), F_OK) == -1) // Fallback, in case default pages/404.html file is missing
-		fileContent = "<!DOCTYPE html><html><head><title>404 Not Found</title></head><body><h1>404 Not Found</h1><hr /><p>Last resort.</p><p>Nothing found.</p></body></html>"; 
-	else if (access(filePath.c_str(), R_OK) == -1) // Fallback, in case default pages/404.html file has no permission to read
-		fileContent = "<!DOCTYPE html><html><head><title>403 Forbidden</title></head><body><h1>403 Forbidden</h1><hr /><p>Last resort.</p><p>No permission.</p></body></html>"; 
-	size = fileContent.size();
-
+	size_t size = 0;
+	// filePath can be empty for 3XX Status request as it does not require body
 	setStatusFromCode(code);
-
-	if (access(filePath.c_str(), R_OK) == 0)
+	if (!filePath.empty())
 	{
-		LOG_INFO("Utility::readBinaryFile() called");
-		auto [binaryFile, binarySize] = Utility::readBinaryFile(filePath);
-		LOG_INFO("Utility::readBinaryFile() finished");
-		size = binarySize;
-		fileContent = std::string(binaryFile.begin(), binaryFile.end());
+		if (access(filePath.c_str(), F_OK) == -1) // Fallback, in case default pages/404.html file is missing
+		{
+			setStatusFromCode(404);
+			fileContent = "<!DOCTYPE html><html><head><title>404 Not Found</title></head><body><h1>404 Not Found</h1><hr /><p>Last resort.</p><p>Nothing found.</p></body></html>"; 
+		}
+		else if (access(filePath.c_str(), R_OK) == -1) // Fallback, in case default pages/404.html file has no permission to read
+		{
+			setStatusFromCode(403);
+			fileContent = "<!DOCTYPE html><html><head><title>403 Forbidden</title></head><body><h1>403 Forbidden</h1><hr /><p>Last resort.</p><p>No permission.</p></body></html>"; 
+		}
+		size = fileContent.size();
 
-		size_t dotPos = filePath.find_last_of(".");
 
-		if (dotPos != std::string::npos && mimeTypes.find(filePath.substr(filePath.find_last_of(".") + 1)) != mimeTypes.end())
-			setType(mimeTypes.at(filePath.substr(filePath.find_last_of(".") + 1)));
-		else
-			setType(mimeTypes.at("default"));
+		if (access(filePath.c_str(), R_OK) == 0)
+		{
+			LOG_INFO("Utility::readBinaryFile() called");
+			auto [binaryFile, binarySize] = Utility::readBinaryFile(filePath);
+			LOG_INFO("Utility::readBinaryFile() finished");
+			size = binarySize;
+			fileContent = std::string(binaryFile.begin(), binaryFile.end());
+
+			size_t dotPos = filePath.find_last_of(".");
+
+			if (dotPos != std::string::npos && mimeTypes.find(filePath.substr(filePath.find_last_of(".") + 1)) != mimeTypes.end())
+				setType(mimeTypes.at(filePath.substr(filePath.find_last_of(".") + 1)));
+			else
+				setType(mimeTypes.at("default"));
+		}
 	}
 	setBody(fileContent);
 	setContentLength(size);

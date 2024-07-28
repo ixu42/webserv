@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/28 21:04:41 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/28 21:13:43 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,19 +36,22 @@ ServersManager::ServersManager()
 				break ;
 			}
 		}
-		if (!foundServer)
-		{
-			try
+			if (!foundServer)
 			{
-				_servers.push_back(new Server(serverConfigs[0].ipAddress.c_str(), serverConfigs[0].port));
-				foundServer = _servers.back();
-			}
-			catch (const std::exception& e)
-			{
-				LOG_ERROR("Failed to launch server: ", e.what());
-				if (errno == EADDRINUSE)
-					moveServerConfigsToNoIpServer(serverConfigs[0].port, serverConfigs);
-			}
+				try
+				{
+					_servers.push_back(new Server(serverConfigs[0].ipAddress.c_str(), serverConfigs[0].port));
+					foundServer = _servers.back();
+				}
+				catch (const ServerException& e)
+				{
+					LOG_ERROR("Failed to launch server: ", e.what());
+					if (e.getErrno() == EADDRINUSE)
+					{
+						moveServerConfigsToNoIpServer(serverConfigs[0].port, serverConfigs);
+						LOG_INFO("Config for the server will be moved");
+					}
+				}
 		}
 		if (foundServer)
 			foundServer->setConfig(serverConfigs);
@@ -89,8 +92,10 @@ ServersManager::~ServersManager()
 
 Server* ServersManager::findNoIpServerByPort(int port)
 {
+	LOG_DEBUG("ServersManager::findNoIpServerByPort() called");
 	for (Server*& server : _servers)
 	{
+		LOG_DEBUG("ipAddr: ", server->getIpAddress());
 		if (server->getIpAddress().empty() && server->getPort() == port)
 			return server;
 	}

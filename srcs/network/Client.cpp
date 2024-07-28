@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/19 12:29:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/26 17:49:52 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/28 16:21:40 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@ Client::Client() :
 		_emptyLinesSize(0),
 		_contentLengthNum(std::string::npos),
 		_isHeadersRead(false),
+		_isBodyRead(false),
 		_maxClientBodyBytes(std::numeric_limits<size_t>::max()),
 		_totalBytesWritten(0) {}
 
@@ -101,6 +102,11 @@ std::string Client::getRequestString()
 bool Client::getIsHeadersRead()
 {
 	return _isHeadersRead;
+}
+
+bool Client::getIsBodyRead()
+{
+	return _isBodyRead;
 }
 
 int Client::getEmptyLinePos()
@@ -192,9 +198,14 @@ void Client::setRequestString(const std::string& requestString)
 	_requestString = requestString;
 }
 
-void Client::setIsHeadersRead(bool isHeaderRead)
+void Client::setIsHeadersRead(bool isHeadersRead)
 {
-	_isHeadersRead = isHeaderRead;
+	_isHeadersRead = isHeadersRead;
+}
+
+void Client::setIsBodyRead(bool isBodyRead)
+{
+	_isBodyRead = isBodyRead;
 }
 
 void		Client::setEmptyLinePos(int emptyLinePos)

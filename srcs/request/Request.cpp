@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/26 20:03:42 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/28 17:08:42 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,23 +25,19 @@ Request::Request()
 	_startLine["query"] = "";
 }
 
-Request::Request(std::string request)
+Request::Request(Client& client)
 {
 	LOG_DEBUG("Request constructor called");
-	parse(request);
+	parse(client);
 }
 
-void Request::parse(std::string request)
+void Request::parse(Client& client)
 {
 	LOG_DEBUG("Request::parse() called");
-	int emptyLinePosition = request.find("\r\n\r\n");
-	if (emptyLinePosition == -1)
-		emptyLinePosition = request.find("\n\n");
 
-	if (emptyLinePosition != -1)
+	if (client.getEmptyLinePos() != -1)
 	{
-		std::string headers = Utility::trim(request.substr(0, emptyLinePosition));
-		std::string body = Utility::trim(request.substr(emptyLinePosition + 2));
+		std::string headers = Utility::trim(client.getRequestString().substr(0, client.getEmptyLinePos()));
 		
 		// Split headers into lines
 		std::vector<std::string> headerLines = Utility::splitStr(headers, "\n");
@@ -81,16 +77,20 @@ void Request::parse(std::string request)
 			}
 		}
 
-		
-		// Unchunk the body if necessary
-		if (_headers.find("transfer-encoding") != _headers.end() && Utility::strToLower(_headers["transfer-encoding"]) == "chunked")
+		if (client.getIsBodyRead())
 		{
-			_body = unchunkBody(body);
-		}
-		else
-		{
-			// Parse the body
-			_body = Utility::trim(body);
+			std::string body = Utility::trim(client.getRequestString().substr(client.getEmptyLinePos() + 2));
+			// Unchunk the body if necessary
+			if (_headers.find("transfer-encoding") != _headers.end()
+				&& Utility::strToLower(_headers["transfer-encoding"]) == "chunked")
+			{
+				_body = unchunkBody(body);
+			}
+			else
+			{
+				// Parse the body
+				_body = Utility::trim(body);
+			}
 		}
 	}
 }
@@ -117,10 +117,16 @@ std::string Request::unchunkBody(std::string& string)
 	std::string unchunkedData;
 	std::istringstream stream(string);
 
+	int count = 0;
+
 	while (true)
 	{
+		count++;
 		std::string chunkSizeStr = Utility::readLine(stream);
 		size_t chunkSize = hexStringToSizeT(chunkSizeStr);
+
+		LOG_DEBUG(TEXT_YELLOW, "chunkSize: ", chunkSize, RESET);
+
 		if (chunkSize == 0) {
 			break;
 		}
@@ -140,6 +146,8 @@ std::string Request::unchunkBody(std::string& string)
 		std::string crlf;
 		std::getline(stream, crlf);
 		LOG_DEBUG(unchunkedData);
+		if (count > 300)
+			break;
 	}
 
 	return unchunkedData;

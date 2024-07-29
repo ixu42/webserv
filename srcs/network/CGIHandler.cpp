@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/24 20:09:46 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/29 14:30:54 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -259,6 +259,7 @@ bool CGIServer::readScriptOutput(Client& client, Server*& server)
 	while ((bytesRead = read(client.getChildPipe(0), buffer, sizeof(buffer))) > 0)
 	{
 		LOG_DEBUG(TEXT_GREEN, "Populating response body with: ", bytesRead, RESET);
+		LOG_DEBUG(TEXT_GREEN, "Response body: ", buffer, RESET);
 		oss.write(buffer, bytesRead);
 	}
 

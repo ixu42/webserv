@@ -42,7 +42,7 @@ error 404 "user-pages copy/404.html"
 #### Defining client max body size
 
 
-`clientMaxBodySize` can be set in `G`, `M`, `KB`, `B`
+`clientMaxBodySize` can be set in `G`, `M`, `K`, `B`
 
 ```
 clientMaxBodySize 100KB

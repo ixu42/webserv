@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/29 14:30:54 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/29 17:02:13 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -129,7 +129,7 @@ void CGIServer::handleChildProcess(Client& client, const std::string& interprete
 void CGIServer::handleParentProcess(Client& client, const std::string& body)
 {
 	close(client.getParentPipe(_in));
-	close(client.getChildPipe(_out));
+	// close(client.getChildPipe(_out));
 
 	LOG_DEBUG("Writing body of the request inside the pipe");
 	write(client.getParentPipe(_out), body.c_str(), body.size());
@@ -251,19 +251,33 @@ void CGIServer::InitCGI(Client& client, Server& server)
 bool CGIServer::readScriptOutput(Client& client, Server*& server)
 {
 	LOG_DEBUG("readScriptOutput() called");
-	char buffer[g_bufferSize];
+	char buffer[57];
 	ssize_t bytesRead;
-	std::ostringstream oss;
+	// std::ostringstream oss;
 
-	std::fill(buffer, buffer + g_bufferSize, 0);
-	while ((bytesRead = read(client.getChildPipe(0), buffer, sizeof(buffer))) > 0)
+	std::fill(buffer, buffer + 57, 0);
+	if ((bytesRead = read(client.getChildPipe(0), buffer, sizeof(buffer))) > 0)
 	{
 		LOG_DEBUG(TEXT_GREEN, "Populating response body with: ", bytesRead, RESET);
 		LOG_DEBUG(TEXT_GREEN, "Response body: ", buffer, RESET);
-		oss.write(buffer, bytesRead);
+		client.getString().append(buffer, bytesRead);
 	}
 
 	LOG_INFO(TEXT_YELLOW, "bytesRead in readScriptOutput: ", bytesRead, RESET);
+	
+	if (bytesRead < 57)
+	{
+		LOG_DEBUG(TEXT_YELLOW, "less than 10", RESET);
+	
+		checkResponseHeaders(client.getString(), client.getResponse());
+		close(client.getChildPipe(0));
+		unregisterCGIPollFd(*server, client.getChildPipe(0));
+		
+		auto it = std::find(g_childPids.begin(), g_childPids.end(), client.getPid());
+		if (it != g_childPids.end())
+			g_childPids.erase(it);
+		return true;
+	}
 
 	if (bytesRead != 0)
 	{
@@ -273,7 +287,7 @@ bool CGIServer::readScriptOutput(Client& client, Server*& server)
 	
 	LOG_DEBUG(TEXT_YELLOW, "readScriptOutput read the whole body", RESET);
 	
-	checkResponseHeaders(oss.str(), client.getResponse());
+	checkResponseHeaders(client.getString(), client.getResponse());
 	close(client.getChildPipe(0));
 	unregisterCGIPollFd(*server, client.getChildPipe(0));
 	

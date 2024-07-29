@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/19 12:29:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/28 16:21:40 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/29 16:59:22 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,11 @@ Client::~Client() {}
 /**
  * Getters
  */
+
+std::string&	Client::getString()
+{
+	return _string;
+}
 
 int Client::getFd()
 {

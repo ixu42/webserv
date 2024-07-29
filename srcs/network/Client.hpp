@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/19 12:27:08 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/28 16:51:21 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/29 16:59:00 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,7 @@ class Client
 		Response*	_response;
 		ClientState	_state;
 		CGIState	_stateCGI;
+		std::string _string;
 
 		std::string	_requestString;
 		int			_emptyLinePos;
@@ -88,6 +89,7 @@ class Client
 		size_t		getMaxClientBodyBytes();
 		std::string	getResponseString();
 		size_t		getTotalBytesWritten();
+		std::string&	getString();
 		
 		void		setFd(int fd);
 		void		setPid(pid_t pid);

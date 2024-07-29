@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/29 13:18:50 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/29 17:37:26 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 std::vector<Server*> ServersManager::_servers;
 ServersManager* ServersManager::_instance = nullptr;
 Config* ServersManager::_webservConfig = nullptr;
+std::vector<struct pollfd> ServersManager::_fds;
 
 ServersManager::ServersManager()
 {
@@ -148,6 +149,7 @@ void ServersManager::run()
 	{
 		// LOG_DEBUG("poll() waiting for an fd to be ready...");
 		int ready = poll(_fds.data(), _fds.size(), -1);
+		LOG_DEBUG("fds size:", _fds.size());
 		// LOG_DEBUG("poll() returned: ", ready);
 		if (ready == -1)
 		{

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/23 18:57:17 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/29 16:24:04 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include "Socket.hpp"
 #include "CGIHandler.hpp"
 #include "SessionsManager.hpp"
+#include "ServersManager.hpp"
 #include "../response/Response.hpp"
 #include "../utils/Utility.hpp"
 #include "../utils/logUtils.hpp"
@@ -40,6 +41,8 @@
 #include <fstream> //open file
 
 #include <regex> // to match header of chunked request
+
+class ServersManager;
 
 class Server
 {

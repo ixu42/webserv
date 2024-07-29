@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/29 15:54:58 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/29 20:29:55 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,8 +75,7 @@ int Server::accepter()
 
 	struct sockaddr_in clientAddr;
 	int clientSockfd = _serverSocket.acceptConnection(clientAddr);
-	if (clientSockfd == -1)
-		return -1;
+		
 	LOG_INFO("Connection established with client (socket fd: ", clientSockfd, ")");
 
 	Client newClient;

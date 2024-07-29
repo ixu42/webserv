@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/28 20:13:57 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/29 12:57:26 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,9 +121,9 @@ Response::Response(int code, std::string filePath, std::map<std::string, std::st
 
 		if (access(filePath.c_str(), R_OK) == 0)
 		{
-			LOG_INFO("Utility::readBinaryFile() called");
+			LOG_DEBUG("Utility::readBinaryFile() called");
 			auto [binaryFile, binarySize] = Utility::readBinaryFile(filePath);
-			LOG_INFO("Utility::readBinaryFile() finished");
+			LOG_DEBUG("Utility::readBinaryFile() finished");
 			size = binarySize;
 			fileContent = std::string(binaryFile.begin(), binaryFile.end());
 

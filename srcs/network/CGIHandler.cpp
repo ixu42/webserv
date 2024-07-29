@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/29 14:30:54 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/29 20:03:41 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -240,10 +240,11 @@ void CGIServer::InitCGI(Client& client, Server& server)
 				"method of CGIServer class");
 		}
 
-		LOG_DEBUG("Pipes numbers: ",client.getParentPipe(0)," ",client.getParentPipe(1),
-			" ", client.getChildPipe(0)," ",client.getChildPipe(1));
+		LOG_DEBUG("Pipes numbers: ",client.getParentPipe(_in)," ",client.getParentPipe(_out),
+			" ", client.getChildPipe(_in)," ",client.getChildPipe(_out));
 		
-		registerCGIPollFd(server, client.getChildPipe(0), POLLIN);
+		registerCGIPollFd(server, client.getChildPipe(_in), POLLIN);
+		registerCGIPollFd(server, client.getParentPipe(_out), POLLOUT);
 		LOG_DEBUG("Finished InitCGI()");
 	}
 }
@@ -253,14 +254,13 @@ bool CGIServer::readScriptOutput(Client& client, Server*& server)
 	LOG_DEBUG("readScriptOutput() called");
 	char buffer[g_bufferSize];
 	ssize_t bytesRead;
-	std::ostringstream oss;
 
 	std::fill(buffer, buffer + g_bufferSize, 0);
-	while ((bytesRead = read(client.getChildPipe(0), buffer, sizeof(buffer))) > 0)
+	while ((bytesRead = read(client.getChildPipe(_in), buffer, sizeof(buffer))) > 0)
 	{
 		LOG_DEBUG(TEXT_GREEN, "Populating response body with: ", bytesRead, RESET);
 		LOG_DEBUG(TEXT_GREEN, "Response body: ", buffer, RESET);
-		oss.write(buffer, bytesRead);
+		client.getRespBody().append(buffer, bytesRead);
 	}
 
 	LOG_INFO(TEXT_YELLOW, "bytesRead in readScriptOutput: ", bytesRead, RESET);
@@ -273,9 +273,10 @@ bool CGIServer::readScriptOutput(Client& client, Server*& server)
 	
 	LOG_DEBUG(TEXT_YELLOW, "readScriptOutput read the whole body", RESET);
 	
-	checkResponseHeaders(oss.str(), client.getResponse());
-	close(client.getChildPipe(0));
-	unregisterCGIPollFd(*server, client.getChildPipe(0));
+	checkResponseHeaders(client.getRespBody(), client.getResponse());
+	close(client.getChildPipe(_in));
+	unregisterCGIPollFd(*server, client.getChildPipe(_in));
+	unregisterCGIPollFd(*server, client.getParentPipe(_out));
 	
 	auto it = std::find(g_childPids.begin(), g_childPids.end(), client.getPid());
 	if (it != g_childPids.end())

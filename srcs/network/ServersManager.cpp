@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/29 17:37:26 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/29 20:07:05 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -265,7 +265,6 @@ void	ServersManager::handleWrite(int fdReadyForWrite)
 				if (client.getState() == Client::ClientState::READY_TO_WRITE && !ifCGIsFd(client, fdReadyForWrite))
 				{
 					server->responder(client, *server); // for CGI only fork, execve, child stuff
-					LOG_INFO("Response object created");
 					if (client.getChildPipe(0) == -1)
 					{
 						client.setState(Client::ClientState::BUILDING);
@@ -275,7 +274,6 @@ void	ServersManager::handleWrite(int fdReadyForWrite)
 				if (ifCGIsFd(client, fdReadyForWrite) && client.getCGIState() == Client::CGIState::INIT)
 				{
 					server->responder(client, *server);
-					LOG_INFO("Response object created");
 				}
 
 				if ((!ifCGIsFd(client, fdReadyForWrite) && client.getState() == Client::ClientState::BUILDING)

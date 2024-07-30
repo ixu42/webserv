@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/29 16:24:04 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/30 23:06:28 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,6 +80,8 @@ class Server
 		void						handler(Server*& server, Client& client);
 		void						responder(Client& client, Server &server);
 
+		void						receiveHeaders(Client &client, std::regex pattern);
+		void						receiveBody(Client &client, std::regex pattern);
 		bool						receiveRequest(Client& client);
 		bool						sendResponse(Client& client);
 		void						finalizeResponse(Client& client);

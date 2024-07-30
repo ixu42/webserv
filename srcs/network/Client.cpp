@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/19 12:29:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/28 16:21:40 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/29 19:50:12 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,6 +72,11 @@ int* Client::getChildPipeWhole()
 std::string Client::getCGIString()
 {
 	return _CGIString;
+}
+
+std::string& Client::getRespBody()
+{
+	return _respBody;
 }
 
 Request* Client::getRequest()

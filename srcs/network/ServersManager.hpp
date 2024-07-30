@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/25 12:00:32 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/29 16:24:16 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,33 +28,35 @@
 
 #define DEFAULT_CONFIG "default/config.conf"
 
+class Server;
+
 /* Can be only instatiated once */
 class ServersManager
 {
 	private:
-		static ServersManager*		_instance;
-		static std::vector<Server*>	_servers;
-		static Config*				_webservConfig;
-		std::vector<struct pollfd>	_fds;
+		static ServersManager*				_instance;
+		static std::vector<Server*>			_servers;
+		static Config*						_webservConfig;
+		static std::vector<struct pollfd>	_fds;
 
 		ServersManager();
 		ServersManager(const ServersManager&) = delete;
 		ServersManager& operator=(const ServersManager&) = delete;
 
-		Server*						findNoIpServerByPort(int port);
-		bool						checkUniqueNameServer(ServerConfig& serverConfig, std::vector<ServerConfig>& targetServerconfigs);
-		void						moveServerConfigsToNoIpServer(int port, std::vector<ServerConfig>& serverConfigs);
-		void						handleRead(struct pollfd& pfdReadyForRead);
-		void						handleWrite(int fdReadyForWrite);
-		void						removeFromPollfd(int fd);
-		void						removeClientByFd(int fd);
-		bool						ifCGIsFd(Client& client, int fd);
-		pollfd*						findPollfdByFd(int fd);
+		Server*								findNoIpServerByPort(int port);
+		bool								checkUniqueNameServer(ServerConfig& serverConfig, std::vector<ServerConfig>& targetServerconfigs);
+		void								moveServerConfigsToNoIpServer(int port, std::vector<ServerConfig>& serverConfigs);
+		void								handleRead(struct pollfd& pfdReadyForRead);
+		void								handleWrite(int fdReadyForWrite);
+		void								removeClientByFd(int fd);
+		bool								ifCGIsFd(Client& client, int fd);
+		pollfd*								findPollfdByFd(int fd);
 
 	public:
 		~ServersManager();
-		static ServersManager*		getInstance(const char* argv0);
+		static ServersManager*				getInstance(const char* argv0);
 
-		void						run();
-		static void					initConfig(const char *fileNameString, const char* argv0);
+		void								run();
+		static void							initConfig(const char *fileNameString, const char* argv0);
+		static void							removeFromPollfd(int fd);
 };

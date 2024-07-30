@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/30 13:25:45 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/30 13:32:45 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -379,6 +379,11 @@ void Server::finalizeResponse(Client &client)
 	client.setResponse(nullptr);
 	close(client.getFd());
 	CGIServer::closeFds(client);
+	ServersManager::removeFromPollfd(client.getFd());
+	ServersManager::removeFromPollfd(client.getChildPipe(0));
+	ServersManager::removeFromPollfd(client.getChildPipe(1));
+	ServersManager::removeFromPollfd(client.getParentPipe(0));
+	ServersManager::removeFromPollfd(client.getParentPipe(1));
 	removeFromClients(client);
 }
 

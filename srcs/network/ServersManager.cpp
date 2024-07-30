@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/30 19:53:28 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/30 23:05:20 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,11 +164,13 @@ void ServersManager::run()
 			{
 				LOG_DEBUG("if POLLIN for fd: ", pfd.fd);
 				handleRead(pfd);
+				break ;
 			}
 			if (pfd.revents & POLLOUT)
 			{
 				LOG_DEBUG("if POLLOUT for fd: ", pfd.fd);
 				handleWrite(pfd.fd);
+				break ;
 			}
 			if (pfd.revents & (POLLERR | POLLHUP)) 
 			{
@@ -184,6 +186,7 @@ void ServersManager::run()
 				}
 				removeClientByFd(pfd.fd);
 				removeFromPollfd(pfd.fd);
+				break ;
 			}
 		}
 	}

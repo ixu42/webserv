@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/29 20:03:41 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/30 18:12:45 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -206,15 +206,19 @@ void CGIServer::checkResponseHeaders(const std::string& result, Response* respon
 void CGIServer::closeFds(Client& client)
 {
 	close(client.getChildPipe(_in));
+	client.setChildPipe(_in, -1);
 	close(client.getChildPipe(_out));
+	client.setChildPipe(_out, -1);
 	close(client.getParentPipe(_in));
+	client.setParentPipe(_in, -1);
 	close(client.getParentPipe(_out));
+	client.setParentPipe(_out, -1);
 }
 
 void CGIServer::registerCGIPollFd(Server& server, int fd, short events)
 {
 	LOG_DEBUG("CGIServer::registerCGIPollFd() called");
-	server.getFds()->push_back({fd, events, 0});
+	server.getFds()->push_back({fd, events, (short int)0});
 }
 
 void CGIServer::unregisterCGIPollFd(Server& server, int fd)

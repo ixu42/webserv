@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+         #
+#    By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/08 17:44:55 by ixu               #+#    #+#              #
-#    Updated: 2024/07/06 02:32:22 by vshchuki         ###   ########.fr        #
+#    Updated: 2024/07/28 20:35:46 by dnikifor         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,8 +23,9 @@ RESPONSE_DIR := $(SRCS_DIR)response/
 UTILS_DIR := $(SRCS_DIR)utils/
 
 # Source files
-SRCS = $(addsuffix .cpp, main Socket Server ServerException ServersManager Request Response \
-			Utility Config ConfigValidator CGIHandler)
+SRCS = $(addsuffix .cpp, main DirLister Uploader Socket Server Client ServerException \
+			ServersManager Request Response Utility Config ConfigValidator CGIHandler \
+			SessionsManager UrlEncoder Signals)
 
 # Object files
 OBJS = $(addprefix $(OBJS_DIR), $(SRCS:.cpp=.o))
@@ -36,7 +37,9 @@ DEBUG_FLAGS := -DDEBUG_MODE
 
 # Color scheme for terminal output
 BRIGHT_YELLOW := \033[0;93m
+RED := \033[31m
 YELLOW := \033[0;33m
+GREEN := \033[32m
 COLOR_RESET := \033[0m
 
 # Default target
@@ -44,7 +47,7 @@ all: $(NAME)
 
 $(NAME): $(OBJS_DIR) $(OBJS)
 	@$(COMPILER) -o $(NAME) $(OBJS)
-	@echo "$(BRIGHT_YELLOW)Built $(NAME)$(COLOR_RESET)"
+	@echo "$(GREEN)Built $(NAME)$(COLOR_RESET)"
 
 # Debug target
 debug: FLAGS += $(DEBUG_FLAGS)
@@ -89,52 +92,12 @@ $(OBJS_DIR)%.o: $(UTILS_DIR)%.cpp .flags
 
 clean:
 	@rm -fr $(OBJS_DIR) .debug .flags .flags_current
-	@echo "$(YELLOW)Removed object files$(COLOR_RESET)"
+	@echo "$(RED)Removed object files$(COLOR_RESET)"
 
 fclean: clean
 	@rm -f $(NAME)
-	@echo "$(YELLOW)Removed executable(s)$(COLOR_RESET)"
+	@echo "$(RED)Removed executable(s)$(COLOR_RESET)"
 
 re: fclean all
 
 .PHONY: flags
-
-# COMPILER = c++
-# FLAGS = -Wall -Wextra -Werror -std=c++17 -g
-
-# NAME = webserv
-
-# SRCS = main.cpp \
-# 		Server.cpp \
-# 		ServersManager.cpp \
-# 		Request.cpp \
-# 		Config.cpp \
-# 		Utility.cpp
-
-# OBJ_DIR = objs/
-# OBJS = $(addprefix $(OBJ_DIR), $(SRCS:.cpp=.o))
-
-# all: $(NAME)
-
-# $(NAME): $(OBJ_DIR) $(OBJS)
-# 	$(COMPILER) $(FLAGS) $(OBJS) -o $(NAME)
-
-# $(OBJ_DIR):
-# 	mkdir -p $(OBJ_DIR)
-
-# $(OBJ_DIR)%.o: %.cpp %.hpp | $(OBJ_DIR)
-# 	$(COMPILER) $(FLAGS) -c $< -o $@
-
-# $(OBJ_DIR)%.o: %.cpp | $(OBJ_DIR)
-# 	$(COMPILER) $(FLAGS) -c $< -o $@
-
-# clean:
-# 	rm -rf $(OBJ_DIR)
-
-# fclean: clean
-# 	rm -f $(NAME)
-
-# re: fclean all
-
-# .PHONY: all clean fclean re
-

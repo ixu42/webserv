@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Utility.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:11:23 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/10 18:58:29 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/28 20:33:41 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,26 @@ std::string Utility::trim(std::string str)
 	return (start < end ? std::string(start, end) : "");
 }
 
+std::string Utility::trimChars(std::string str, std::string chars)
+{
+	std::string result = str;
+	for (char& symbol : chars)
+	{
+		std::string::const_iterator start = std::find_if_not(result.begin(), result.end(), [symbol](char c) {
+			return symbol == c;
+		});
+		std::string::const_iterator end = std::find_if_not(result.rbegin(), result.rend(), [symbol](char c) {
+			return symbol == c;
+		}).base();
+		result = start < end ? std::string(start, end) : "";
+	}
+	return result;
+}
+
+
+
 // Splits string with string delimiter
-std::vector<std::string> Utility::splitString(const std::string &str, const std::string &delimiter)
+std::vector<std::string> Utility::splitStr(const std::string &str, const std::string &delimiter)
 {
 	std::vector<std::string> seglist;
 	std::string segment;
@@ -57,11 +75,18 @@ std::vector<std::string> Utility::splitString(const std::string &str, const std:
 	return seglist;
 }
 
-
 std::string Utility::strToLower(std::string str)
 {
 	for (char& c: str)
 		c = std::tolower(c);
+
+	return str;
+}
+
+std::string Utility::strToUpper(std::string str)
+{
+	for (char& c: str)
+		c = std::toupper(c);
 
 	return str;
 }
@@ -101,6 +126,11 @@ std::string Utility::getDate()
 	return std::string(buffer);
 }
 
+std::string	Utility::replaceStrInStr(std::string dest, const std::string& str1, const std::string& str2)
+{
+	return std::regex_replace(dest, std::regex(str1), str2);
+}
+
 std::string Utility::readLine(std::istream &stream)
 {
 	std::string line;
@@ -133,4 +163,34 @@ std::pair<std::vector<uint8_t>, size_t> Utility::readBinaryFile(const std::strin
 	}
 
 	return {buffer, static_cast<size_t>(size)};
+}
+void Utility::createFile(std::string filename, std::string content)
+{
+	std::ofstream outFile(filename);
+	if (!outFile) {
+		throw ServerException("Error: Could not create the file!");
+	}
+	outFile << content;
+	outFile.close();
+}
+
+bool Utility::argvCheck(int argc, char *argv[], std::string& configFile)
+{
+	if (argc == 1)
+	{
+		LOG_INFO("No file provided. Default config will be used from default/config.conf");
+		return false;
+	}
+	else if (argc == 2)
+	{
+		configFile = argv[1];
+		return false;
+	}
+	else
+	{
+		LOG_ERROR("Too many arguments");
+		LOG_INFO("Usage: ./webserv <config>");
+		LOG_INFO("<config> - absolute path or relative path to the executable directory");
+		return true;
+	}
 }

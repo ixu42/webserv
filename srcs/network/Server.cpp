@@ -6,22 +6,22 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/11 23:43:33 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/30 13:25:45 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
-void	Server::initServer(const char* ipAddr, int port)
+void Server::initServer(const char *ipAddr, int port)
 {
 	_port = port;
 	std::string str(ipAddr);
 	_ipAddr = str;
-	
+
 	_serverSocket.create();
 
 	memset(&_hints, 0, sizeof(_hints));
-	_hints.ai_family = AF_INET;	// Use AF_INET6 for IPv6
+	_hints.ai_family = AF_INET; // Use AF_INET6 for IPv6
 	_hints.ai_socktype = SOCK_STREAM;
 	_hints.ai_flags = AI_PASSIVE; // For wildcard IP address
 	int status = getaddrinfo(nullptr, std::to_string(port).c_str(), &_hints, &_res);
@@ -36,6 +36,8 @@ void	Server::initServer(const char* ipAddr, int port)
 
 	_serverSocket.listenForConnections(10);
 
+	if (isCGIBinExistAndReadable())
+		listCGIFiles();
 }
 
 Server::Server() : _serverSocket(Socket())
@@ -45,7 +47,7 @@ Server::Server() : _serverSocket(Socket())
 	initServer(nullptr, 8080);
 }
 
-Server::Server(const char* ipAddr, int port) : _serverSocket(Socket())
+Server::Server(const char *ipAddr, int port) : _serverSocket(Socket())
 {
 	LOG_DEBUG("Server parameterized constructor called");
 	LOG_DEBUG("Server (port: ", port, ", ipAddr: ", ipAddr, ") created");
@@ -57,17 +59,17 @@ Server::~Server()
 {
 	LOG_DEBUG("Server destructor called");
 
-	for (t_client& client : _clients)
+	for (Client &client : _clients)
 	{
-		close(client.fd);
-		if (client.request)
-			delete client.request;
-		if (client.response)
-			delete client.response;
+		close(client.getFd());
+		if (client.getRequest())
+			delete client.getRequest();
+		if (client.getResponse())
+			delete client.getResponse();
 	}
 }
 
-int	Server::accepter()
+int Server::accepter()
 {
 	LOG_DEBUG("Server::accepter() called");
 
@@ -77,30 +79,33 @@ int	Server::accepter()
 		return -1;
 	LOG_INFO("Connection established with client (socket fd: ", clientSockfd, ")");
 
-	_clients.push_back((t_client){clientSockfd, nullptr, nullptr});
+	Client newClient;
+	newClient.setFd(clientSockfd);
+	_clients.push_back(newClient);
+
 	return clientSockfd;
 }
 
-int findContentLength(std::string request)
+int Server::findContentLength(std::string request)
 {
-	std::string contentLength = "content-length: ";
+	std::string contentLength = "content-length:";
 
-	Utility::strToLower(request);
+	request = Utility::strToLower(request);
 	unsigned long contentLengthPos = request.find(contentLength);
 	if (contentLengthPos != std::string::npos)
 	{
 		std::string contentLengthValue = request.substr(contentLengthPos + contentLength.length());
 		int contentLengthValueEnd = contentLengthValue.find("\r\n");
 		contentLengthValue = contentLengthValue.substr(0, contentLengthValueEnd);
-		return std::stoi(contentLengthValue);
+		return std::stoi(Utility::trim(contentLengthValue));
 	}
-	return -1;
+	return 0;
 }
 
 /* When headers and start line are read in receiveRequest, maxClientBodySize can be found */
 size_t Server::findMaxClientBodyBytes(Request request)
 {
-	ServerConfig* serverConfig = findServerConfig(&request);
+	ServerConfig *serverConfig = findServerConfig(&request);
 	std::string sizeString = serverConfig->clientMaxBodySize;
 
 	// Parse the numeric part of the string
@@ -109,325 +114,203 @@ size_t Server::findMaxClientBodyBytes(Request request)
 
 	// Determine multiplier based on the suffix
 	char suffix = std::toupper(sizeString.back());
-	switch (suffix) {
-		case 'G':
-			multiplier *= 1024;
-			break;
-		case 'M':
-			multiplier *= 1024;
-			break;
-		case 'K':
-			multiplier *= 1024;
-			break;
-		case 'B':
-			break;
-		default:
-			break;
+	switch (suffix)
+	{
+	case 'G':
+		multiplier *= 1024;
+		[[fallthrough]];
+	case 'M':
+		multiplier *= 1024;
+		[[fallthrough]];
+	case 'K':
+		multiplier *= 1024;
+		[[fallthrough]];
+	case 'B':
+		break;
+	default:
+		break;
 	}
 
-	return static_cast<std::size_t>(numericValue * multiplier);
+	return static_cast<size_t>(numericValue * multiplier);
 }
 
-Request* Server::receiveRequest(int clientSockfd)
+bool Server::receiveRequest(Client &client)
 {
-	LOG_DEBUG("Server::receiveRequest called");
-	const int bufferSize = 10;
-	char buffer[bufferSize] = {0};
+	LOG_DEBUG("Server::receiveRequest called for fd: ", client.getFd());
+	char buffer[g_bufferSize];
 	int bytesRead;
-	std::string request;
-	int emptyLinePos = -1;
-	int emptyLinesSize = 0;
+	std::fill(buffer, buffer + g_bufferSize, 0);
+	std::regex pattern(R"(\s*transfer-encoding:\s*chunked\s*)", std::regex_constants::icase);
 
-	bool isHeadersRead = false;
-	std::size_t contentLengthNum = std::string::npos;
 
-	std::size_t maxClientBodyBytes = std::numeric_limits<std::size_t>::max();
-	while (1)
+	bytesRead = read(client.getFd(), buffer, sizeof(buffer));
+	LOG_DEBUG(TEXT_YELLOW, "bytesRead in receiveRequest())): ", bytesRead, RESET);
+
+	if (bytesRead < 0)
+		return false;
+	if (bytesRead == 0)
+		client.setState(Client::ClientState::READY_TO_WRITE);
+
+	if (client.getState() == Client::ClientState::READING)
 	{
-		bytesRead = read(clientSockfd, buffer, bufferSize);
-		LOG_DEBUG("=== Reading in chunks bytes: ", bytesRead);
-		LOG_DEBUG_RAW("[DEBUG] ");
-		for (int i = 0; i < bytesRead; i++)
-			LOG_DEBUG_RAW(buffer[i], "(", int(buffer[i]), "),");
-		LOG_DEBUG_RAW("\n");
-
-		if (bytesRead < 0)
-			continue;
-		else if (bytesRead == 0)
-			break;
-		request += std::string(buffer, bytesRead);
+		client.setRequestString(client.getRequestString() + std::string(buffer, bytesRead));
 
 		// Check if the request is complete (ends with "\r\n\r\n")
-		if (!isHeadersRead && (request.find("\r\n\r\n") != std::string::npos || request.find("\n\n") != std::string::npos))
+		if (!client.getIsHeadersRead() && client.getRequestString().find("\r\n\r\n") != std::string::npos)
 		{
-			emptyLinePos = request.find("\r\n\r\n") ? request.find("\r\n\r\n") : request.find("\n\n");
-			emptyLinesSize = request.find("\r\n\r\n") ? 4 : 2;
-			isHeadersRead = true;
-			contentLengthNum = findContentLength(request);
-			if (contentLengthNum == std::string::npos)
-				break;
-
+			client.setEmptyLinePos(client.getRequestString().find("\r\n\r\n"));
+			client.setEmptyLinesSize(4);
+			client.setIsHeadersRead(true);
+			client.setContentLengthNum(findContentLength(client.getRequestString()));
+			if (!std::regex_search(client.getRequestString(), pattern) && client.getContentLengthNum() == 0)
+			{
+				client.setState(Client::ClientState::READY_TO_WRITE);
+			}
+			
 			// Find maxClientBodySize
-			maxClientBodyBytes = findMaxClientBodyBytes(Request(request));
+			// only calculate if the value is initial
+			if (client.getMaxClientBodyBytes() == std::numeric_limits<size_t>::max())
+				client.setMaxClientBodyBytes(findMaxClientBodyBytes(Request(client)));
 		}
 
-		if (isHeadersRead && contentLengthNum != -std::string::npos)
+		if (client.getIsHeadersRead() && (client.getContentLengthNum() != std::string::npos || std::regex_search(client.getRequestString(), pattern)))
 		{
-			size_t currRequestBodyBytes = request.length() - emptyLinePos - emptyLinesSize;
+			size_t currRequestBodyBytes = client.getRequestString().length() - client.getEmptyLinePos() - client.getEmptyLinesSize();
 
-			if (currRequestBodyBytes > maxClientBodyBytes)
-				throw ResponseError(407, {}, "Exception has been thrown in receiveRequest() "
-			"method of Server class");
+			if (currRequestBodyBytes > client.getMaxClientBodyBytes())
+				throw ResponseError(413, {}, "Exception has been thrown in receiveRequest() "
+											 "method of Server class");
+			// Find end of chunked body
+			size_t endOfChunkedBody = client.getRequestString().find("\r\n0\r\n\r\n");
 
-			if (currRequestBodyBytes >= contentLengthNum)
-				break;
+			if ((client.getContentLengthNum() != 0
+					&& currRequestBodyBytes >= client.getContentLengthNum()) || endOfChunkedBody != std::string::npos)
+			{
+				client.setState(Client::ClientState::READY_TO_WRITE);
+				client.setIsBodyRead(true);
+			}
 		}
+		if (client.getState() != Client::ClientState::READY_TO_WRITE)
+			return false;
 	}
 
 	LOG_INFO("Request read");
-	LOG_DEBUG_MULTILINE(TEXT_YELLOW, request, RESET);
-
-	return new Request(request);
+	LOG_DEBUG(TEXT_YELLOW, client.getRequestString().substr(0, 1000), "\n...\n", RESET, "\n");
+	return true;
 }
 
-void	Server::handler(Server*& server, t_client& client)
+void Server::handler(Server *&server, Client &client)
 {
-	try 
+	try
 	{
-		client.request = server->receiveRequest(client.fd);
+		if (server->receiveRequest(client))
+			client.setRequest(new Request(client));
 	}
-	catch (ResponseError& e)
+	catch (ResponseError &e) // For example, maxClientBodySize exceeded
 	{
 		LOG_ERROR("Request can not be handled: ", e.what(), ": ", e.getCode());
+		std::cout << "Client state: " << int(client.getState()) << std::endl;
+		client.setState(Client::ClientState::READY_TO_WRITE);
+		client.setRequest(new Request(client));
+		client.setResponse(createResponse(client.getRequest(), e.getCode()));
+		LOG_DEBUG("Response set for ResponseError catch");
+	}
+	catch (std::exception &e)
+	{
+		client.setRequest(new Request(client));
+		LOG_ERROR("Request handle threw an exception");
+		std::cout << "Client state: " << int(client.getState()) << std::endl;
+		client.setState(Client::ClientState::READY_TO_WRITE);
+		LOG_DEBUG("host: ", client.getRequest()->getHeaders()["host"]);
+		client.getRequest()->setHeader("host", getIpAddress()+ ":" + std::to_string(getPort())); // Fallback to default host
+		client.setResponse(createResponse(client.getRequest(), 400));
 	}
 }
 
-Response* Server::createResponse(Request* request, int code, 
-						std::map<std::string, std::string> optionalHeaders)
+Response *Server::createResponse(Request *request, int code, std::map<std::string, std::string> optionalHeaders)
 {
+	LOG_DEBUG("createResponse() called");
 	return new Response(code, findServerConfig(request), optionalHeaders);
 }
 
-void Server::sendResponse(std::string& response, t_client& client)
+bool Server::sendResponse(Client &client)
 {
-	size_t totalBytesWritten = 0;
-	size_t bytesToWrite = response.length();
-	const char* buffer = response.c_str();
+	size_t bytesToWrite = client.getResponseString().length(); // maybe copy to struct to optimize
 
-	while (totalBytesWritten < bytesToWrite)
-	{
-		ssize_t bytesWritten = write(client.fd, buffer + totalBytesWritten, bytesToWrite - totalBytesWritten);
-		if (bytesWritten == -1) // We can not use EAGAIN or EWOULDBLOCK here
-			continue;
-		else if (bytesWritten == 0) // Handle case where write returns 0 (should not happen with regular sockets)
-			break;
-		else {
-			totalBytesWritten += bytesWritten;
-		}
-		LOG_DEBUG(TEXT_GREEN, "Bytes written: ", bytesWritten, RESET);
-	}
-	LOG_DEBUG(TEXT_GREEN, "response.length(): ", response.length(), RESET);
-}
+	// Calculate the remaining bytes to write
+	size_t remainingBytes = bytesToWrite - client.getTotalBytesWritten();
+	// Limit the chunk size to the remaining bytes
+	size_t bytesToWriteNow = remainingBytes < g_bufferSize ? remainingBytes : g_bufferSize;
 
-std::stringstream Server::generateDirectoryListingHtml(const std::string& root)
-{
-	std::stringstream htmlStream;
+	ssize_t bytesWritten = write(client.getFd(), client.getResponseString().c_str() + client.getTotalBytesWritten(), bytesToWriteNow);
+	LOG_DEBUG(TEXT_GREEN, "Bytes written: ", bytesWritten, RESET);
+	if (bytesWritten == -1) // We can not use EAGAIN or EWOULDBLOCK here
+		return false;
+	client.setTotalBytesWritten(client.getTotalBytesWritten() + bytesWritten);
+	LOG_DEBUG(TEXT_GREEN, "client.totalBytesWritten: ", client.getTotalBytesWritten(), RESET);
 	
-	htmlStream << "<div class=\"file-list\">\n";
-	htmlStream << "<div class=\"file-row\">\n";
-	htmlStream << "<div class=\"file-cell\"><a href=\"../\">../</a></div>\n";
-	htmlStream << "<div class=\"file-cell\"></div>\n";
-	htmlStream << "<div class=\"file-cell\"></div>\n";
-	htmlStream << "</div>\n";
-	
-	// Iterate over all the entries in the directory
-	for (const auto& entry : fs::directory_iterator(root)) {
-		fs::path filePath = entry.path();
-		std::string fileName = filePath.filename().string();
-
-		// Calculate last write time
-		auto ftime = fs::last_write_time(filePath);
-		auto sctp = std::chrono::time_point_cast<std::chrono::system_clock::duration>(ftime - fs::file_time_type::clock::now()
-				+ std::chrono::system_clock::now());
-		std::time_t cftime = std::chrono::system_clock::to_time_t(sctp);
-
-		htmlStream << "<div class=\"file-row\">\n";
-		// Output name
-		htmlStream << "<div class=\"file-cell name\"><a href=\"" << fileName;
-		if (entry.is_directory())
-			htmlStream << "/";
-		htmlStream << "\">" << fileName;
-		if (entry.is_directory())
-			htmlStream << "/"; 
-		htmlStream << "</a></div>\n";
-		// Output last write time
-		htmlStream << "<div class=\"file-cell date\">" << std::put_time(std::localtime(&cftime), "%d-%b-%Y %T") << "</div>";
-		// Output size
-		htmlStream << "<div class=\"file-cell size\">";
-		htmlStream << (!entry.is_directory() ? std::to_string(fs::file_size(filePath)) : "-");
-		htmlStream << "</div></div>\n";
-	}
-	htmlStream << "</div>\n";
-	
-	return htmlStream;
-}
-
-/**
- * Creates dynamic body for Response using, current location and html template
- * html template should have 
- */
-Response* Server::createDirListResponse(Location& location, std::string requestPath)
-{
-	std::string pathShortCode = "[path]";
-	std::string bodyShortCode = "[body]";
-	Response* listingResponse = new Response();
-	std::string fileString = Utility::readFile(location.defaultListingTemplate);
-	std::stringstream htmlStream;
-
-	// Find the root for requstPath
-	std::string root = location.root + requestPath.substr(location.path.length());
-
-	try
+	// Handle case where write returns 0 (should not happen with regular sockets)
+	if (bytesWritten == 0 || client.getTotalBytesWritten() == bytesToWrite)
 	{
-		htmlStream = generateDirectoryListingHtml(root);
-	}
-	catch (const fs::filesystem_error& e)
-	{
-		LOG_ERROR("Error accessing directory: ", e.what());
-		delete listingResponse;
-		throw ResponseError(403, {}, "Exception has been thrown in createDirListResponse() "
-			"method of Server class");
-	}
-
-	// Replace [body]
-	size_t replaceStringPos = fileString.find(bodyShortCode);
-	if (replaceStringPos != std::string::npos)
-		fileString.replace(replaceStringPos,  bodyShortCode.length(), htmlStream.str());
-	// Replace [title]
-	while ((replaceStringPos = fileString.find(pathShortCode)) != std::string::npos)
-		fileString.replace(replaceStringPos, pathShortCode.length(), requestPath);
-
-	listingResponse->setBody(fileString);
-	listingResponse->setTypeFromFormat("html");
-	listingResponse->setStatusFromCode(200);
-
-	return listingResponse;
-}
-
-bool	Server::formRequestErrorResponse(t_client& client)
-{
-	if (client.response)
-	{
-		std::string responseString = Response::buildResponse(*client.response);
-		sendResponse(responseString, client);
-		delete client.request;
-		delete client.response;
-		client.request = nullptr;
-		client.response = nullptr;
-		close(client.fd);
-		removeFromClients(client);
+		LOG_INFO(TEXT_GREEN, "Response written with length: ", client.getTotalBytesWritten(), RESET);
 		return true;
 	}
-	
+
 	return false;
 }
 
-bool	Server::formCGIConfigAbsenceResponse(t_client& client, Server& server)
+bool Server::formCGIConfigAbsenceResponse(Client &client, Server &server)
 {
-	if (!server.findServerConfig(client.request)->cgis["php"]
-		&& !server.findServerConfig(client.request)->cgis["py"]
-		&& client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
+	if (server.findServerConfig(client.getRequest())->cgis->size() < 1
+		&& client.getRequest()->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
 	{
-		// client.response = new Response(404, {}, findServerConfig(client.request));
-		client.response = createResponse(client.request, 404);
-		std::string responseString = Response::buildResponse(*client.response);
-		sendResponse(responseString, client);
-		delete client.request;
-		delete client.response;
-		client.request = nullptr;
-		client.response = nullptr;
-		close(client.fd);
-		removeFromClients(client);
+		client.setResponse(createResponse(client.getRequest(), 404));
 		return true;
 	}
-	
 	return false;
 }
 
-void	Server::handleCGIResponse(t_client& client, Server& server)
+void Server::handleNonCGIResponse(Client &client, Server &server)
 {
-	try
+	Location foundLocation = server.findLocation(client.getRequest());
+	LOG_DEBUG(TEXT_GREEN, "Location: ", foundLocation.path, RESET);
+
+	checkIfMethodAllowed(client, foundLocation);
+
+	if (foundLocation.redirect != "")
+		handleRedirect(client, foundLocation);
+	else if (foundLocation.upload && client.getRequest()->getStartLine()["method"] == "POST")
 	{
-		client.response = new Response();
-		CGIServer::handleCGI(client, server);
+		LOG_INFO("Handling file upload...");
+		client.setResponse(createResponse(client.getRequest(), Uploader::handleUpload(client, foundLocation)));
 	}
-	catch (ResponseError& e)
+	else if (client.getRequest()->getStartLine()["method"] == "DELETE")
 	{
-		delete client.response;
-		LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
-		// client.response = new Response(e.getCode(), e.getHeaders(), findServerConfig(client.request));
-		client.response = createResponse(client.request, e.getCode(), e.getHeaders());
+		LOG_INFO("Handling file deletion...");
+		client.setResponse(createResponse(client.getRequest(), handleDelete(client, foundLocation)));
 	}
-	catch (const std::exception& e)
-	{
-		delete client.response;
-		LOG_ERROR("Responder caught an exception: ", e.what());
-		// client.response = new Response(500, {}, findServerConfig(client.request));
-		client.response = createResponse(client.request, 500);
-	}
+	else
+		handleStaticFiles(client, foundLocation);
 }
 
-void	Server::handleNonCGIResponse(t_client& client, Server &server)
+void Server::checkIfMethodAllowed(Client &client, Location &foundLocation)
 {
-	try
-	{
-		Location foundLocation = server.findLocation(client.request);
-		LOG_DEBUG(TEXT_GREEN, "Location: ", foundLocation.path, RESET);
-		
-		checkIfAllowed(client, foundLocation);
-		if (foundLocation.redirect != "")
-		{
-			handleRedirect(client, foundLocation);
-		}
-		else
-		{
-			handleStaticFiles(client, foundLocation);
-		}
-	}
-	catch (ResponseError& e)
-	{
-		delete client.response;
-		LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
-		// client.response = new Response(e.getCode(), e.getHeaders(), findServerConfig(client.request));
-		client.response = createResponse(client.request, e.getCode(), e.getHeaders());
-	}
-	catch (const std::exception& e)
-	{
-		delete client.response;
-		LOG_ERROR("Responder caught an exception: ", e.what());
-		// client.response = new Response(500, {}, findServerConfig(client.request));
-		client.response = createResponse(client.request, 500);
-	}
-}
-
-void	Server::checkIfAllowed(t_client& client, Location& foundLocation)
-{
-	if (!foundLocation.methods[Utility::strToLower(client.request->getStartLine()["method"])])
+	if (!foundLocation.methods[Utility::strToLower(client.getRequest()->getStartLine()["method"])])
 	{
 		std::string allowedMethods;
-		for (auto& [methodName, methodBool] : foundLocation.methods)
+		for (auto &[methodName, methodBool] : foundLocation.methods)
 		{
 			if (methodBool)
-				allowedMethods += allowedMethods.empty() ? methodName : ", " + methodName;
+				allowedMethods += allowedMethods.empty() ? Utility::strToUpper(methodName) : ", " + Utility::strToUpper(methodName);
 		}
 		throw ResponseError(405, {{"Allowed", allowedMethods}}, "Exception has been thrown in checkIfAllowed() "
-			"method of Server class");
+																"method of Server class");
 	}
 }
 
-void	Server::handleRedirect(t_client& client, Location& foundLocation)
+void Server::handleRedirect(Client &client, Location &foundLocation)
 {
-	std::string pagePath = client.request->getStartLine()["path"].substr(foundLocation.path.length());
+	std::string pagePath = client.getRequest()->getStartLine()["path"].substr(foundLocation.path.length());
 	size_t requestUriPos = foundLocation.redirect.find("$request_uri");
 	std::string redirectUrl = foundLocation.redirect.substr(0, requestUriPos);
 
@@ -436,22 +319,39 @@ void	Server::handleRedirect(t_client& client, Location& foundLocation)
 
 	LOG_DEBUG("Redirect URL: ", redirectUrl);
 	LOG_DEBUG("Page path: ", pagePath);
-	// client.response = new Response(307, {{"Location", redirectUrl}}, findServerConfig(client.request));
-	client.response = createResponse(client.request, 307, {{"Location", redirectUrl}});
+	client.setResponse(createResponse(client.getRequest(), 307, {{"Location", redirectUrl}}));
 }
 
-void	Server::handleStaticFiles(t_client& client, Location& foundLocation)
+int Server::handleDelete(Client &client, Location &foundLocation)
 {
-	std::string requestPath = client.request->getStartLine()["path"];
+	std::string filePathString = foundLocation.root + client.getRequest()->getStartLine()["path"].substr(foundLocation.path.length());
+	std::filesystem::path filePath = filePathString;
+
+	if (access(filePathString.c_str(), F_OK) != 0)
+		return 404;
+	else if (access(filePathString.c_str(), W_OK) != 0)
+		return 403;
+	else if (std::filesystem::remove(filePath))
+	{
+		LOG_INFO("File ", filePathString, " deleted successfully.");
+		return 204;
+	}
+	return 500;
+}
+
+void Server::handleStaticFiles(Client &client, Location &foundLocation)
+{
+	std::string requestPath = client.getRequest()->getStartLine()["path"];
 	std::string filePath = foundLocation.root + requestPath.substr(foundLocation.path.length());
 	if (access(filePath.c_str(), F_OK) == -1)
-		throw ResponseError(404);
+		throw ResponseError(404, {}, "Exception has been thrown in handleStaticFiles() "
+									 "method of Server class");
 	else if (access(filePath.c_str(), R_OK) == -1)
-		throw ResponseError(403);
-
-	Response* locationResp = nullptr;
+		throw ResponseError(403, {}, "Exception has been thrown in handleStaticFiles() "
+									 "method of Server class");
 
 	// If path ends with /, check for index file and directory listing, otherwise throw 403
+	Response *locationResp = nullptr;
 	if (requestPath.back() == '/')
 	{
 		if (access((filePath + foundLocation.index).c_str(), F_OK) == 0)
@@ -461,60 +361,82 @@ void	Server::handleStaticFiles(t_client& client, Location& foundLocation)
 				throw ResponseError(403);
 		}
 		else if (foundLocation.autoindex)
-			locationResp = createDirListResponse(foundLocation, requestPath);
+			locationResp = DirLister::createDirListResponse(foundLocation, requestPath);
 		else
 			throw ResponseError(404, {}, "Exception has been thrown in handleStaticFiles() "
-			"method of Server class"); // 
+										 "method of Server class"); //
 	}
-	
+
 	// Checks if location response was formed, otherwise creates Response from filePath
-	client.response = !locationResp ? new Response(200, filePath) : locationResp; 
+	client.setResponse(locationResp ? locationResp : new Response(200, filePath));
 }
 
-void	Server::finalizeResponse(t_client& client)
+void Server::finalizeResponse(Client &client)
 {
-	std::string response = Response::buildResponse(*client.response);
-
-	sendResponse(response, client);
-	// write(client.fd, response.c_str(), response.size());
-
-	delete client.request;
-	delete client.response;
-	client.request = nullptr;
-	client.response = nullptr;
-
-	close(client.fd);
+	delete client.getRequest();
+	delete client.getResponse();
+	client.setRequest(nullptr);
+	client.setResponse(nullptr);
+	close(client.getFd());
+	CGIServer::closeFds(client);
 	removeFromClients(client);
-
-	LOG_DEBUG("response: ", response);
 }
 
-void	Server::responder(t_client& client, Server &server)
+void Server::validateRequest(Client &client)
+{
+	LOG_DEBUG("validateRequest()");
+	if (!client.getRequest())
+		throw ResponseError(400, {}, "Request is nullptr");
+	if (client.getRequest()->getStartLine()["method"].empty() ||
+		client.getRequest()->getStartLine()["path"].empty() ||
+		client.getRequest()->getStartLine()["version"].empty() ||
+		client.getRequest()->getHeaders()["host"].empty())
+		throw ResponseError(400, {}, "Request does not have mandatory fields");
+	if (client.getRequest()->getStartLine()["version"] != "HTTP/1.1")
+		throw ResponseError(505, {}, "Wrong HTTP version in the start line");
+}
+
+void Server::responder(Client &client, Server &server)
 {
 	LOG_DEBUG("Server::responder() called");
-
-	if (formRequestErrorResponse(client)) return;
-	client.request->printRequest();
-
-	// replace writing a dummy response by the actual response
-	// request obj can be accessed by e.g. client.request->
 	
-	if (formCGIConfigAbsenceResponse(client, server)) return;
-	
-	if (client.request->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
-	{
-		handleCGIResponse(client, server);
-	}
-	else
-	{
-		handleNonCGIResponse(client, server);
-	}
-	finalizeResponse(client);
+	// client.getRequest()->printRequest(); // can flood the Terminal if a file is uploaded
 
-	LOG_INFO("Response sent and connection closed (socket fd: ", client.fd, ")");
+	if ((client.getResponse() && !client.getResponse()->getBody().empty()) || formCGIConfigAbsenceResponse(client, server))
+	{
+		client.setState(Client::ClientState::FINISHED_WRITING);
+		return;
+	}
+	try
+	{
+		validateRequest(client);
+		// client.getRequest()->printRequest(); // can flood the Terminal if a file is uploaded
+		if (client.getRequest()->getStartLine()["path"].find("/cgi-bin") != std::string::npos && client.getCGIState() == Client::CGIState::INIT)
+		{
+			CGIServer::handleCGI(client, server);
+			client.setCGIState(Client::CGIState::FORKED);
+			LOG_DEBUG("cgi switched to forked");
+		}
+		else if (client.getRequest()->getStartLine()["path"].find("/cgi-bin") == std::string::npos)
+			handleNonCGIResponse(client, server);
+	}
+	catch (ResponseError &e)
+	{
+		delete client.getResponse();
+		LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
+		client.setResponse(createResponse(client.getRequest(), e.getCode(), e.getHeaders()));
+	}
+	catch (const std::exception &e)
+	{
+		delete client.getResponse();
+		LOG_ERROR("Responder caught an exception: ", e.what());
+		client.setResponse(createResponse(client.getRequest(), 500));
+	}
+	if (!client.getResponse())
+		client.setResponse(createResponse(client.getRequest(), 500));
 }
 
-void	Server::removeFromClients(t_client& client)
+void Server::removeFromClients(Client &client)
 {
 	// remove from _clients vector
 	for (auto it = _clients.begin(); it != _clients.end(); ++it)
@@ -522,7 +444,7 @@ void	Server::removeFromClients(t_client& client)
 		if (&(*it) == &client)
 		{
 			_clients.erase(it);
-			break ;
+			break;
 		}
 	}
 }
@@ -533,40 +455,44 @@ std::string Server::whoAmI() const
 }
 
 /** If no match found, the first config will be used */
-ServerConfig* Server::findServerConfig(Request* req)
+ServerConfig *Server::findServerConfig(Request *req)
 {
-	// If request host is an ip address:port or if the ip is not specified for current server, the first config for the server is used
-	if(!req)
-		throw ResponseError(400, {}, "Exception has been thrown in findServerConfig() "
-			"method of Server class");
-	if (req->getHeaders()["host"].empty())
-		throw ResponseError(400, {}, "Exception (empty host) has been thrown in findServerConfig() "
-			"method of Server class"); // Bad request
+	// If request host is an ip address:port or if the ip is not specified for current server,
+	// the first config for the server is used
+	if (!req || req->getHeaders()["host"].empty())
+		return &_configs[0];
 
-	std::vector<std::string> hostSplit = Utility::splitString(req->getHeaders()["host"], ":");
+	std::vector<std::string> hostSplit = Utility::splitStr(req->getHeaders()["host"], ":");
+	std::string reqPort = "80"; // Default port for HTTP
+	std::string reqHost;
 
-	std::string reqHost = Utility::trim(hostSplit[0]);
-	std::string reqPort = Utility::trim(hostSplit[1]);
-
-	if (reqPort.empty())
-		reqPort = "80";
-
-	if (whoAmI() == req->getHeaders()["host"] ||
-	// Also additional check can be needed for the port 80. The port might be not specified in the request. Check with sudo ./webserv
-		(_ipAddr.empty() && std::to_string(_port) == reqPort)) 
-	{
-		if (!_configs.empty())
-			return &_configs[0];
+	if (hostSplit.size() > 0) {
+		reqHost = Utility::trim(hostSplit.at(0));
+		if (hostSplit.size() > 1)
+					reqPort = Utility::trim(hostSplit.at(1));
 	}
 
 	// If request is a servername, find the correct servername
 	if (!reqHost.empty())
 	{
-		for (ServerConfig& config : _configs)
+		for (ServerConfig &config : _configs)
 		{
+			LOG_DEBUG(config.serverName, ", ", reqHost);
 			if (config.serverName == reqHost)
+			{
+				LOG_DEBUG("config match!");
 				return &config;
+			}
 		}
+	}
+
+	// Also additional check can be needed for the port 80. The port might be not specified in the request.
+	// Check with sudo ./webserv
+	if (whoAmI() == req->getHeaders()["host"] ||
+		(_ipAddr.empty() && std::to_string(_port) == reqPort))
+	{
+		if (!_configs.empty())
+			return &_configs[0];
 	}
 
 	if (_configs.empty())
@@ -575,39 +501,40 @@ ServerConfig* Server::findServerConfig(Request* req)
 	return &_configs[0];
 }
 
-
-Location Server::findLocation(Request* req)
+Location Server::findLocation(Request *req)
 {
 	LOG_INFO("Searching for server for current location...");
 	if (!req)
 		throw ResponseError(400, {}, "Exception (no request) has been thrown in findLocation() "
-			"method of Server class");
+									 "method of Server class");
 
-	ServerConfig* namedServerConfig = findServerConfig(req);
-	// This block might be redundant as we always have a server config???
+	ServerConfig *namedServerConfig = findServerConfig(req);
+	
+	// This block might be redundant as we always have a server config
 	if (!namedServerConfig)
 	{
 		throw ResponseError(404, {}, "Exception (no ServerConfig) has been thrown in findLocation() "
-			"method of Server class");
+									 "method of Server class");
 	}
 	if (namedServerConfig->locations.empty())
 	{
 		LOG_ERROR("No locations found for server: ", whoAmI());
 		throw ResponseError(404, {}, "Exception has been thrown in findLocation() "
-			"method of Server class");
+									 "method of Server class");
 	}
 
 	LOG_INFO("Server found. Searching for location...");
+	
 	// Find the longest matching location
 	Location foundLocation;
 	size_t locationLength = 0;
 	std::string requestPath = req->getStartLine()["path"];
 
-	LOG_INFO("Let's find location for request path: ", requestPath);
-	LOG_INFO("We have locations to check: ", namedServerConfig->locations.size());
-	for (Location& location : namedServerConfig->locations)
+	LOG_DEBUG("Let's find location for request path: ", requestPath);
+	LOG_DEBUG("We have locations to check: ", namedServerConfig->locations.size());
+	for (Location &location : namedServerConfig->locations)
 	{
-		LOG_INFO("Path: ", location.path, " RequestPath: ", requestPath);
+		LOG_DEBUG("Path: ", location.path, " RequestPath: ", requestPath);
 		if (location.path == requestPath)
 		{
 			LOG_INFO("Location found, perfect match: ", location.path);
@@ -627,19 +554,43 @@ Location Server::findLocation(Request* req)
 	return foundLocation;
 }
 
+bool Server::isCGIBinExistAndReadable()
+{
+	if (access(_CGIBinFolder, F_OK) != 0 || access(_CGIBinFolder, R_OK) != 0)
+	{
+		LOG_WARNING("cgi-bin/ directory doesn't exist or forbidden to access");
+		return false;
+	}
+
+	return true;
+}
+
+void Server::listCGIFiles()
+{
+	struct dirent *entry;
+
+	DIR *dp = opendir(_CGIBinFolder);
+	if (dp == NULL)
+	{
+		throw ResponseError(500, {}, "Error occured on opendir() function");
+	}
+
+	while ((entry = readdir(dp)))
+	{
+		if (entry->d_name[0] != '.')
+			_cgiBinFiles.push_back(entry->d_name);
+	}
+
+	closedir(dp);
+}
 
 /**
  * Getters
-*/
+ */
 
-std::vector<ServerConfig> Server::getConfig()
+std::vector<ServerConfig> &Server::getConfigs()
 {
 	return _configs;
-}
-
-Pipe& Server::getPipe()
-{
-	return _CGIpipes;
 }
 
 int Server::getServerSockfd()
@@ -647,7 +598,7 @@ int Server::getServerSockfd()
 	return _serverSocket.getSockfd();
 }
 
-std::vector<t_client>& Server::getClients()
+std::vector<Client> &Server::getClients()
 {
 	return _clients;
 }
@@ -662,6 +613,21 @@ int Server::getPort()
 	return _port;
 }
 
+std::vector<struct pollfd> *Server::getFds()
+{
+	return _managerFds;
+}
+
+const char *Server::getCGIBinFolder()
+{
+	return _CGIBinFolder;
+}
+
+std::vector<std::string> Server::getcgiBinFiles()
+{
+	return _cgiBinFiles;
+}
+
 /**
  * Setters
  */
@@ -669,4 +635,9 @@ int Server::getPort()
 void Server::setConfig(std::vector<ServerConfig> serverConfigs)
 {
 	_configs = serverConfigs;
+}
+
+void Server::setFds(std::vector<struct pollfd> *fds)
+{
+	_managerFds = fds;
 }

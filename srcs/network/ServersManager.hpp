@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.hpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/09 21:38:40 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/25 12:00:32 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@
 #include <errno.h>
 
 #include <exception>
-#include "../utils/signal.hpp"
+#include "../utils/globals.hpp"
 
 #define DEFAULT_CONFIG "default/config.conf"
 
@@ -38,18 +38,23 @@ class ServersManager
 		std::vector<struct pollfd>	_fds;
 
 		ServersManager();
-		// ServersManager(Config& webservConfig);
 		ServersManager(const ServersManager&) = delete;
 		ServersManager& operator=(const ServersManager&) = delete;
 
+		Server*						findNoIpServerByPort(int port);
+		bool						checkUniqueNameServer(ServerConfig& serverConfig, std::vector<ServerConfig>& targetServerconfigs);
+		void						moveServerConfigsToNoIpServer(int port, std::vector<ServerConfig>& serverConfigs);
 		void						handleRead(struct pollfd& pfdReadyForRead);
 		void						handleWrite(int fdReadyForWrite);
 		void						removeFromPollfd(int fd);
+		void						removeClientByFd(int fd);
+		bool						ifCGIsFd(Client& client, int fd);
+		pollfd*						findPollfdByFd(int fd);
 
 	public:
 		~ServersManager();
-		static ServersManager*		getInstance();
+		static ServersManager*		getInstance(const char* argv0);
 
 		void						run();
-		static void					initConfig(const char *fileNameString);
+		static void					initConfig(const char *fileNameString, const char* argv0);
 };

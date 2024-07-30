@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.42.fr>          +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/10 20:28:19 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/24 15:27:16 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,9 +14,10 @@
 
 #include "../request/Request.hpp"
 #include "Server.hpp"
-#include "client.hpp"
+#include "Client.hpp"
 #include "../response/Response.hpp"
 #include "../utils/logUtils.hpp"
+#include "../utils/globals.hpp"
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -28,28 +29,31 @@
 #include <vector>
 #include <memory>
 
-#define IN 0
-#define OUT 1
-
-#define PYTHON_INTERPRETER "/usr/bin/python3"
-#define PHP_INTERPRETER "/usr/bin/php"
-
 class Server;
 
 class CGIServer {
 	private:
-		static	std::string					determineInterpreter(const std::string& filePath);
+		const static std::string			_python_interpr;
+		const static std::string			_php_interpr;
+		const static int					_in = 0;
+		const static int					_out = 1;
+
+		static	std::string					determineInterpreter(Client& client, const std::string& filePath, Server& server);
 		static	std::vector<std::string>	setEnvironmentVariables(Request* request);
-		static	void						handleProcesses(t_client& client, Server& server,
-												const std::string& interpreter, const std::vector<std::string>& envVars);
-		static	void						handleChildProcess(Server& server, const std::string& interpreter,
+		static	void						handleProcesses(Client& client, const std::string& interpreter,
+												const std::vector<std::string>& envVars);
+		static	void						handleChildProcess(Client& client, const std::string& interpreter,
 												const std::string& filePath, const std::vector<std::string>& envVars);
-		static	void						handleParentProcess(Server& server, Response* response, const std::string& body);
-		static	std::string					readErrorPage(const std::string& errorPagePath);
+		static	void						handleParentProcess(Client& client, const std::string& body);
 		static	void						checkResponseHeaders(const std::string& result, Response* response);
-		static	void						closeFds(Server& server);
+		static	void						registerCGIPollFd(Server& server, int fd, short events);
+		static	void						unregisterCGIPollFd(Server& server, int fd);
+		static	void						changeToErrorState(Client& client);
 
 	public:
 		CGIServer()							= delete;
-		static void							handleCGI(t_client& client, Server& server);
+		static void							handleCGI(Client& client, Server& server);
+		static	void						InitCGI(Client& client, Server& server);
+		static	bool						readScriptOutput(Client& client, Server*& server);
+		static	void						closeFds(Client& client);
 };

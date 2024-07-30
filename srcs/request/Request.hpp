@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:40 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/08 10:43:54 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/28 16:38:05 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,9 +18,14 @@
 #include <iostream>
 #include <vector>
 
+#include "../network/Client.hpp"
 #include "../utils/Utility.hpp"
 #include "../utils/logUtils.hpp"
 #include "../config/Config.hpp"
+#include "../utils/UrlEncoder.hpp"
+
+// Forward declaration of the Client class
+class Client;
 
 class Request
 {
@@ -28,26 +33,26 @@ class Request
 	private:
 		QueryStringParameters	_startLine;
 		QueryStringParameters	_headers;
-		std::string				_body; // ???
-
-		Location* location;
-
-	public:
-		Request();
-		Request(std::string request);
-
-		void					parse(std::string request);
+		std::string				_body;
 
 		/* Unchunk request */
 		size_t					hexStringToSizeT(const std::string &hexStr);
 		std::string				unchunkBody(std::string& body);
+		
+	public:
+		Request();
+		Request(Client& client);
+		// Request(std::string request);
+
+
+		void					parse(Client& client);
+		// void					parse(std::string request);
 
 		/* Getters and setters */
 		QueryStringParameters	getStartLine();
 		QueryStringParameters	getHeaders();
 		std::string				getBody();
-
-		void					setLocation(Location* location);
+		void					setHeader(std::string key, std::string value);
 
 		void					printRequest();
 };

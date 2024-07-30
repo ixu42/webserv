@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:53 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/08 10:45:06 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/28 20:32:58 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,9 +39,9 @@ class Socket
 		~Socket();
 
 		int		getSockfd();
-		bool	create();
-		bool	bindAddress(struct addrinfo* res);
-		bool	listenForConnections(int backlog);
+		void	create();
+		void	bindAddress(struct addrinfo* res);
+		void	listenForConnections(int backlog);
 		int		acceptConnection(struct sockaddr_in addr);
 
 	private:

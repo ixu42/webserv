@@ -6,46 +6,40 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/09 19:48:25 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/23 18:57:17 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#define FDS 2
-
-struct Pipe {
-	int input[FDS];
-	int output[FDS];
-};
-
 #include "Socket.hpp"
 #include "CGIHandler.hpp"
+#include "SessionsManager.hpp"
 #include "../response/Response.hpp"
 #include "../utils/Utility.hpp"
 #include "../utils/logUtils.hpp"
 #include "../request/Request.hpp"
 #include "../utils/ServerException.hpp"
-#include "client.hpp"
+#include "DirLister.hpp"
+#include "Uploader.hpp"
 #include <vector>
 #include <string>
 #include <cstring> // memset()
 #include <signal.h> // signal()
 #include <poll.h> // poll()
 #include <unistd.h> // read(), write(), close()
+#include <dirent.h> // opendir(), readdir(), closedir()
 
 #include <limits> // for max size_t
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <filesystem>
 
 #include <fstream> //open file
 
-#include <filesystem> // for createDirListResp()
-#include <chrono> // for createDirListResp()
-
-namespace fs = std::filesystem;
+#include <regex> // to match header of chunked request
 
 class Server
 {
@@ -53,10 +47,12 @@ class Server
 		Socket						_serverSocket;
 		struct addrinfo				_hints;
 		struct addrinfo*			_res;
-		std::vector<t_client>		_clients;
+		std::vector<Client>			_clients;
 		std::vector<ServerConfig>	_configs;
-		Pipe						_CGIpipes;
+		std::vector<struct pollfd>*	_managerFds;
+		std::vector<std::string>	_cgiBinFiles;
 
+		const char *				_CGIBinFolder = "cgi-bin/";
 		int							_port;
 		std::string					_ipAddr;
 
@@ -66,38 +62,46 @@ class Server
 		~Server();
 
 		void						setConfig(std::vector<ServerConfig> serverConfigs);
+		void						setFds(std::vector<struct pollfd>* fds);
+		
 		int							getServerSockfd();
-		Pipe&						getPipe();
-		std::vector<t_client>&		getClients();
+		std::vector<Client>&		getClients();
 		std::string					getIpAddress();
 		int							getPort();
-		std::vector<ServerConfig>	getConfig();
+		std::vector<ServerConfig>&	getConfigs();
+		std::vector<struct pollfd>*	getFds();
+		const char *				getCGIBinFolder();
+		std::vector<std::string>	getcgiBinFiles();
 
 		int							accepter();
-		void						handler(Server*& server, t_client& client);
-		void						responder(t_client& client, Server &server);
+		void						handler(Server*& server, Client& client);
+		void						responder(Client& client, Server &server);
 
-		Request*					receiveRequest(int clientSockfd);
+		bool						receiveRequest(Client& client);
+		bool						sendResponse(Client& client);
+		void						finalizeResponse(Client& client);
+		ServerConfig*				findServerConfig(Request* req);
 
 	private:
 		std::string					whoAmI() const;
 		void						initServer(const char* ipAddr, int port);
-		void						removeFromClients(t_client& client);
-		bool						formRequestErrorResponse(t_client& client);
-		bool						formCGIConfigAbsenceResponse(t_client& client, Server &server);
-		void						handleCGIResponse(t_client& client, Server &server);
-		void						handleNonCGIResponse(t_client& client, Server &server);
-		void						checkIfAllowed(t_client& client, Location& foundLocation);
-		void						handleRedirect(t_client& client, Location& foundLocation);
-		void						handleStaticFiles(t_client& client, Location& foundLocation);
-		void						finalizeResponse(t_client& client);
+		void						removeFromClients(Client& client);
+
+
+		void						validateRequest(Client& client);
+		int							findContentLength(std::string request);
+		bool						formCGIConfigAbsenceResponse(Client& client, Server &server);
+		void						handleNonCGIResponse(Client& client, Server &server);
+		void						checkIfMethodAllowed(Client& client, Location& foundLocation);
+		void						handleRedirect(Client& client, Location& foundLocation);
+		int							handleDelete(Client& client, Location& foundLocation);
+		void						handleStaticFiles(Client& client, Location& foundLocation);
 		Location					findLocation(Request* req);
-		void						sendResponse(std::string& response, t_client& client);
-		Response*					createDirListResponse(Location& location, std::string requestPath);
-		std::stringstream			generateDirectoryListingHtml(const std::string& root);
+		void						listCGIFiles();
+		bool						isCGIBinExistAndReadable();
 		
-		ServerConfig*				findServerConfig(Request* req);
 		size_t						findMaxClientBodyBytes(Request request);
 
-		Response*					createResponse(Request* request, int code, std::map<std::string, std::string> optionalHeaders = {});
+		Response*					createResponse(Request* request, int code, std::map<std::string,
+										std::string> optionalHeaders = {});
 };

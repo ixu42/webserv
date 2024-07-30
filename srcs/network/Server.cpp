@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/30 13:32:45 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/30 17:26:52 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,8 +75,7 @@ int Server::accepter()
 
 	struct sockaddr_in clientAddr;
 	int clientSockfd = _serverSocket.acceptConnection(clientAddr);
-	if (clientSockfd == -1)
-		return -1;
+		
 	LOG_INFO("Connection established with client (socket fd: ", clientSockfd, ")");
 
 	Client newClient;

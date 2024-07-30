@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/16 17:53:36 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/26 17:08:58 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/30 20:12:10 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,6 +63,43 @@ std::string Uploader::removeQuotes(const std::string& str)
 	return result;
 }
 
+size_t Uploader::processForm(std::string headers, std::string body, Location& foundLocation)
+{
+	std::istringstream stream(headers);
+	std::string line;
+	std::string filename;
+	size_t filesCreated = 0;
+
+	// Process headers
+	while (std::getline(stream, line))
+	{
+		size_t colonPos = line.find(":");
+		if (colonPos != std::string::npos)
+		{
+			std::string headerKey = Utility::trim(line.substr(0, colonPos));
+			std::string headerValue = Utility::trim(line.substr(colonPos + 1));
+			LOG_INFO(TEXT_GREEN, "headerKey: ", headerKey, RESET);
+			LOG_INFO(TEXT_GREEN, "headerValue: ", headerValue, RESET);
+
+			if (Utility::strToLower(headerKey) == "content-disposition")
+			{
+				filename = removeQuotes(extractFromMultiValue(headerValue, "filename"));
+				LOG_INFO(TEXT_GREEN, "filename: ", filename, RESET);
+				break;
+			}
+		}
+	}
+	
+	// Process body
+	if (!filename.empty())
+	{
+		LOG_INFO(TEXT_YELLOW, "File will be created here: ", foundLocation.root, RESET);
+		Utility::createFile(foundLocation.root + filename, body);
+		filesCreated++;
+	}
+	return filesCreated;
+}
+
 int Uploader::handleUpload(Client& client, Location& foundLocation)
 {
 	LOG_DEBUG("handleUpload() called");
@@ -80,12 +117,11 @@ int Uploader::handleUpload(Client& client, Location& foundLocation)
 		for (std::string& part : multipartVec)
 		{
 			LOG_DEBUG(TEXT_GREEN, part, RESET);
-			std::string filename;
 
-			size_t emptyLinePos = part.find("\r\n\r\n") != std::string::npos ? part.find("\r\n\r\n") : part.find("\n\n");
+			size_t emptyLinePos = part.find("\r\n\r\n");
 			if (emptyLinePos == std::string::npos)
 				continue;
-			size_t emptyLinesSize = part.find("\r\n\r\n") != std::string::npos ? 4 : 2;
+			size_t emptyLinesSize = 4;
 
 			std::string headers = part.substr(0, emptyLinePos);
 			std::string body = emptyLinePos + emptyLinesSize != part.size() ? 
@@ -93,36 +129,7 @@ int Uploader::handleUpload(Client& client, Location& foundLocation)
 								"";
 
 			LOG_DEBUG("body: \n", body);
-			std::istringstream stream(headers);
-			std::string line;
-			
-			// Process headers
-			while (std::getline(stream, line))
-			{
-				size_t colonPos = line.find(":");
-				if (colonPos != std::string::npos)
-				{
-					std::string headerKey = Utility::trim(line.substr(0, colonPos));
-					std::string headerValue = Utility::trim(line.substr(colonPos + 1));
-					LOG_INFO(TEXT_GREEN, "headerKey: ", headerKey, RESET);
-					LOG_INFO(TEXT_GREEN, "headerValue: ", headerValue, RESET);
-
-					if (Utility::strToLower(headerKey) == "content-disposition")
-					{
-						filename = removeQuotes(extractFromMultiValue(headerValue, "filename"));
-						LOG_INFO(TEXT_GREEN, "filename: ", filename, RESET);
-						break;
-					}
-				}
-			}
-			
-			// Process body
-			if (!filename.empty())
-			{
-				LOG_INFO(TEXT_YELLOW, "File will be created here: ", foundLocation.root, RESET);
-				Utility::createFile(foundLocation.root + filename, body);
-				filesCreated++;
-			}
+			filesCreated += processForm(headers, body, foundLocation);
 		}
 	}
 	if (filesCreated)

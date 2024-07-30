@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.hpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/29 16:24:16 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/30 19:51:57 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,10 +43,12 @@ class ServersManager
 		ServersManager(const ServersManager&) = delete;
 		ServersManager& operator=(const ServersManager&) = delete;
 
+		void								processFoundServer(Server* foundServer, std::vector<ServerConfig> serverConfigs);
 		Server*								findNoIpServerByPort(int port);
 		bool								checkUniqueNameServer(ServerConfig& serverConfig, std::vector<ServerConfig>& targetServerconfigs);
 		void								moveServerConfigsToNoIpServer(int port, std::vector<ServerConfig>& serverConfigs);
 		void								handleRead(struct pollfd& pfdReadyForRead);
+		void								processClientCycle(Server*& server, Client& client, int fdReadyForWrite);
 		void								handleWrite(int fdReadyForWrite);
 		void								removeClientByFd(int fd);
 		bool								ifCGIsFd(Client& client, int fd);

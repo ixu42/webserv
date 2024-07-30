@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/30 18:25:43 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/30 23:06:37 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,6 +133,48 @@ size_t Server::findMaxClientBodyBytes(Request request)
 	return static_cast<size_t>(numericValue * multiplier);
 }
 
+void Server::receiveHeaders(Client &client, std::regex pattern)
+{
+	// Check if the request is complete (ends with "\r\n\r\n")
+	if (!client.getIsHeadersRead() && client.getRequestString().find("\r\n\r\n") != std::string::npos)
+	{
+		client.setEmptyLinePos(client.getRequestString().find("\r\n\r\n"));
+		client.setEmptyLinesSize(4);
+		client.setIsHeadersRead(true);
+		client.setContentLengthNum(findContentLength(client.getRequestString()));
+		if (!std::regex_search(client.getRequestString(), pattern) && client.getContentLengthNum() == 0)
+		{
+			client.setState(Client::ClientState::READY_TO_WRITE);
+		}
+		
+		// Find maxClientBodySize
+		// only calculate if the value is initial
+		if (client.getMaxClientBodyBytes() == std::numeric_limits<size_t>::max())
+			client.setMaxClientBodyBytes(findMaxClientBodyBytes(Request(client)));
+	}
+}
+
+void Server::receiveBody(Client &client, std::regex pattern)
+{
+	if (client.getIsHeadersRead() && (client.getContentLengthNum() != std::string::npos || std::regex_search(client.getRequestString(), pattern)))
+	{
+		size_t currRequestBodyBytes = client.getRequestString().length() - client.getEmptyLinePos() - client.getEmptyLinesSize();
+
+		if (currRequestBodyBytes > client.getMaxClientBodyBytes())
+			throw ResponseError(413, {}, "Exception has been thrown in receiveRequest() "
+											"method of Server class");
+		// Find end of chunked body
+		size_t endOfChunkedBody = client.getRequestString().find("\r\n0\r\n\r\n");
+
+		if ((client.getContentLengthNum() != 0
+				&& currRequestBodyBytes >= client.getContentLengthNum()) || endOfChunkedBody != std::string::npos)
+		{
+			client.setState(Client::ClientState::READY_TO_WRITE);
+			client.setIsBodyRead(true);
+		}
+	}
+}
+
 bool Server::receiveRequest(Client &client)
 {
 	LOG_DEBUG("Server::receiveRequest called for fd: ", client.getFd());
@@ -140,7 +182,6 @@ bool Server::receiveRequest(Client &client)
 	int bytesRead;
 	std::fill(buffer, buffer + g_bufferSize, 0);
 	std::regex pattern(R"(\s*transfer-encoding:\s*chunked\s*)", std::regex_constants::icase);
-
 
 	bytesRead = read(client.getFd(), buffer, sizeof(buffer));
 	LOG_DEBUG(TEXT_YELLOW, "bytesRead in receiveRequest())): ", bytesRead, RESET);
@@ -154,41 +195,8 @@ bool Server::receiveRequest(Client &client)
 	{
 		client.setRequestString(client.getRequestString() + std::string(buffer, bytesRead));
 
-		// Check if the request is complete (ends with "\r\n\r\n")
-		if (!client.getIsHeadersRead() && client.getRequestString().find("\r\n\r\n") != std::string::npos)
-		{
-			client.setEmptyLinePos(client.getRequestString().find("\r\n\r\n"));
-			client.setEmptyLinesSize(4);
-			client.setIsHeadersRead(true);
-			client.setContentLengthNum(findContentLength(client.getRequestString()));
-			if (!std::regex_search(client.getRequestString(), pattern) && client.getContentLengthNum() == 0)
-			{
-				client.setState(Client::ClientState::READY_TO_WRITE);
-			}
-			
-			// Find maxClientBodySize
-			// only calculate if the value is initial
-			if (client.getMaxClientBodyBytes() == std::numeric_limits<size_t>::max())
-				client.setMaxClientBodyBytes(findMaxClientBodyBytes(Request(client)));
-		}
-
-		if (client.getIsHeadersRead() && (client.getContentLengthNum() != std::string::npos || std::regex_search(client.getRequestString(), pattern)))
-		{
-			size_t currRequestBodyBytes = client.getRequestString().length() - client.getEmptyLinePos() - client.getEmptyLinesSize();
-
-			if (currRequestBodyBytes > client.getMaxClientBodyBytes())
-				throw ResponseError(413, {}, "Exception has been thrown in receiveRequest() "
-											 "method of Server class");
-			// Find end of chunked body
-			size_t endOfChunkedBody = client.getRequestString().find("\r\n0\r\n\r\n");
-
-			if ((client.getContentLengthNum() != 0
-					&& currRequestBodyBytes >= client.getContentLengthNum()) || endOfChunkedBody != std::string::npos)
-			{
-				client.setState(Client::ClientState::READY_TO_WRITE);
-				client.setIsBodyRead(true);
-			}
-		}
+		receiveHeaders(client, pattern);
+		receiveBody(client, pattern);
 		if (client.getState() != Client::ClientState::READY_TO_WRITE)
 			return false;
 	}

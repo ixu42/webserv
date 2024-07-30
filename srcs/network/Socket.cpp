@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:46 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/28 20:58:33 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/29 20:30:48 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,14 +97,14 @@ int Socket::acceptConnection(struct sockaddr_in addr)
 	LOG_DEBUG("Socket::acceptConnection() called");
 
 	if (!isValidSocketFd())
-		return false;
+		throw ServerException("Not a valid socket fd while accepting");
 
 	socklen_t addrlen = sizeof(addr);
 	int acceptedSocketFd = accept(_sockfd, (struct sockaddr*)&addr, &addrlen);
 	if (acceptedSocketFd < 0)
 	{
 		printError("accept() error: ");
-		return -1;
+		throw ServerException("could not start accepting connections: " + std::string(strerror(errno)));
 	}
 	
 	return acceptedSocketFd;

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/31 17:22:23 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/31 20:19:41 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,7 +121,7 @@ bool ServersManager::checkUniqueNameServer(ServerConfig& serverConfig, std::vect
 
 void ServersManager::moveServerConfigsToNoIpServer(int port, std::vector<ServerConfig>& serverConfigs)
 {
-	LOG_INFO("Address already in use. All the configs will be moved to the no ip server.");
+	LOG_WARNING("Address already in use. All the configs will be moved to the no ip server.");
 	Server* noIpServer = findNoIpServerByPort(port);
 	if (noIpServer == nullptr)
 		return ;

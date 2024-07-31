@@ -36,7 +36,7 @@ If no `ipAddress` is provided, webserv will try to create server on all the inte
 ipAddress 127.0.0.1
 port 8006
 serverName host2.website1.com
-error 404 "user-pages copy/404.html"
+error 404 "webroot/user-pages copy/404.html"
 ```
 
 #### Defining client max body size
@@ -103,9 +103,33 @@ Successful upload will redirect to the requested path automatically.
 ```
 [location]
 path /uploads/
-root website2/uploads/
+root webroot/website2/uploads/
 autoindex on
 upload on
+```
+
+#### Defining custom index
+
+Can be `.html` or `.htm` file.
+
+```
+[location]
+path /uploads/
+root webroot/website2/uploads/
+index index.html
+```
+
+
+#### Set allowed methods
+
+`methods` can be set to comma-separated list of method `get`, `post`, `delete`.
+
+```
+[location]
+path /uploads/
+root webroot/website2/uploads/
+methods get,post,delete
+index index.html
 ```
 
 ### Commenting
@@ -149,7 +173,7 @@ ipAddress 127.0.0.1
 port 8006
 serverName host2.website1.com
 
-error 404 "user-pages copy/404.html"
+error 404 "webroot/user-pages copy/404.html"
 [location]
 path /
 root "website1 copy/"
@@ -171,12 +195,12 @@ serverName host1.website2.com
 
 [location]
 path /
-root website2/
+root webroot/website2/
 autoindex on
 
 [location]
 path /uploads/
-root website2/uploads/
+root webroot/website2/uploads/
 autoindex on
 upload on
 ```

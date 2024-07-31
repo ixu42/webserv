@@ -6,7 +6,11 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
+<<<<<<< HEAD
 /*   Updated: 2024/07/31 20:19:41 by vshchuki         ###   ########.fr       */
+=======
+/*   Updated: 2024/07/31 18:40:09 by vshchuki         ###   ########.fr       */
+>>>>>>> main
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -152,6 +156,7 @@ void ServersManager::run()
 {
 	while (!g_signalReceived.load())
 	{
+		std::vector<pollfd> new_fds;
 		int ready = poll(_fds.data(), _fds.size(), -1);
 		if (ready == -1)
 		{
@@ -165,7 +170,7 @@ void ServersManager::run()
 			if (pfd.revents & POLLIN)
 			{
 				LOG_DEBUG("if POLLIN for fd: ", pfd.fd);
-				handleRead(pfd);
+				handleRead(pfd, new_fds);
 			}
 			if (pfd.revents & POLLOUT)
 			{
@@ -187,10 +192,14 @@ void ServersManager::run()
 				removeFromPollfd(pfd.fd);
 			}
 		}
+		if (!new_fds.empty())
+		{
+			_fds.insert(_fds.end(), new_fds.begin(), new_fds.end());
+		}
 	}
 }
 
-void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
+void	ServersManager::handleRead(struct pollfd& pfdReadyForRead, std::vector<pollfd>& new_fds)
 {
 	bool fdFound = false;
 
@@ -199,7 +208,7 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 		if (pfdReadyForRead.fd == server->getServerSockfd())
 		{
 			int clientSockfd = server->accepter();
-			_fds.push_back({clientSockfd, POLLIN | POLLOUT | POLLERR | POLLHUP, 0}); 
+			new_fds.push_back({clientSockfd, POLLIN | POLLOUT | POLLERR | POLLHUP, 0}); 
 			break ;
 		}
 		for (Client& client : server->getClients())
@@ -210,8 +219,8 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 				server->handler(server, client);
 				if (client.getState() == Client::ClientState::READY_TO_WRITE)
 				{
-					if (client.getRequest()->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
-						CGIServer::InitCGI(client, *server);
+					if (client.getRequest()->getStartLine()["path"].rfind("/cgi-bin/") == 0)
+						CGIServer::InitCGI(client, new_fds);
 				}
 				fdFound = true;
 				break ;
@@ -237,7 +246,7 @@ void ServersManager::processClientCycle(Server*& server, Client& client, int fdR
 {
 	if (client.getState() == Client::ClientState::READY_TO_WRITE && !ifCGIsFd(client, fdReadyForWrite))
 	{
-		server->responder(client, *server); // for CGI only fork, execve, child stuff
+		server->responder(client, *server);
 		if (client.getChildPipe(0) == -1)
 		{
 			client.setState(Client::ClientState::BUILDING);
@@ -246,7 +255,7 @@ void ServersManager::processClientCycle(Server*& server, Client& client, int fdR
 	}
 	if (ifCGIsFd(client, fdReadyForWrite) && client.getCGIState() == Client::CGIState::INIT)
 	{
-		server->responder(client, *server);
+		server->responder(client, *server);  // for CGI only fork, execve, child stuff
 	}
 
 	if ((!ifCGIsFd(client, fdReadyForWrite) && client.getState() == Client::ClientState::BUILDING)

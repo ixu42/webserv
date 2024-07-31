@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/30 23:06:37 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/31 18:37:51 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -392,6 +392,9 @@ void Server::finalizeResponse(Client &client)
 	ServersManager::removeFromPollfd(client.getChildPipe(1));
 	ServersManager::removeFromPollfd(client.getParentPipe(0));
 	ServersManager::removeFromPollfd(client.getParentPipe(1));
+	if (client.getChildPipe(0) != -1)
+		CGIServer::setToInit(client);
+	client.setFd(-1);
 	removeFromClients(client);
 }
 
@@ -412,9 +415,7 @@ void Server::validateRequest(Client &client)
 void Server::responder(Client &client, Server &server)
 {
 	LOG_DEBUG("Server::responder() called");
-	
 	// client.getRequest()->printRequest(); // can flood the Terminal if a file is uploaded
-
 	if ((client.getResponse() && !client.getResponse()->getBody().empty()) || formCGIConfigAbsenceResponse(client, server))
 	{
 		client.setState(Client::ClientState::FINISHED_WRITING);
@@ -424,13 +425,13 @@ void Server::responder(Client &client, Server &server)
 	{
 		validateRequest(client);
 		// client.getRequest()->printRequest(); // can flood the Terminal if a file is uploaded
-		if (client.getRequest()->getStartLine()["path"].find("/cgi-bin") != std::string::npos && client.getCGIState() == Client::CGIState::INIT)
+		if (client.getRequest()->getStartLine()["path"].rfind("/cgi-bin/", 0) == 0 && client.getCGIState() == Client::CGIState::INIT)
 		{
 			CGIServer::handleCGI(client, server);
 			client.setCGIState(Client::CGIState::FORKED);
 			LOG_DEBUG("cgi switched to forked");
 		}
-		else if (client.getRequest()->getStartLine()["path"].find("/cgi-bin") == std::string::npos)
+		else if (client.getCGIState() == Client::CGIState::INIT)
 			handleNonCGIResponse(client, server);
 	}
 	catch (ResponseError &e)

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/30 18:12:45 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/31 18:31:52 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -206,19 +206,23 @@ void CGIServer::checkResponseHeaders(const std::string& result, Response* respon
 void CGIServer::closeFds(Client& client)
 {
 	close(client.getChildPipe(_in));
-	client.setChildPipe(_in, -1);
 	close(client.getChildPipe(_out));
-	client.setChildPipe(_out, -1);
 	close(client.getParentPipe(_in));
-	client.setParentPipe(_in, -1);
 	close(client.getParentPipe(_out));
+}
+
+void CGIServer::setToInit(Client& client)
+{
+	client.setChildPipe(_in, -1);
+	client.setChildPipe(_out, -1);
+	client.setParentPipe(_in, -1);
 	client.setParentPipe(_out, -1);
 }
 
-void CGIServer::registerCGIPollFd(Server& server, int fd, short events)
+void CGIServer::registerCGIPollFd(int fd, short events, std::vector<pollfd>& new_fds)
 {
 	LOG_DEBUG("CGIServer::registerCGIPollFd() called");
-	server.getFds()->push_back({fd, events, (short int)0});
+	new_fds.push_back({fd, events, 0});
 }
 
 void CGIServer::unregisterCGIPollFd(Server& server, int fd)
@@ -230,7 +234,7 @@ void CGIServer::unregisterCGIPollFd(Server& server, int fd)
 	}), server.getFds()->end());
 }
 
-void CGIServer::InitCGI(Client& client, Server& server)
+void CGIServer::InitCGI(Client& client, std::vector<pollfd>& new_fds)
 {
 	LOG_DEBUG("Initializing CGI");
 	if (client.getRequest()->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
@@ -247,8 +251,8 @@ void CGIServer::InitCGI(Client& client, Server& server)
 		LOG_DEBUG("Pipes numbers: ",client.getParentPipe(_in)," ",client.getParentPipe(_out),
 			" ", client.getChildPipe(_in)," ",client.getChildPipe(_out));
 		
-		registerCGIPollFd(server, client.getChildPipe(_in), POLLIN);
-		registerCGIPollFd(server, client.getParentPipe(_out), POLLOUT);
+		registerCGIPollFd(client.getChildPipe(_in), POLLIN, new_fds);
+		registerCGIPollFd(client.getParentPipe(_out), POLLOUT, new_fds);
 		LOG_DEBUG("Finished InitCGI()");
 	}
 }

@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/30 23:05:20 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/31 16:47:39 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,7 +70,7 @@ ServersManager::ServersManager()
 
 	if (_servers.empty())
 	{
-		delete _instance;
+		delete _webservConfig;
 		throw ServerException("No valid servers");
 	}
 	LOG_INFO("ServersManager created ", _servers.size(), " servers");

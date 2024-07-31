@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/31 18:06:41 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/31 18:32:10 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -215,7 +215,7 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead, std::vector<poll
 				if (client.getState() == Client::ClientState::READY_TO_WRITE)
 				{
 					if (client.getRequest()->getStartLine()["path"].rfind("/cgi-bin/") == 0)
-						CGIServer::InitCGI(client, *server, new_fds);
+						CGIServer::InitCGI(client, new_fds);
 				}
 				fdFound = true;
 				break ;

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/30 19:53:28 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/31 16:37:54 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -150,6 +150,7 @@ void ServersManager::run()
 {
 	while (!g_signalReceived.load())
 	{
+		std::vector<pollfd> new_fds;
 		int ready = poll(_fds.data(), _fds.size(), -1);
 		if (ready == -1)
 		{
@@ -163,7 +164,7 @@ void ServersManager::run()
 			if (pfd.revents & POLLIN)
 			{
 				LOG_DEBUG("if POLLIN for fd: ", pfd.fd);
-				handleRead(pfd);
+				handleRead(pfd, new_fds);
 			}
 			if (pfd.revents & POLLOUT)
 			{
@@ -186,10 +187,14 @@ void ServersManager::run()
 				removeFromPollfd(pfd.fd);
 			}
 		}
+		if (!new_fds.empty())
+		{
+			_fds.insert(_fds.end(), new_fds.begin(), new_fds.end());
+		}
 	}
 }
 
-void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
+void	ServersManager::handleRead(struct pollfd& pfdReadyForRead, std::vector<pollfd>& new_fds)
 {
 	bool fdFound = false;
 
@@ -198,7 +203,7 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 		if (pfdReadyForRead.fd == server->getServerSockfd())
 		{
 			int clientSockfd = server->accepter();
-			_fds.push_back({clientSockfd, POLLIN | POLLOUT | POLLERR | POLLHUP, 0}); 
+			new_fds.push_back({clientSockfd, POLLIN | POLLOUT | POLLERR | POLLHUP, 0}); 
 			break ;
 		}
 		for (Client& client : server->getClients())
@@ -210,7 +215,7 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead)
 				if (client.getState() == Client::ClientState::READY_TO_WRITE)
 				{
 					if (client.getRequest()->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
-						CGIServer::InitCGI(client, *server);
+						CGIServer::InitCGI(client, *server, new_fds);
 				}
 				fdFound = true;
 				break ;

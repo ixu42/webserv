@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.hpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/30 19:51:57 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/31 15:23:27 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ class ServersManager
 		Server*								findNoIpServerByPort(int port);
 		bool								checkUniqueNameServer(ServerConfig& serverConfig, std::vector<ServerConfig>& targetServerconfigs);
 		void								moveServerConfigsToNoIpServer(int port, std::vector<ServerConfig>& serverConfigs);
-		void								handleRead(struct pollfd& pfdReadyForRead);
+		void								handleRead(struct pollfd& pfdReadyForRead, std::vector<pollfd>& new_fds);
 		void								processClientCycle(Server*& server, Client& client, int fdReadyForWrite);
 		void								handleWrite(int fdReadyForWrite);
 		void								removeClientByFd(int fd);

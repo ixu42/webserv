@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/31 16:37:54 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/07/31 18:06:41 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -214,7 +214,7 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead, std::vector<poll
 				server->handler(server, client);
 				if (client.getState() == Client::ClientState::READY_TO_WRITE)
 				{
-					if (client.getRequest()->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
+					if (client.getRequest()->getStartLine()["path"].rfind("/cgi-bin/") == 0)
 						CGIServer::InitCGI(client, *server, new_fds);
 				}
 				fdFound = true;
@@ -241,7 +241,7 @@ void ServersManager::processClientCycle(Server*& server, Client& client, int fdR
 {
 	if (client.getState() == Client::ClientState::READY_TO_WRITE && !ifCGIsFd(client, fdReadyForWrite))
 	{
-		server->responder(client, *server); // for CGI only fork, execve, child stuff
+		server->responder(client, *server);
 		if (client.getChildPipe(0) == -1)
 		{
 			client.setState(Client::ClientState::BUILDING);
@@ -250,7 +250,7 @@ void ServersManager::processClientCycle(Server*& server, Client& client, int fdR
 	}
 	if (ifCGIsFd(client, fdReadyForWrite) && client.getCGIState() == Client::CGIState::INIT)
 	{
-		server->responder(client, *server);
+		server->responder(client, *server);  // for CGI only fork, execve, child stuff
 	}
 
 	if ((!ifCGIsFd(client, fdReadyForWrite) && client.getState() == Client::ClientState::BUILDING)

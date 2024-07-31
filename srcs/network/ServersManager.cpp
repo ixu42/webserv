@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/31 16:47:39 by ixu              ###   ########.fr       */
+/*   Updated: 2024/07/31 17:22:23 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,13 +164,11 @@ void ServersManager::run()
 			{
 				LOG_DEBUG("if POLLIN for fd: ", pfd.fd);
 				handleRead(pfd);
-				break ;
 			}
 			if (pfd.revents & POLLOUT)
 			{
 				LOG_DEBUG("if POLLOUT for fd: ", pfd.fd);
 				handleWrite(pfd.fd);
-				break ;
 			}
 			if (pfd.revents & (POLLERR | POLLHUP)) 
 			{
@@ -186,7 +184,6 @@ void ServersManager::run()
 				}
 				removeClientByFd(pfd.fd);
 				removeFromPollfd(pfd.fd);
-				break ;
 			}
 		}
 	}

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/31 18:32:10 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/07/31 18:40:09 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,18 @@ void ServersManager::processFoundServer(Server* foundServer, std::vector<ServerC
 		foundServer->setConfig(serverConfigs);
 }
 
+void ServersManager::printServersInfo()
+{
+	LOG_INFO("ServersManager created ", _servers.size(), " servers");
+	for (Server*& server : _servers)
+	{
+		std::string ipAddr = server->getIpAddress();
+		if (ipAddr.empty())
+			ipAddr = "0.0.0.0";
+		LOG_INFO("Server ipAddr: ", ipAddr, ", port: ", server->getPort());
+	}
+}
+
 ServersManager::ServersManager()
 {
 	LOG_DEBUG("ServersManager creating servers... Servers in config: ", _webservConfig->getServersConfigsMap().size());
@@ -70,27 +82,18 @@ ServersManager::ServersManager()
 
 	if (_servers.empty())
 	{
-		delete _instance;
+		delete _webservConfig;
 		throw ServerException("No valid servers");
 	}
-	LOG_INFO("ServersManager created ", _servers.size(), " servers");
-	for (Server*& server : _servers)
-	{
-		std::string ipAddr = server->getIpAddress();
-		if (ipAddr.empty())
-			ipAddr = "0.0.0.0";
-		LOG_INFO("Server ipAddr: ", ipAddr, ", port: ", server->getPort());
-	}
-}
-		
+
+	printServersInfo();
+}	
 
 ServersManager::~ServersManager()
 {
 	LOG_DEBUG(_servers.size(), " server(s) will be deleted");
 	for (Server *server : _servers)
-	{
 		delete server;
-	}
 	delete _webservConfig;
 }
 
@@ -114,7 +117,6 @@ bool ServersManager::checkUniqueNameServer(ServerConfig& serverConfig, std::vect
 			return false;
 	}
 	return true;
-
 }
 
 void ServersManager::moveServerConfigsToNoIpServer(int port, std::vector<ServerConfig>& serverConfigs)
@@ -178,11 +180,10 @@ void ServersManager::run()
 					LOG_DEBUG("POLLERR");
 				if (pfd.revents & POLLHUP)
 					LOG_DEBUG("POLLHUP");
-				if (close(pfd.fd) == -1) {
+				if (close(pfd.fd) == -1)
 					LOG_DEBUG("Failed to close fd: ", pfd.fd, " Error: ", strerror(errno));
-				} else {
+				else
 					LOG_DEBUG("Closed fd: ", pfd.fd);
-				}
 				removeClientByFd(pfd.fd);
 				removeFromPollfd(pfd.fd);
 			}
@@ -315,13 +316,13 @@ void	ServersManager::removeClientByFd(int currentFd)
 		std::vector<Client>& clients = server->getClients();
 		for (auto it = clients.begin(); it != clients.end(); ++it)
 		{
-		if (it->getFd() == currentFd)
-		{
-			delete it->getRequest();
-			delete it->getResponse();
-			clients.erase(it);
-			break ;
-		}
+			if (it->getFd() == currentFd)
+			{
+				delete it->getRequest();
+				delete it->getResponse();
+				clients.erase(it);
+				break ;
+			}
 		}
 	}
 }

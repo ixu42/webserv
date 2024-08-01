@@ -6,11 +6,28 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/11 23:15:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/01 14:01:23 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/01 21:28:12 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "DirLister.hpp"
+
+bool DirLister::generateSymbolicLinkRow(std::stringstream& htmlStream, fs::path filePath)
+{
+	if (fs::is_symlink(filePath))
+	{
+		fs::path targetPath = fs::read_symlink(filePath); // Correctly read the symlink target
+		htmlStream << "<div class=\"file-row\">\n";
+		htmlStream << "<div class=\"file-cell name\"><a href=\"" << targetPath.string();
+		htmlStream << (targetPath.string() != "/" ? "/" : "");
+		htmlStream << "\">" << filePath.filename().string() << " -> " << targetPath.string() << "</a></div>\n";
+		htmlStream << "<div class=\"file-cell date\">-</div>\n";
+		htmlStream << "<div class=\"file-cell size\">-</div>\n";
+		htmlStream << "</div>\n";
+		return true;
+	}
+	return false;
+}
 
 std::stringstream DirLister::generateDirectoryListingHtml(const std::string& root)
 {
@@ -22,12 +39,12 @@ std::stringstream DirLister::generateDirectoryListingHtml(const std::string& roo
 	htmlStream << "<div class=\"file-cell\"></div>\n";
 	htmlStream << "<div class=\"file-cell\"></div>\n";
 	htmlStream << "</div>\n";
-	
 	// Iterate over all the entries in the directory
 	for (const auto& entry : fs::directory_iterator(root)) {
 		fs::path filePath = entry.path();
 		std::string fileName = filePath.filename().string();
-
+		if (generateSymbolicLinkRow(htmlStream, filePath))
+			continue;
 		// Calculate last write time
 		auto ftime = fs::last_write_time(filePath);
 		auto sctp = std::chrono::time_point_cast<std::chrono::system_clock::duration>(ftime - fs::file_time_type::clock::now()

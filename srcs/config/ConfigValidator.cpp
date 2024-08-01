@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ConfigValidator.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:11 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/24 15:26:12 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/01 02:06:07 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -248,13 +248,13 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 int ConfigValidator::validateLocationConfig(std::string locationString)
 {
 	// linePattern is more broad and should have characters from more specific cases
-	std::regex linePattern(R"(\s*(path|redirect|index|root|methods|upload|autoindex)\s+[a-zA-Z0-9~\-_./,:$"' ]+\s*)");
+	std::regex linePattern(R"(\s*(path|redirect|index|root|methods|upload|autoindex)\s+[a-zA-Z0-9~\-_./,:$%"' ]+\s*)");
 	std::map<std::string, std::regex> patterns = {
 		{"path", std::regex(R"(\s*path\s+\/([a-zA-Z0-9_\-~.]+\/?)*([a-zA-Z0-9_\-~.]+\.[a-zA-Z0-9_\-~.]+)?\s*)")},
 		{"index", std::regex(R"(\s*index\s+([^,\s]+(?:\.html|\.htm))\s*)")},
-		{"redirect", std::regex(R"(\s*redirect\s+((\w+:(\/\/[^\/\s]+)?[^\s]*)|(\/([a-zA-Z0-9-_~.]*\/)))\s*)")},
+		{"redirect", std::regex(R"(\s*redirect\s+((\w+:(\/\/[^\/\s]+)?[^\s]*)|(\/([a-zA-Z0-9-_~%./]*)))\s*)")},
 
-		{"root", std::regex(R"(\s*root\s+(['"]*)((?:\.\.\/|\/)*([a-zA-Z0-9-_~. ]+\/)+\1)\s*)")},
+		{"root", std::regex(R"(\s*root\s+(['"]*)((?:\.\.\/|\/)*([a-zA-Z0-9-_~. ]+\/)*\1)\s*)")},
 
 		{"upload", std::regex(R"(\s*upload\s+(on|off)\s*)")},
 		{"methods", std::regex(R"(\s*methods\s+(get|post|delete)(,(get|post|delete)){0,2}\s*)")},

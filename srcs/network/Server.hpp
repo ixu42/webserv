@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/08/01 17:59:29 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/01 20:53:37 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,6 +80,7 @@ class Server
 		bool						handler(Server*& server, Client& client);
 		bool						responder(Client& client, Server &server);
 
+		void						handleCGITimeout(Client &client);
 		void						receiveHeaders(Client &client, std::regex pattern);
 		void						receiveBody(Client &client, std::regex pattern);
 		bool						receiveRequest(Client& client);
@@ -101,6 +102,7 @@ class Server
 		void						handleRedirect(Client& client, Location& foundLocation);
 		int							handleDelete(Client& client, Location& foundLocation);
 		void						handleStaticFiles(Client& client, Location& foundLocation);
+		ServerConfig*				processNamedServerConfig(Request *req);
 		Location					findLocation(Request* req);
 		void						listCGIFiles();
 		bool						isCGIBinExistAndReadable();

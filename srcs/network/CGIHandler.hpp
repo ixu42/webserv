@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/01 16:42:34 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/01 21:02:22 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,11 +54,12 @@ class CGIHandler {
 		static void							unregisterCGIPollFd(Server& server, int fd);
 
 	public:
-		CGIHandler()							= delete;
+		CGIHandler()						= delete;
 		static void							changeToErrorState(Client& client);
 		static void							handleCGI(Client& client, Server& server);
 		static void							InitCGI(Client& client, std::vector<pollfd>& new_fds);
 		static bool							readScriptOutput(Client& client, Server*& server);
 		static void							closeFds(Client& client);
 		static void							setToInit(Client& client);
+		static void							removeFromPids(pid_t pid);
 };

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/01 18:24:54 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/01 21:21:34 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,12 +17,13 @@ const std::string CGIHandler::_php_interpr = "/usr/bin/php";
 
 void CGIHandler::handleCGI(Client& client, Server& server)
 {
-	// Save starting time
-	client.cgiStart = std::chrono::system_clock::now();
-	std::time_t start_time = std::chrono::system_clock::to_time_t(client.cgiStart);
-	std::cout << "Cgi started at: " << std::ctime(&start_time)<< std::endl;
-	
 	LOG_INFO(TEXT_GREEN, "Running CGI", RESET);
+	
+	// Save starting time
+	client.setCgiStart(std::chrono::system_clock::now());
+	std::time_t start_time = std::chrono::system_clock::to_time_t(client.getCgiStart());
+	LOG_DEBUG("Cgi started at: ", std::ctime(&start_time));
+	
 	LOG_DEBUG("handleCGI function started");
 	std::string interpreter = determineInterpreter(client, client.getRequest()->getStartLine()["path"], server);
 	std::vector<std::string> envVars = setEnvironmentVariables(client.getRequest());
@@ -82,7 +83,11 @@ std::vector<std::string> CGIHandler::setEnvironmentVariables(Request* request)
 	env.push_back("QUERY_STRING=" + request->getStartLine()["query"]);
 	env.push_back("SCRIPT_NAME=" + request->getStartLine()["path"].erase(0, 1));
 	env.push_back("SERVER_PROTOCOL=" + request->getStartLine()["version"]);
+	env.push_back("SERVER_NAME=" + request->getHeaders()["host"]);
+	env.push_back("GATEWAY_INTERFACE=CGI/1.1");
 	env.push_back("PATH_INFO=" + request->getStartLine()["path_info"]);
+	env.push_back("HTTP_ACCEPT=" + request->getHeaders()["accept"]);
+	env.push_back("HTTP_USER_AGENT=" + request->getHeaders()["user-agent"]);
 	
 	if (request->getStartLine()["method"] == "POST")
 	{
@@ -139,7 +144,8 @@ void CGIHandler::handleParentProcess(Client& client, const std::string& body)
 	if (write(client.getParentPipe(_out), body.c_str(), body.size()) < 0)
 	{
 		LOG_DEBUG("Child pid: ", client.getPid());
-		kill(client.getPid(), SIGKILL);
+		kill(client.getPid(), SIGTERM);
+		removeFromPids(client.getPid());
 		changeToErrorState(client);
 		throw ProcessingError(500, {}, "handleParentProcess() writing failed");
 	}
@@ -151,11 +157,12 @@ void CGIHandler::handleProcesses(Client& client, const std::string& interpreter,
 	const std::vector<std::string>& envVars)
 {
 	pid_t childPid = fork();
-	client.setPid(childPid);
 	LOG_DEBUG("forked in handleProcesses");
+	client.setPid(childPid);
 	if (client.getPid() == -1)
 	{
-		kill(client.getPid(), SIGKILL);
+		kill(client.getPid(), SIGTERM);
+		removeFromPids(client.getPid());
 		changeToErrorState(client);
 		throw ProcessingError(500, {}, "Exception (fork) has been thrown in handleParentProcess() "
 			"method of CGIHandler class");
@@ -281,7 +288,9 @@ bool CGIHandler::readScriptOutput(Client& client, Server*& server)
 		LOG_DEBUG(TEXT_GREEN, "Response body: ", buffer, RESET);
 		client.getRespBody().append(buffer, bytesRead);
 	}
+
 	LOG_INFO(TEXT_YELLOW, "bytesRead in readScriptOutput: ", bytesRead, RESET);
+	
 	if (bytesRead < 0)
 		throw ProcessingError(500, {}, "readScriptOutput() reading failed");
 	if (bytesRead != 0)
@@ -307,4 +316,17 @@ void CGIHandler::changeToErrorState(Client& client)
 {
 	client.setState(Client::ClientState::BUILDING);
 	client.setCGIState(Client::CGIState::FINISHED_SET);
+}
+
+void CGIHandler::removeFromPids(pid_t pid)
+{
+	// remove from g_childPids vector
+	for (auto it = g_childPids.begin(); it != g_childPids.end(); ++it)
+	{
+		if (*it == pid)
+		{
+			g_childPids.erase(it);
+			break;
+		}
+	}
 }

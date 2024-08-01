@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/31 18:40:22 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/01 20:17:13 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,7 @@ class ServersManager
 		Server*								findNoIpServerByPort(int port);
 		bool								checkUniqueNameServer(ServerConfig& serverConfig, std::vector<ServerConfig>& targetServerconfigs);
 		void								moveServerConfigsToNoIpServer(int port, std::vector<ServerConfig>& serverConfigs);
+		void								handleInternalFailure(Server*& server, Client& client, std::string msg);
 		void								handleRead(struct pollfd& pfdReadyForRead, std::vector<pollfd>& new_fds);
 		void								processClientCycle(Server*& server, Client& client, int fdReadyForWrite);
 		void								handleWrite(int fdReadyForWrite);

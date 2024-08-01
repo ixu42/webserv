@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/01 18:21:52 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/01 20:47:35 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,7 +78,7 @@ ServersManager::ServersManager()
 	{
 		server->setFds(&_fds);
 		_fds.push_back({server->getServerSockfd(), POLLIN, 0});
-	}
+	}	
 
 	if (_servers.empty())
 	{
@@ -195,6 +195,13 @@ void ServersManager::run()
 	}
 }
 
+void ServersManager::handleInternalFailure(Server*& server, Client& client, std::string msg)
+{
+	server->finalizeResponse(client);
+	delete _instance;
+	throw ServerException(msg);
+}
+
 void	ServersManager::handleRead(struct pollfd& pfdReadyForRead, std::vector<pollfd>& new_fds)
 {
 	bool fdFound = false;
@@ -213,11 +220,7 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead, std::vector<poll
 				&& client.getState() == Client::ClientState::READING)
 			{
 				if (!server->handler(server, client))
-				{
-					server->finalizeResponse(client);
-					delete _instance;
-					throw ServerException("handler() failed");
-				}
+					handleInternalFailure(server, client, "handler() failed");
 				if (client.getState() == Client::ClientState::READY_TO_WRITE)
 				{
 					if (client.getRequest()->getStartLine()["path"].rfind("/cgi-bin/") == 0)
@@ -232,16 +235,11 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead, std::vector<poll
 				try
 				{
 					if (CGIHandler::readScriptOutput(client, server)) // read in CGI
-					{
-						client.setState(Client::ClientState::BUILDING);
-						client.setCGIState(Client::CGIState::FINISHED_SET);
-					}
+						CGIHandler::changeToErrorState(client);
 				}
 				catch (ProcessingError& e)
 				{
-					server->finalizeResponse(client);
-					delete _instance;
-					throw ServerException("readScriptOutput() failed");
+					handleInternalFailure(server, client, "readScriptOutput() failed");
 				}
 				fdFound = true;
 				break ;
@@ -256,34 +254,19 @@ void ServersManager::processClientCycle(Server*& server, Client& client, int fdR
 {
 	if (client.getState() == Client::ClientState::READY_TO_WRITE && !ifCGIsFd(client, fdReadyForWrite))
 	{
-		if (!server->responder(client, *server))  // for CGI only fork, execve, child stuff
-		{
-			server->finalizeResponse(client);
-			delete _instance;
-			throw ServerException("responder() failed");
-		}
+		if (!server->responder(client, *server))
+			handleInternalFailure(server, client, "responder() failed");
 		if (client.getChildPipe(0) == -1)
 		{
 			client.setState(Client::ClientState::BUILDING);
 			LOG_DEBUG("client switched to building");
 		}
 	}
-	// if (ifCGIsFd(client, fdReadyForWrite) && client.getCGIState() == Client::CGIState::INIT)
-	// {
-	// 	if (!server->responder(client, *server))  // for CGI only fork, execve, child stuff
-	// 	{
-	// 		server->finalizeResponse(client);
-	// 		delete _instance;
-	// 		throw ServerException("responder() failed");
-	// 	}
-	// }
-
 	if ((!ifCGIsFd(client, fdReadyForWrite) && client.getState() == Client::ClientState::BUILDING)
 		|| (ifCGIsFd(client, fdReadyForWrite) && client.getCGIState() == Client::CGIState::FINISHED_SET))
 	{
 		SessionsManager::handleSessions(client);
 		client.setResponseString(Response::buildResponse(*client.getResponse()));
-		
 		LOG_DEBUG("response: ", client.getResponseString().substr(0, 500), "\n...\n");
 		client.setState(Client::ClientState::WRITING);
 	}

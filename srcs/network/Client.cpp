@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/19 12:29:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/29 19:50:12 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/01 20:32:31 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,8 @@ Client::Client() :
 		_isHeadersRead(false),
 		_isBodyRead(false),
 		_maxClientBodyBytes(std::numeric_limits<size_t>::max()),
-		_totalBytesWritten(0) {}
+		_totalBytesWritten(0),
+		_cgiStart(std::chrono::system_clock::now()) {}
 
 Client::~Client() {}
 
@@ -143,6 +144,11 @@ size_t Client::getTotalBytesWritten()
 	return _totalBytesWritten;
 }
 
+std::chrono::_V2::system_clock::time_point Client::getCgiStart()
+{
+	return _cgiStart;
+}
+
 /**
  * Setters
  */
@@ -241,4 +247,9 @@ void Client::setResponseString(const std::string& responseString)
 void Client::setTotalBytesWritten(size_t totalBytesWritten)
 {
 	_totalBytesWritten = totalBytesWritten;
+}
+
+void Client::setCgiStart(std::chrono::_V2::system_clock::time_point cgiStart)
+{
+	_cgiStart = cgiStart;
 }

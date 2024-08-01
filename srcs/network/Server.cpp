@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/08/01 18:26:20 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/01 21:15:30 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -216,9 +216,7 @@ bool Server::handler(Server *&server, Client &client)
 	catch (ProcessingError &e) // For example, maxClientBodySize exceeded
 	{
 		if (e.getCode() == 500)
-		{
 			return false;
-		}
 		LOG_ERROR("Request can not be handled: ", e.what(), ": ", e.getCode());
 		std::cout << "Client state: " << int(client.getState()) << std::endl;
 		client.setState(Client::ClientState::READY_TO_WRITE);
@@ -418,11 +416,29 @@ void Server::validateRequest(Client &client)
 		throw ProcessingError(505, {}, "Wrong HTTP version in the start line");
 }
 
-bool Server::responder(Client &client, Server &server)
+void Server::handleCGITimeout(Client &client)
 {
 	float timeout = 15.0;
+
+	auto cgiEnd = std::chrono::system_clock::now();
+
+	std::chrono::duration<double> elapsed_seconds = cgiEnd - client.getCgiStart();
+	std::time_t end_time = std::chrono::system_clock::to_time_t(cgiEnd);
+
+	if (elapsed_seconds.count() >= timeout && client.getCGIState() == Client::CGIState::FORKED)
+	{
+		LOG_DEBUG("Cgi timeouted at: ", std::ctime(&end_time));
+		kill(client.getPid(), SIGTERM);
+		CGIHandler::removeFromPids(client.getPid());
+		CGIHandler::changeToErrorState(client);
+		delete client.getResponse();
+		client.setResponse(createResponse(client.getRequest(), 500));
+	}
+}
+
+bool Server::responder(Client &client, Server &server)
+{
 	LOG_DEBUG("Server::responder() called");
-	// client.getRequest()->printRequest(); // can flood the Terminal if a file is uploaded
 	if ((client.getResponse() && !client.getResponse()->getBody().empty()) || formCGIConfigAbsenceResponse(client, server))
 	{
 		client.setState(Client::ClientState::FINISHED_WRITING);
@@ -431,26 +447,8 @@ bool Server::responder(Client &client, Server &server)
 	try
 	{
 		validateRequest(client);
-		// Check timeout and kill child process
-			auto cgiEnd = std::chrono::system_clock::now();
- 
-			std::chrono::duration<double> elapsed_seconds = cgiEnd - client.cgiStart;
-			std::time_t end_time = std::chrono::system_clock::to_time_t(cgiEnd);
+		handleCGITimeout(client);
 
-			std::cout << "finished computation at " << std::ctime(&end_time)
-			  << "elapsed time: " << elapsed_seconds.count() << "s"
-			  << std::endl;
-			if (elapsed_seconds.count() >= timeout && client.getCGIState() == Client::CGIState::FORKED)
-			{
-				LOG_INFO("Child was killed after the timeout for pid: ", client.getPid());
-				// kill(client.getPid(), SIGKILL);
-				kill(client.getPid(), SIGTERM);
-				CGIHandler::changeToErrorState(client);
-				delete client.getResponse();
-				client.setResponse(createResponse(client.getRequest(), 500));
-			}
-			
-		// client.getRequest()->printRequest(); // can flood the Terminal if a file is uploaded
 		if (client.getRequest()->getStartLine()["path"].rfind("/cgi-bin/", 0) == 0 && client.getCGIState() == Client::CGIState::INIT)
 		{
 			CGIHandler::handleCGI(client, server);
@@ -462,13 +460,8 @@ bool Server::responder(Client &client, Server &server)
 	}
 	catch (ProcessingError &e)
 	{
-		// std::string comp = "handleParentProcess() writing failed";
-		std::cout << "e.what(): " << e.what() << ", size: " << std::strlen(e.what()) << std::endl;
 		if (e.getCode() == 500 && std::strcmp(e.what(), "handleParentProcess() writing failed") == 0)
-		{
-			LOG_ERROR("returning false");
 			return false;
-		}
 		delete client.getResponse();
 		LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
 		client.setResponse(createResponse(client.getRequest(), e.getCode(), e.getHeaders()));
@@ -481,6 +474,7 @@ bool Server::responder(Client &client, Server &server)
 	}
 	if (!client.getResponse())
 		client.setResponse(createResponse(client.getRequest(), 500));
+
 	return true;
 }
 
@@ -534,8 +528,6 @@ ServerConfig *Server::findServerConfig(Request *req)
 		}
 	}
 
-	// Also additional check can be needed for the port 80. The port might be not specified in the request.
-	// Check with sudo ./webserv
 	if (whoAmI() == req->getHeaders()["host"] ||
 		(_ipAddr.empty() && std::to_string(_port) == reqPort))
 	{
@@ -549,29 +541,32 @@ ServerConfig *Server::findServerConfig(Request *req)
 	return &_configs[0];
 }
 
-Location Server::findLocation(Request *req)
+ServerConfig* Server::processNamedServerConfig(Request *req)
 {
 	LOG_INFO("Searching for server for current location...");
 	if (!req)
 		throw ProcessingError(400, {}, "Exception (no request) has been thrown in findLocation() "
 									 "method of Server class");
 
-	ServerConfig *namedServerConfig = findServerConfig(req);
+	ServerConfig* namedServerConfig = findServerConfig(req);
 	
 	// This block might be redundant as we always have a server config
 	if (!namedServerConfig)
-	{
 		throw ProcessingError(404, {}, "Exception (no ServerConfig) has been thrown in findLocation() "
 									 "method of Server class");
-	}
 	if (namedServerConfig->locations.empty())
 	{
 		LOG_ERROR("No locations found for server: ", whoAmI());
 		throw ProcessingError(404, {}, "Exception has been thrown in findLocation() "
 									 "method of Server class");
 	}
-
 	LOG_INFO("Server found. Searching for location...");
+	return namedServerConfig;
+}
+
+Location Server::findLocation(Request *req)
+{
+	ServerConfig* namedServerConfig = processNamedServerConfig(req);
 	
 	// Find the longest matching location
 	Location foundLocation;

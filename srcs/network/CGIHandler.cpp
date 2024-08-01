@@ -6,17 +6,22 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/31 18:31:52 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/01 18:24:54 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "CGIHandler.hpp"
 
-const std::string CGIServer::_python_interpr = "/usr/bin/python3";
-const std::string CGIServer::_php_interpr = "/usr/bin/php";
+const std::string CGIHandler::_python_interpr = "/usr/bin/python3";
+const std::string CGIHandler::_php_interpr = "/usr/bin/php";
 
-void CGIServer::handleCGI(Client& client, Server& server)
+void CGIHandler::handleCGI(Client& client, Server& server)
 {
+	// Save starting time
+	client.cgiStart = std::chrono::system_clock::now();
+	std::time_t start_time = std::chrono::system_clock::to_time_t(client.cgiStart);
+	std::cout << "Cgi started at: " << std::ctime(&start_time)<< std::endl;
+	
 	LOG_INFO(TEXT_GREEN, "Running CGI", RESET);
 	LOG_DEBUG("handleCGI function started");
 	std::string interpreter = determineInterpreter(client, client.getRequest()->getStartLine()["path"], server);
@@ -26,12 +31,12 @@ void CGIServer::handleCGI(Client& client, Server& server)
 	LOG_DEBUG("handleCGI function ended");
 }
 
-std::string CGIServer::determineInterpreter(Client& client, const std::string& filePath, Server& server)
+std::string CGIHandler::determineInterpreter(Client& client, const std::string& filePath, Server& server)
 {
 	if (server.getcgiBinFiles().size() == 0)
 	{
 		changeToErrorState(client);
-		throw ResponseError(404, {}, "cgi-bin/ folder is empty or does not exist");
+		throw ProcessingError(404, {}, "cgi-bin/ folder is empty or does not exist");
 	}
 
 	size_t cgiBinPos = filePath.find(server.getCGIBinFolder());
@@ -47,13 +52,13 @@ std::string CGIServer::determineInterpreter(Client& client, const std::string& f
 	if (access(fullPath.c_str(), F_OK) != 0)
 	{
 		changeToErrorState(client);
-		throw ResponseError(404, {}, "File does not exist");
+		throw ProcessingError(404, {}, "File does not exist");
 	}
 	// check if the file has read permissions
 	if (access(fullPath.c_str(), R_OK) != 0)
 	{
 		changeToErrorState(client);
-		throw ResponseError(403, {}, "File is not readable");
+		throw ProcessingError(403, {}, "File is not readable");
 	}
 
 	std::string extension = fileName.substr(fileName.find_last_of(".") + 1);
@@ -62,13 +67,13 @@ std::string CGIServer::determineInterpreter(Client& client, const std::string& f
 	if (cgiPath == "")
 	{
 		changeToErrorState(client);
-		throw ResponseError(500, {}, "Unknown file extension");
+		throw ProcessingError(500, {}, "Unknown file extension");
 	}
 
 	return cgiPath;
 }
 
-std::vector<std::string> CGIServer::setEnvironmentVariables(Request* request)
+std::vector<std::string> CGIHandler::setEnvironmentVariables(Request* request)
 {
 	std::vector<std::string> env;
 
@@ -87,7 +92,7 @@ std::vector<std::string> CGIServer::setEnvironmentVariables(Request* request)
 	return env;
 }
 
-void CGIServer::handleChildProcess(Client& client, const std::string& interpreter,
+void CGIHandler::handleChildProcess(Client& client, const std::string& interpreter,
 	const std::string& filePath, const std::vector<std::string>& envVars)
 {
 	LOG_DEBUG("Duplicating stdin and stdout");
@@ -96,8 +101,7 @@ void CGIServer::handleChildProcess(Client& client, const std::string& interprete
 	{
 		closeFds(client);
 		changeToErrorState(client);
-		throw ResponseError(500, {}, "Exception (dup2) has been thrown in handleChildProcess() "
-			"method of CGIServer class");
+		std::exit(EXIT_FAILURE);
 	}
 
 	close(client.getParentPipe(_out));
@@ -122,22 +126,28 @@ void CGIServer::handleChildProcess(Client& client, const std::string& interprete
 	close(client.getParentPipe(_in));
 	close(client.getChildPipe(_out));
 	changeToErrorState(client);
-	throw ResponseError(500, {}, "Exception (execve) has been thrown in handleChildProcess() "
-		"method of CGIServer class");
+	std::exit(EXIT_FAILURE);
 }
 
-void CGIServer::handleParentProcess(Client& client, const std::string& body)
+void CGIHandler::handleParentProcess(Client& client, const std::string& body)
 {
+	(void)body;
 	close(client.getParentPipe(_in));
 	close(client.getChildPipe(_out));
 
 	LOG_DEBUG("Writing body of the request inside the pipe");
-	write(client.getParentPipe(_out), body.c_str(), body.size());
+	if (write(client.getParentPipe(_out), body.c_str(), body.size()) < 0)
+	{
+		LOG_DEBUG("Child pid: ", client.getPid());
+		kill(client.getPid(), SIGKILL);
+		changeToErrorState(client);
+		throw ProcessingError(500, {}, "handleParentProcess() writing failed");
+	}
 	close(client.getParentPipe(_out));
 	LOG_DEBUG("Wrote body of the request and closed the pipe");
 }
 
-void CGIServer::handleProcesses(Client& client, const std::string& interpreter,
+void CGIHandler::handleProcesses(Client& client, const std::string& interpreter,
 	const std::vector<std::string>& envVars)
 {
 	pid_t childPid = fork();
@@ -145,10 +155,10 @@ void CGIServer::handleProcesses(Client& client, const std::string& interpreter,
 	LOG_DEBUG("forked in handleProcesses");
 	if (client.getPid() == -1)
 	{
-		closeFds(client);
+		kill(client.getPid(), SIGKILL);
 		changeToErrorState(client);
-		throw ResponseError(500, {}, "Exception (fork) has been thrown in handleParentProcess() "
-			"method of CGIServer class");
+		throw ProcessingError(500, {}, "Exception (fork) has been thrown in handleParentProcess() "
+			"method of CGIHandler class");
 	}
 	else if (client.getPid() == 0)
 	{
@@ -158,6 +168,7 @@ void CGIServer::handleProcesses(Client& client, const std::string& interpreter,
 	}
 	else
 	{
+		LOG_DEBUG("Child pid in parent: ", childPid);
 		LOG_DEBUG("Parent started");
 		g_childPids.push_back(client.getPid());
 		handleParentProcess(client, client.getRequest()->getBody());
@@ -165,7 +176,7 @@ void CGIServer::handleProcesses(Client& client, const std::string& interpreter,
 	LOG_INFO(TEXT_GREEN, "CGI script executed", RESET);
 }
 
-void CGIServer::checkResponseHeaders(const std::string& result, Response* response)
+void CGIHandler::checkResponseHeaders(const std::string& result, Response* response)
 {
 	LOG_DEBUG("Checking for the headers in CGI output");
 	size_t headerEnd = result.find("\n\n");
@@ -203,7 +214,7 @@ void CGIServer::checkResponseHeaders(const std::string& result, Response* respon
 	}
 }
 
-void CGIServer::closeFds(Client& client)
+void CGIHandler::closeFds(Client& client)
 {
 	close(client.getChildPipe(_in));
 	close(client.getChildPipe(_out));
@@ -211,7 +222,7 @@ void CGIServer::closeFds(Client& client)
 	close(client.getParentPipe(_out));
 }
 
-void CGIServer::setToInit(Client& client)
+void CGIHandler::setToInit(Client& client)
 {
 	client.setChildPipe(_in, -1);
 	client.setChildPipe(_out, -1);
@@ -219,13 +230,13 @@ void CGIServer::setToInit(Client& client)
 	client.setParentPipe(_out, -1);
 }
 
-void CGIServer::registerCGIPollFd(int fd, short events, std::vector<pollfd>& new_fds)
+void CGIHandler::registerCGIPollFd(int fd, short events, std::vector<pollfd>& new_fds)
 {
-	LOG_DEBUG("CGIServer::registerCGIPollFd() called");
+	LOG_DEBUG("CGIHandler::registerCGIPollFd() called");
 	new_fds.push_back({fd, events, 0});
 }
 
-void CGIServer::unregisterCGIPollFd(Server& server, int fd)
+void CGIHandler::unregisterCGIPollFd(Server& server, int fd)
 {
 	server.getFds()->erase(std::remove_if(server.getFds()->begin(),
 		server.getFds()->end(), [fd](const pollfd& pfd)
@@ -234,7 +245,7 @@ void CGIServer::unregisterCGIPollFd(Server& server, int fd)
 	}), server.getFds()->end());
 }
 
-void CGIServer::InitCGI(Client& client, std::vector<pollfd>& new_fds)
+void CGIHandler::InitCGI(Client& client, std::vector<pollfd>& new_fds)
 {
 	LOG_DEBUG("Initializing CGI");
 	if (client.getRequest()->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
@@ -244,8 +255,8 @@ void CGIServer::InitCGI(Client& client, std::vector<pollfd>& new_fds)
 		if (pipe(client.getParentPipeWhole()) == -1 || pipe(client.getChildPipeWhole()) == -1)
 		{
 			changeToErrorState(client);
-			throw ResponseError(500, {}, "Exception (pipe) has been thrown in InitCGI() "
-				"method of CGIServer class");
+			throw ProcessingError(500, {}, "Exception (pipe) has been thrown in InitCGI() "
+				"method of CGIHandler class");
 		}
 
 		LOG_DEBUG("Pipes numbers: ",client.getParentPipe(_in)," ",client.getParentPipe(_out),
@@ -257,7 +268,7 @@ void CGIServer::InitCGI(Client& client, std::vector<pollfd>& new_fds)
 	}
 }
 
-bool CGIServer::readScriptOutput(Client& client, Server*& server)
+bool CGIHandler::readScriptOutput(Client& client, Server*& server)
 {
 	LOG_DEBUG("readScriptOutput() called");
 	char buffer[g_bufferSize];
@@ -270,9 +281,9 @@ bool CGIServer::readScriptOutput(Client& client, Server*& server)
 		LOG_DEBUG(TEXT_GREEN, "Response body: ", buffer, RESET);
 		client.getRespBody().append(buffer, bytesRead);
 	}
-
 	LOG_INFO(TEXT_YELLOW, "bytesRead in readScriptOutput: ", bytesRead, RESET);
-
+	if (bytesRead < 0)
+		throw ProcessingError(500, {}, "readScriptOutput() reading failed");
 	if (bytesRead != 0)
 	{
 		LOG_DEBUG("Still reading from pipe in CGI");
@@ -292,7 +303,7 @@ bool CGIServer::readScriptOutput(Client& client, Server*& server)
 	return true;
 }
 
-void CGIServer::changeToErrorState(Client& client)
+void CGIHandler::changeToErrorState(Client& client)
 {
 	client.setState(Client::ClientState::BUILDING);
 	client.setCGIState(Client::CGIState::FINISHED_SET);

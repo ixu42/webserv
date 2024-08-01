@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/04 00:51:19 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/28 20:53:51 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/01 14:01:23 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,19 +26,19 @@ int ServerException::getErrno() const
 	return _errno;
 }
 
-ResponseError::ResponseError(int code, std::map<std::string, std::string> optionalHeaders, std::string message) : ServerException("Response error")
+ProcessingError::ProcessingError(int code, std::map<std::string, std::string> optionalHeaders, std::string message) : ServerException("Response error")
 {
 	_code = code;
 	_headers = optionalHeaders;
 	_message = message;
 }
 
-int ResponseError::getCode() const
+int ProcessingError::getCode() const
 {
 	return _code;
 }
 
-std::map<std::string, std::string> ResponseError::getHeaders() const
+std::map<std::string, std::string> ProcessingError::getHeaders() const
 {
 	return _headers;
 }

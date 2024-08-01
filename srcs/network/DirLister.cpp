@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/11 23:15:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/30 19:36:24 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/01 14:01:23 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,7 +78,7 @@ Response* DirLister::createDirListResponse(Location& location, std::string reque
 	{
 		LOG_ERROR("Error accessing directory: ", e.what());
 		delete listingResponse;
-		throw ResponseError(403, {}, "Exception has been thrown in createDirListResponse() "
+		throw ProcessingError(403, {}, "Exception has been thrown in createDirListResponse() "
 			"method of Server class");
 	}
 

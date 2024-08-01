@@ -3,19 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   Signals.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/28 19:35:22 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/28 20:22:36 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/01 17:02:10 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Signals.hpp"
 
-void Signals::signalHandler(int signal)
+void Signals::killAllChildrenPids()
 {
-	LOG_DEBUG("Signal ", signal, " received");
-	g_signalReceived.store(true);
 	for (auto pid : g_childPids)
 	{
 		if (pid > 0)
@@ -26,9 +24,17 @@ void Signals::signalHandler(int signal)
 			kill(pid, SIGTERM);
 		}
 	}
+}
+
+void Signals::signalHandler(int signal)
+{
+	LOG_DEBUG("Signal ", signal, " received");
+	g_signalReceived.store(true);
+	killAllChildrenPids();
 	std::cout << TEXT_WHITE << "\n[" << getCurrentTime() << "] " << RESET;
 	std::cout << TEXT_MAGENTA << "[INFO] " << RESET;
 	std::cout << TEXT_MAGENTA << "Shutting down the server(s)..." << RESET << std::endl;
+	std::cout << TEXT_MAGENTA << g_signalReceived << RESET << std::endl;
 }
 
 void Signals::trackSignals()

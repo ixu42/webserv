@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   SessionsManager.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/12 15:02:01 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/28 21:01:07 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/01 14:01:23 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,17 +113,17 @@ void SessionsManager::checkPermissions()
 		}
 		else
 		{
-			throw ResponseError(500, {}, "Exception has been thrown in checkIfFileExist() "
+			throw ProcessingError(500, {}, "Exception has been thrown in checkIfFileExist() "
 			"method of SessionsManager class");
 		}
 	}
 	if (access(_filename.c_str(), R_OK) != 0)
 	{
-		throw ResponseError(403, {}, "Read permission denied for file: " + _filename);
+		throw ProcessingError(403, {}, "Read permission denied for file: " + _filename);
 	}
 	if (access(_filename.c_str(), W_OK) != 0)
 	{
-		throw ResponseError(403, {}, "Write permission denied for file: " + _filename);
+		throw ProcessingError(403, {}, "Write permission denied for file: " + _filename);
 	}
 }
 
@@ -133,7 +133,7 @@ bool SessionsManager::sessionExistsCheck(std::string& sessionData)
 	std::string line;
 	if (!infile.is_open())
 	{
-		throw ResponseError(500, {}, "Exception has been thrown in writeSessionToFile() "
+		throw ProcessingError(500, {}, "Exception has been thrown in writeSessionToFile() "
 			"method of SessionsManager class");
 	}
 
@@ -177,7 +177,7 @@ void SessionsManager::addSessionToFile(std::string& sessionData)
 	}
 	else
 	{
-		throw ResponseError(500, {}, "Exception has been thrown in addSession() "
+		throw ProcessingError(500, {}, "Exception has been thrown in addSession() "
 			"method of SessionsManager class");
 	}
 }

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/31 18:32:17 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/01 16:42:34 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,9 +30,12 @@
 #include <vector>
 #include <memory>
 
+#include <chrono>
+#include <ctime> 
+
 class Server;
 
-class CGIServer {
+class CGIHandler {
 	private:
 		const static std::string			_python_interpr;
 		const static std::string			_php_interpr;
@@ -49,10 +52,10 @@ class CGIServer {
 		static void							checkResponseHeaders(const std::string& result, Response* response);
 		static void							registerCGIPollFd(int fd, short events, std::vector<pollfd>& new_fds);
 		static void							unregisterCGIPollFd(Server& server, int fd);
-		static void							changeToErrorState(Client& client);
 
 	public:
-		CGIServer()							= delete;
+		CGIHandler()							= delete;
+		static void							changeToErrorState(Client& client);
 		static void							handleCGI(Client& client, Server& server);
 		static void							InitCGI(Client& client, std::vector<pollfd>& new_fds);
 		static bool							readScriptOutput(Client& client, Server*& server);

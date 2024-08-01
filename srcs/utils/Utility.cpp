@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Utility.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:11:23 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/28 20:33:41 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/01 14:01:23 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,7 +147,7 @@ std::pair<std::vector<uint8_t>, size_t> Utility::readBinaryFile(const std::strin
 	// Open the file in binary mode at the end to get the file size
 	std::ifstream file(filePath, std::ios::binary | std::ios::ate);
 	if (!file) {
-		throw ResponseError(404, {}, "Exception (no file) has been thrown in readBinaryFile() "
+		throw ProcessingError(404, {}, "Exception (no file) has been thrown in readBinaryFile() "
 			"method of Utility class");
 	}
 
@@ -158,7 +158,7 @@ std::pair<std::vector<uint8_t>, size_t> Utility::readBinaryFile(const std::strin
 	// Read the contents of the file into a vector
 	std::vector<uint8_t> buffer(size);
 	if (!file.read(reinterpret_cast<char*>(buffer.data()), size)) {
-		throw ResponseError(500, {}, "Exception (reading error) has been thrown in readBinaryFile() "
+		throw ProcessingError(500, {}, "Exception (reading error) has been thrown in readBinaryFile() "
 			"method of Utility class");
 	}
 

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/30 23:06:28 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/01 17:59:29 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,8 +77,8 @@ class Server
 		std::vector<std::string>	getcgiBinFiles();
 
 		int							accepter();
-		void						handler(Server*& server, Client& client);
-		void						responder(Client& client, Server &server);
+		bool						handler(Server*& server, Client& client);
+		bool						responder(Client& client, Server &server);
 
 		void						receiveHeaders(Client &client, std::regex pattern);
 		void						receiveBody(Client &client, std::regex pattern);

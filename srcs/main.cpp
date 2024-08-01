@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/30 13:26:21 by ixu              ###   ########.fr       */
+/*   Updated: 2024/08/01 17:09:22 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,12 +43,14 @@ int main(int argc, char *argv[])
 	}
 	catch (const ServerException& e)
 	{
-		LOG_ERROR("Server close with error: ", e.what());
+		LOG_ERROR("Server close with error: ", e.what(), ", errno: ", e.getErrno());
+		Signals::killAllChildrenPids();
 		return EXIT_FAILURE;
 	}
 	catch (const std::exception& e)
 	{
 		LOG_ERROR("Server close with exception: ", e.what());
+		Signals::killAllChildrenPids();
 		return EXIT_FAILURE;
 	}
 }

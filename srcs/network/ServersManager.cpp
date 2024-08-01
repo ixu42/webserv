@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/31 21:54:44 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/01 18:21:52 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -212,11 +212,16 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead, std::vector<poll
 			if (pfdReadyForRead.fd == client.getFd()
 				&& client.getState() == Client::ClientState::READING)
 			{
-				server->handler(server, client);
+				if (!server->handler(server, client))
+				{
+					server->finalizeResponse(client);
+					delete _instance;
+					throw ServerException("handler() failed");
+				}
 				if (client.getState() == Client::ClientState::READY_TO_WRITE)
 				{
 					if (client.getRequest()->getStartLine()["path"].rfind("/cgi-bin/") == 0)
-						CGIServer::InitCGI(client, new_fds);
+						CGIHandler::InitCGI(client, new_fds);
 				}
 				fdFound = true;
 				break ;
@@ -224,10 +229,19 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead, std::vector<poll
 			if (ifCGIsFd(client, pfdReadyForRead.fd) && client.getCGIState() == Client::CGIState::FORKED)
 			{
 				LOG_DEBUG("Now forked and reading");
-				if (CGIServer::readScriptOutput(client, server)) // read in CGI
+				try
 				{
-					client.setState(Client::ClientState::BUILDING);
-					client.setCGIState(Client::CGIState::FINISHED_SET);
+					if (CGIHandler::readScriptOutput(client, server)) // read in CGI
+					{
+						client.setState(Client::ClientState::BUILDING);
+						client.setCGIState(Client::CGIState::FINISHED_SET);
+					}
+				}
+				catch (ProcessingError& e)
+				{
+					server->finalizeResponse(client);
+					delete _instance;
+					throw ServerException("readScriptOutput() failed");
 				}
 				fdFound = true;
 				break ;
@@ -242,17 +256,27 @@ void ServersManager::processClientCycle(Server*& server, Client& client, int fdR
 {
 	if (client.getState() == Client::ClientState::READY_TO_WRITE && !ifCGIsFd(client, fdReadyForWrite))
 	{
-		server->responder(client, *server);
+		if (!server->responder(client, *server))  // for CGI only fork, execve, child stuff
+		{
+			server->finalizeResponse(client);
+			delete _instance;
+			throw ServerException("responder() failed");
+		}
 		if (client.getChildPipe(0) == -1)
 		{
 			client.setState(Client::ClientState::BUILDING);
 			LOG_DEBUG("client switched to building");
 		}
 	}
-	if (ifCGIsFd(client, fdReadyForWrite) && client.getCGIState() == Client::CGIState::INIT)
-	{
-		server->responder(client, *server);  // for CGI only fork, execve, child stuff
-	}
+	// if (ifCGIsFd(client, fdReadyForWrite) && client.getCGIState() == Client::CGIState::INIT)
+	// {
+	// 	if (!server->responder(client, *server))  // for CGI only fork, execve, child stuff
+	// 	{
+	// 		server->finalizeResponse(client);
+	// 		delete _instance;
+	// 		throw ServerException("responder() failed");
+	// 	}
+	// }
 
 	if ((!ifCGIsFd(client, fdReadyForWrite) && client.getState() == Client::ClientState::BUILDING)
 		|| (ifCGIsFd(client, fdReadyForWrite) && client.getCGIState() == Client::CGIState::FINISHED_SET))
@@ -266,8 +290,18 @@ void ServersManager::processClientCycle(Server*& server, Client& client, int fdR
 	if (fdReadyForWrite == client.getFd() && client.getState() == Client::ClientState::WRITING)
 	{
 		LOG_DEBUG("Sending the response now");
-		if (server->sendResponse(client))
-			client.setState(Client::ClientState::FINISHED_WRITING);
+		try
+		{
+			if (server->sendResponse(client))
+				client.setState(Client::ClientState::FINISHED_WRITING);
+		}
+		catch (ProcessingError& e)
+		{
+			server->finalizeResponse(client);
+			delete _instance;
+			throw ServerException("sendResponse() failed");
+		}
+		
 	}
 	if (client.getState() == Client::ClientState::FINISHED_WRITING
 		&& (client.getChildPipe(0) == -1 || client.getCGIState() == Client::CGIState::FINISHED_SET))

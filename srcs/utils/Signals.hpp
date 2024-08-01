@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Signals.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/28 19:35:24 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/28 20:25:17 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/01 17:02:14 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,4 +29,5 @@ class Signals
 		
 	public:
 		static void trackSignals();
+		static void killAllChildrenPids();
 };

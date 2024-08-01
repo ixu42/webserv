@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/19 12:27:08 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/29 19:49:38 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/01 16:15:52 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,8 @@
 #include "../response/Response.hpp"
 #include <limits>
 #include <string>
+
+#include <chrono>
 
 // Forward declaration of the Request class
 class Request;
@@ -66,6 +68,7 @@ class Client
 		size_t			_totalBytesWritten;
 
 	public:
+		std::chrono::_V2::system_clock::time_point cgiStart;
 		Client();
 		~Client();
 

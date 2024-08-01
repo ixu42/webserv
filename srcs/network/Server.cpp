@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/31 18:37:51 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/01 18:26:20 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -161,7 +161,7 @@ void Server::receiveBody(Client &client, std::regex pattern)
 		size_t currRequestBodyBytes = client.getRequestString().length() - client.getEmptyLinePos() - client.getEmptyLinesSize();
 
 		if (currRequestBodyBytes > client.getMaxClientBodyBytes())
-			throw ResponseError(413, {}, "Exception has been thrown in receiveRequest() "
+			throw ProcessingError(413, {}, "Exception has been thrown in receiveRequest() "
 											"method of Server class");
 		// Find end of chunked body
 		size_t endOfChunkedBody = client.getRequestString().find("\r\n0\r\n\r\n");
@@ -187,7 +187,7 @@ bool Server::receiveRequest(Client &client)
 	LOG_DEBUG(TEXT_YELLOW, "bytesRead in receiveRequest())): ", bytesRead, RESET);
 
 	if (bytesRead < 0)
-		return false;
+		throw ProcessingError(500, {}, "receiveRequest() reading failed");
 	if (bytesRead == 0)
 		client.setState(Client::ClientState::READY_TO_WRITE);
 
@@ -206,21 +206,25 @@ bool Server::receiveRequest(Client &client)
 	return true;
 }
 
-void Server::handler(Server *&server, Client &client)
+bool Server::handler(Server *&server, Client &client)
 {
 	try
 	{
 		if (server->receiveRequest(client))
 			client.setRequest(new Request(client));
 	}
-	catch (ResponseError &e) // For example, maxClientBodySize exceeded
+	catch (ProcessingError &e) // For example, maxClientBodySize exceeded
 	{
+		if (e.getCode() == 500)
+		{
+			return false;
+		}
 		LOG_ERROR("Request can not be handled: ", e.what(), ": ", e.getCode());
 		std::cout << "Client state: " << int(client.getState()) << std::endl;
 		client.setState(Client::ClientState::READY_TO_WRITE);
 		client.setRequest(new Request(client));
 		client.setResponse(createResponse(client.getRequest(), e.getCode()));
-		LOG_DEBUG("Response set for ResponseError catch");
+		LOG_DEBUG("Response set for ProcessingError catch");
 	}
 	catch (std::exception &e)
 	{
@@ -232,9 +236,10 @@ void Server::handler(Server *&server, Client &client)
 		client.getRequest()->setHeader("host", getIpAddress()+ ":" + std::to_string(getPort())); // Fallback to default host
 		client.setResponse(createResponse(client.getRequest(), 400));
 	}
+	return true;
 }
 
-Response *Server::createResponse(Request *request, int code, std::map<std::string, std::string> optionalHeaders)
+Response* Server::createResponse(Request *request, int code, std::map<std::string, std::string> optionalHeaders)
 {
 	LOG_DEBUG("createResponse() called");
 	return new Response(code, findServerConfig(request), optionalHeaders);
@@ -251,8 +256,9 @@ bool Server::sendResponse(Client &client)
 
 	ssize_t bytesWritten = write(client.getFd(), client.getResponseString().c_str() + client.getTotalBytesWritten(), bytesToWriteNow);
 	LOG_DEBUG(TEXT_GREEN, "Bytes written: ", bytesWritten, RESET);
+
 	if (bytesWritten == -1) // We can not use EAGAIN or EWOULDBLOCK here
-		return false;
+		throw ProcessingError(500, {}, "sendResponse() writing failed");
 	client.setTotalBytesWritten(client.getTotalBytesWritten() + bytesWritten);
 	LOG_DEBUG(TEXT_GREEN, "client.totalBytesWritten: ", client.getTotalBytesWritten(), RESET);
 	
@@ -310,7 +316,7 @@ void Server::checkIfMethodAllowed(Client &client, Location &foundLocation)
 			if (methodBool)
 				allowedMethods += allowedMethods.empty() ? Utility::strToUpper(methodName) : ", " + Utility::strToUpper(methodName);
 		}
-		throw ResponseError(405, {{"Allowed", allowedMethods}}, "Exception has been thrown in checkIfAllowed() "
+		throw ProcessingError(405, {{"Allowed", allowedMethods}}, "Exception has been thrown in checkIfAllowed() "
 																"method of Server class");
 	}
 }
@@ -351,10 +357,10 @@ void Server::handleStaticFiles(Client &client, Location &foundLocation)
 	std::string requestPath = client.getRequest()->getStartLine()["path"];
 	std::string filePath = foundLocation.root + requestPath.substr(foundLocation.path.length());
 	if (access(filePath.c_str(), F_OK) == -1)
-		throw ResponseError(404, {}, "Exception has been thrown in handleStaticFiles() "
+		throw ProcessingError(404, {}, "Exception has been thrown in handleStaticFiles() "
 									 "method of Server class");
 	else if (access(filePath.c_str(), R_OK) == -1)
-		throw ResponseError(403, {}, "Exception has been thrown in handleStaticFiles() "
+		throw ProcessingError(403, {}, "Exception has been thrown in handleStaticFiles() "
 									 "method of Server class");
 
 	// If path ends with /, check for index file and directory listing, otherwise throw 403
@@ -365,12 +371,12 @@ void Server::handleStaticFiles(Client &client, Location &foundLocation)
 		{
 			filePath += foundLocation.index;
 			if (access((filePath).c_str(), R_OK) != 0)
-				throw ResponseError(403);
+				throw ProcessingError(403);
 		}
 		else if (foundLocation.autoindex)
 			locationResp = DirLister::createDirListResponse(foundLocation, requestPath);
 		else
-			throw ResponseError(404, {}, "Exception has been thrown in handleStaticFiles() "
+			throw ProcessingError(404, {}, "Exception has been thrown in handleStaticFiles() "
 										 "method of Server class"); //
 	}
 
@@ -386,14 +392,14 @@ void Server::finalizeResponse(Client &client)
 	client.setResponse(nullptr);
 	close(client.getFd());
 	if (client.getChildPipe(0) != -1)
-		CGIServer::closeFds(client);
+		CGIHandler::closeFds(client);
 	ServersManager::removeFromPollfd(client.getFd());
 	ServersManager::removeFromPollfd(client.getChildPipe(0));
 	ServersManager::removeFromPollfd(client.getChildPipe(1));
 	ServersManager::removeFromPollfd(client.getParentPipe(0));
 	ServersManager::removeFromPollfd(client.getParentPipe(1));
 	if (client.getChildPipe(0) != -1)
-		CGIServer::setToInit(client);
+		CGIHandler::setToInit(client);
 	client.setFd(-1);
 	removeFromClients(client);
 }
@@ -402,40 +408,67 @@ void Server::validateRequest(Client &client)
 {
 	LOG_DEBUG("validateRequest()");
 	if (!client.getRequest())
-		throw ResponseError(400, {}, "Request is nullptr");
+		throw ProcessingError(400, {}, "Request is nullptr");
 	if (client.getRequest()->getStartLine()["method"].empty() ||
 		client.getRequest()->getStartLine()["path"].empty() ||
 		client.getRequest()->getStartLine()["version"].empty() ||
 		client.getRequest()->getHeaders()["host"].empty())
-		throw ResponseError(400, {}, "Request does not have mandatory fields");
+		throw ProcessingError(400, {}, "Request does not have mandatory fields");
 	if (client.getRequest()->getStartLine()["version"] != "HTTP/1.1")
-		throw ResponseError(505, {}, "Wrong HTTP version in the start line");
+		throw ProcessingError(505, {}, "Wrong HTTP version in the start line");
 }
 
-void Server::responder(Client &client, Server &server)
+bool Server::responder(Client &client, Server &server)
 {
+	float timeout = 15.0;
 	LOG_DEBUG("Server::responder() called");
 	// client.getRequest()->printRequest(); // can flood the Terminal if a file is uploaded
 	if ((client.getResponse() && !client.getResponse()->getBody().empty()) || formCGIConfigAbsenceResponse(client, server))
 	{
 		client.setState(Client::ClientState::FINISHED_WRITING);
-		return;
+		return true;
 	}
 	try
 	{
 		validateRequest(client);
+		// Check timeout and kill child process
+			auto cgiEnd = std::chrono::system_clock::now();
+ 
+			std::chrono::duration<double> elapsed_seconds = cgiEnd - client.cgiStart;
+			std::time_t end_time = std::chrono::system_clock::to_time_t(cgiEnd);
+
+			std::cout << "finished computation at " << std::ctime(&end_time)
+			  << "elapsed time: " << elapsed_seconds.count() << "s"
+			  << std::endl;
+			if (elapsed_seconds.count() >= timeout && client.getCGIState() == Client::CGIState::FORKED)
+			{
+				LOG_INFO("Child was killed after the timeout for pid: ", client.getPid());
+				// kill(client.getPid(), SIGKILL);
+				kill(client.getPid(), SIGTERM);
+				CGIHandler::changeToErrorState(client);
+				delete client.getResponse();
+				client.setResponse(createResponse(client.getRequest(), 500));
+			}
+			
 		// client.getRequest()->printRequest(); // can flood the Terminal if a file is uploaded
 		if (client.getRequest()->getStartLine()["path"].rfind("/cgi-bin/", 0) == 0 && client.getCGIState() == Client::CGIState::INIT)
 		{
-			CGIServer::handleCGI(client, server);
+			CGIHandler::handleCGI(client, server);
 			client.setCGIState(Client::CGIState::FORKED);
 			LOG_DEBUG("cgi switched to forked");
 		}
 		else if (client.getCGIState() == Client::CGIState::INIT)
 			handleNonCGIResponse(client, server);
 	}
-	catch (ResponseError &e)
+	catch (ProcessingError &e)
 	{
+		// std::string comp = "handleParentProcess() writing failed";
+		std::cout << "e.what(): " << e.what() << ", size: " << std::strlen(e.what()) << std::endl;
+		if (e.getCode() == 500 && std::strcmp(e.what(), "handleParentProcess() writing failed") == 0)
+		{
+			LOG_ERROR("returning false");
+			return false;
+		}
 		delete client.getResponse();
 		LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
 		client.setResponse(createResponse(client.getRequest(), e.getCode(), e.getHeaders()));
@@ -448,6 +481,7 @@ void Server::responder(Client &client, Server &server)
 	}
 	if (!client.getResponse())
 		client.setResponse(createResponse(client.getRequest(), 500));
+	return true;
 }
 
 void Server::removeFromClients(Client &client)
@@ -519,7 +553,7 @@ Location Server::findLocation(Request *req)
 {
 	LOG_INFO("Searching for server for current location...");
 	if (!req)
-		throw ResponseError(400, {}, "Exception (no request) has been thrown in findLocation() "
+		throw ProcessingError(400, {}, "Exception (no request) has been thrown in findLocation() "
 									 "method of Server class");
 
 	ServerConfig *namedServerConfig = findServerConfig(req);
@@ -527,13 +561,13 @@ Location Server::findLocation(Request *req)
 	// This block might be redundant as we always have a server config
 	if (!namedServerConfig)
 	{
-		throw ResponseError(404, {}, "Exception (no ServerConfig) has been thrown in findLocation() "
+		throw ProcessingError(404, {}, "Exception (no ServerConfig) has been thrown in findLocation() "
 									 "method of Server class");
 	}
 	if (namedServerConfig->locations.empty())
 	{
 		LOG_ERROR("No locations found for server: ", whoAmI());
-		throw ResponseError(404, {}, "Exception has been thrown in findLocation() "
+		throw ProcessingError(404, {}, "Exception has been thrown in findLocation() "
 									 "method of Server class");
 	}
 
@@ -586,7 +620,7 @@ void Server::listCGIFiles()
 	DIR *dp = opendir(_CGIBinFolder);
 	if (dp == NULL)
 	{
-		throw ResponseError(500, {}, "Error occured on opendir() function");
+		throw ProcessingError(500, {}, "Error occured on opendir() function");
 	}
 
 	while ((entry = readdir(dp)))

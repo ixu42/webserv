@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/24 15:24:53 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/01 02:10:57 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -311,6 +311,9 @@ std::string Config::normalizeFilePath(std::string filePathStr, bool closePath)
 		fs::path executableDir = getExecutablePath();
 		fs::path normalizedfilePath = filePath.is_absolute() ? filePath : executableDir / filePath;
 		normalizedfilePath = fs::canonical(normalizedfilePath);
+
+		if (normalizedfilePath.string() == "/")
+			closePath = false;
 
 		return closePath ? normalizedfilePath.string() + "/" : normalizedfilePath.string();
 	}

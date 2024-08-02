@@ -255,24 +255,21 @@ void CGIHandler::unregisterCGIPollFd(Server& server, int fd)
 void CGIHandler::InitCGI(Client& client, std::vector<pollfd>& new_fds)
 {
 	LOG_DEBUG("Initializing CGI");
-	if (client.getRequest()->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
+	Response* response = new Response();
+	client.setResponse(response);
+	if (pipe(client.getParentPipeWhole()) == -1 || pipe(client.getChildPipeWhole()) == -1)
 	{
-		Response* response = new Response();
-		client.setResponse(response);
-		if (pipe(client.getParentPipeWhole()) == -1 || pipe(client.getChildPipeWhole()) == -1)
-		{
-			changeToErrorState(client);
-			throw ProcessingError(500, {}, "Exception (pipe) has been thrown in InitCGI() "
-				"method of CGIHandler class");
-		}
-
-		LOG_DEBUG("Pipes numbers: ",client.getParentPipe(_in)," ",client.getParentPipe(_out),
-			" ", client.getChildPipe(_in)," ",client.getChildPipe(_out));
-		
-		registerCGIPollFd(client.getChildPipe(_in), POLLIN, new_fds);
-		registerCGIPollFd(client.getParentPipe(_out), POLLOUT, new_fds);
-		LOG_DEBUG("Finished InitCGI()");
+		changeToErrorState(client);
+		throw ProcessingError(500, {}, "Exception (pipe) has been thrown in InitCGI() "
+			"method of CGIHandler class");
 	}
+
+	LOG_DEBUG("Pipes numbers: ",client.getParentPipe(_in)," ",client.getParentPipe(_out),
+		" ", client.getChildPipe(_in)," ",client.getChildPipe(_out));
+	
+	registerCGIPollFd(client.getChildPipe(_in), POLLIN, new_fds);
+	registerCGIPollFd(client.getParentPipe(_out), POLLOUT, new_fds);
+	LOG_DEBUG("Finished InitCGI()");
 }
 
 bool CGIHandler::readScriptOutput(Client& client, Server*& server)

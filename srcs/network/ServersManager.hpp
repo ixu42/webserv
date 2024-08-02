@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.hpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/02 13:56:21 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/02 11:40:58 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,14 +47,14 @@ class ServersManager
 		Server*								findNoIpServerByPort(int port);
 		bool								checkUniqueNameServer(ServerConfig& serverConfig, std::vector<ServerConfig>& targetServerconfigs);
 		void								moveServerConfigsToNoIpServer(int port, std::vector<ServerConfig>& serverConfigs);
-		// void								handleInternalFailure(Server*& server, Client& client, std::string msg);
-		void								handleRead(struct pollfd& pfdReadyForRead, std::vector<pollfd>& new_fds);
+		void								handleRead(int fdReadyForRead, std::vector<pollfd>& new_fds);
 		void								processClientCycle(Server*& server, Client& client, int fdReadyForWrite);
 		void								handleWrite(int fdReadyForWrite);
 		void								removeClientByFd(int fd);
 		bool								ifCGIsFd(Client& client, int fd);
 		pollfd*								findPollfdByFd(int fd);
 		static void							printServersInfo();
+		void								checkRevents(std::vector<pollfd>& new_fds);
 
 	public:
 		~ServersManager();

@@ -55,7 +55,8 @@ void ServersManager::printServersInfo()
 ServersManager::ServersManager()
 {
 	LOG_DEBUG("ServersManager creating servers... Servers in config: ", _webservConfig->getServersConfigsMap().size());
-	// iterate according to keys because map is ordered and we can not use unordered map as the order is not guaranteed
+
+	// Iterate according to keys because map is ordered and we can not use unordered map as the order is not guaranteed
 	for (auto& key : _webservConfig->getServersConfigsMapKeys())
 	{
 		std::vector<ServerConfig> serverConfigs = _webservConfig->getServersConfigsMap()[key];
@@ -87,7 +88,7 @@ ServersManager::ServersManager()
 	}
 
 	printServersInfo();
-}	
+}
 
 ServersManager::~ServersManager()
 {
@@ -139,13 +140,44 @@ void ServersManager::initConfig(const char *fileNameString, const char*argv0)
 
 ServersManager* ServersManager::getInstance(const char* argv0)
 {
-	// if config is not initialized with initConfig, DEFAULT_CONFIG will be used
+	// If config is not initialized with initConfig, DEFAULT_CONFIG will be used
 	if (_webservConfig == nullptr)
 		_webservConfig = new Config(DEFAULT_CONFIG, argv0);
 	if (_instance == nullptr)
 		_instance = new ServersManager();
 
 	return _instance;
+}
+
+void ServersManager::checkRevents(std::vector<pollfd>& new_fds)
+{
+	for (struct pollfd& pfd : _fds)
+	{
+		if (pfd.revents & POLLIN)
+		{
+			LOG_DEBUG("if POLLIN for fd: ", pfd.fd);
+			handleRead(pfd.fd, new_fds);
+		}
+		if (pfd.revents & POLLOUT)
+		{
+			LOG_DEBUG("if POLLOUT for fd: ", pfd.fd);
+			handleWrite(pfd.fd);
+		}
+		if (pfd.revents & (POLLERR | POLLHUP)) 
+		{
+			LOG_DEBUG("Error or hangup on fd: ", pfd.fd);
+			if (pfd.revents & POLLERR )
+				LOG_DEBUG("POLLERR");
+			if (pfd.revents & POLLHUP)
+				LOG_DEBUG("POLLHUP");
+			if (close(pfd.fd) == -1)
+				LOG_DEBUG("Failed to close fd: ", pfd.fd, " Error: ", strerror(errno));
+			else
+				LOG_DEBUG("Closed fd: ", pfd.fd);
+			removeClientByFd(pfd.fd);
+			removeFromPollfd(pfd.fd);
+		}
+	}
 }
 
 void ServersManager::run()
@@ -161,47 +193,19 @@ void ServersManager::run()
 			else
 				throw ServerException("poll() error");
 		}
-		for (struct pollfd& pfd : _fds)
-		{
-			if (pfd.revents & POLLIN)
-			{
-				LOG_DEBUG("if POLLIN for fd: ", pfd.fd);
-				handleRead(pfd, new_fds);
-			}
-			if (pfd.revents & POLLOUT)
-			{
-				LOG_DEBUG("if POLLOUT for fd: ", pfd.fd);
-				handleWrite(pfd.fd);
-			}
-			if (pfd.revents & (POLLERR | POLLHUP))
-			{
-				LOG_DEBUG("Error or hangup on fd: ", pfd.fd);
-				if (pfd.revents & POLLERR )
-					LOG_DEBUG("POLLERR");
-				if (pfd.revents & POLLHUP)
-					LOG_DEBUG("POLLHUP");
-				if (pfd.fd != -1 && close(pfd.fd) == -1)
-					LOG_DEBUG("Failed to close fd: ", pfd.fd, " Error: ", strerror(errno));
-				else
-					LOG_DEBUG("Closed fd: ", pfd.fd);
-				removeClientByFd(pfd.fd);
-				removeFromPollfd(pfd.fd);
-			}
-		}
+		checkRevents(new_fds);
 		if (!new_fds.empty())
-		{
 			_fds.insert(_fds.end(), new_fds.begin(), new_fds.end());
-		}
 	}
 }
 
-void	ServersManager::handleRead(struct pollfd& pfdReadyForRead, std::vector<pollfd>& new_fds)
+void ServersManager::handleRead(int fdReadyForRead, std::vector<pollfd>& new_fds)
 {
 	bool fdFound = false;
 
 	for (Server*& server : _servers)
 	{
-		if (pfdReadyForRead.fd == server->getServerSockfd())
+		if (fdReadyForRead == server->getServerSockfd())
 		{
 			int clientSockfd = server->accepter();
 			new_fds.push_back({clientSockfd, POLLIN | POLLOUT | POLLERR | POLLHUP, 0}); 
@@ -209,7 +213,7 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead, std::vector<poll
 		}
 		for (Client& client : server->getClients())
 		{
-			if (pfdReadyForRead.fd == client.getFd()
+			if (fdReadyForRead == client.getFd()
 				&& client.getState() == Client::ClientState::READING)
 			{
 				if (!server->handler(server, client))
@@ -220,7 +224,7 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead, std::vector<poll
 				fdFound = true;
 				break ;
 			}
-			if (ifCGIsFd(client, pfdReadyForRead.fd) && client.getCGIState() == Client::CGIState::FORKED)
+			if (ifCGIsFd(client, fdReadyForRead) && client.getCGIState() == Client::CGIState::FORKED)
 			{
 				LOG_DEBUG("Now forked and reading");
 				try
@@ -283,7 +287,7 @@ void ServersManager::processClientCycle(Server*& server, Client& client, int fdR
 	}
 }
 
-void	ServersManager::handleWrite(int fdReadyForWrite)
+void ServersManager::handleWrite(int fdReadyForWrite)
 {
 	bool fdFound = false;
 
@@ -303,7 +307,7 @@ void	ServersManager::handleWrite(int fdReadyForWrite)
 	}
 }
 
-void	ServersManager::removeFromPollfd(int fd)
+void ServersManager::removeFromPollfd(int fd)
 {
 	for (auto fd_it = _fds.begin(); fd_it != _fds.end(); ++fd_it)
 	{
@@ -315,7 +319,7 @@ void	ServersManager::removeFromPollfd(int fd)
 	}
 }
 
-void	ServersManager::removeClientByFd(int currentFd)
+void ServersManager::removeClientByFd(int currentFd)
 {
 	for (Server*& server : _servers)
 	{

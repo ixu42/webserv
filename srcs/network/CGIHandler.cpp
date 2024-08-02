@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/02 11:19:34 by ixu              ###   ########.fr       */
+/*   Updated: 2024/08/02 13:20:34 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -289,7 +289,10 @@ bool CGIHandler::readScriptOutput(Client& client, Server*& server)
 	LOG_INFO(TEXT_YELLOW, "bytesRead in readScriptOutput: ", bytesRead, RESET);
 	
 	if (bytesRead < 0)
+	{
+		changeToErrorState(client);
 		throw ProcessingError(500, {}, "readScriptOutput() reading failed");
+	}
 	if (bytesRead != 0)
 	{
 		LOG_DEBUG("Still reading from pipe in CGI");

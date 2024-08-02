@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:46 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/29 20:30:48 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/02 14:01:57 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ void Socket::create()
 	_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (!isValidSocketFd())
 	{
-		printError("socket() error: ");
+		closeSocketFd("socket() error: ");
 		throw ServerException("Failed to create socket: " + std::string(strerror(errno)));
 	}
 }
@@ -49,7 +49,7 @@ void Socket::bindAddress(struct addrinfo* res)
 	int ret = setsockopt(_sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 	if (ret < 0)
 	{
-		printError("setsockopt() error: ");
+		closeSocketFd("setsockopt() error: ");
 		throw ServerException("Failed to set socket options: " + std::string(strerror(errno)));
 	}
 
@@ -57,14 +57,14 @@ void Socket::bindAddress(struct addrinfo* res)
 	int flags = fcntl(_sockfd, F_GETFL, 0);
 	if (flags < 0)
 	{
-		printError("fcntl F_GETFL error: ");
+		closeSocketFd("fcntl F_GETFL error: ");
 		throw ServerException("fcntl F_GETFL error: " + std::string(strerror(errno)));
 	}
 
 	ret = fcntl(_sockfd, F_SETFL, flags | O_NONBLOCK);
 	if (ret < 0)
 	{
-		printError("fcntl F_SETFL error: ");
+		closeSocketFd("fcntl F_SETFL error: ");
 		throw ServerException("fcntl F_SETFL error: " + std::string(strerror(errno)));
 	}
 
@@ -72,7 +72,7 @@ void Socket::bindAddress(struct addrinfo* res)
 	if (ret < 0)
 	{
 		freeaddrinfo(res);
-		printError("bind() error: ");
+		closeSocketFd("bind() error: ");
 		throw ServerException("could not bind socket to address: " + std::string(strerror(errno)));
 	}	
 }
@@ -87,7 +87,7 @@ void Socket::listenForConnections(int backlog)
 	int ret = listen(_sockfd, backlog);
 	if (ret < 0)
 	{
-		printError("listen() error: ");
+		closeSocketFd("listen() error: ");
 		throw ServerException("could not start listening for connections: " + std::string(strerror(errno)));
 	}
 }
@@ -103,7 +103,7 @@ int Socket::acceptConnection(struct sockaddr_in addr)
 	int acceptedSocketFd = accept(_sockfd, (struct sockaddr*)&addr, &addrlen);
 	if (acceptedSocketFd < 0)
 	{
-		printError("accept() error: ");
+		closeSocketFd("accept() error: ");
 		throw ServerException("could not start accepting connections: " + std::string(strerror(errno)));
 	}
 	
@@ -123,7 +123,7 @@ bool Socket::isValidSocketFd()
 	return true;
 }
 
-void Socket::printError(const std::string& msg)
+void Socket::closeSocketFd(const std::string& msg)
 {
 	LOG_DEBUG(msg, strerror(errno));
 	if (isValidSocketFd())

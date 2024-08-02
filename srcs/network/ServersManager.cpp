@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/02 11:40:31 by ixu              ###   ########.fr       */
+/*   Updated: 2024/08/02 13:58:18 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -199,13 +199,6 @@ void ServersManager::run()
 	}
 }
 
-void ServersManager::handleInternalFailure(Server*& server, Client& client, std::string msg)
-{
-	server->finalizeResponse(client);
-	delete _instance;
-	throw ServerException(msg);
-}
-
 void ServersManager::handleRead(int fdReadyForRead, std::vector<pollfd>& new_fds)
 {
 	bool fdFound = false;
@@ -224,12 +217,10 @@ void ServersManager::handleRead(int fdReadyForRead, std::vector<pollfd>& new_fds
 				&& client.getState() == Client::ClientState::READING)
 			{
 				if (!server->handler(server, client))
-					handleInternalFailure(server, client, "handler() failed");
-				if (client.getState() == Client::ClientState::READY_TO_WRITE)
-				{
-					if (client.getRequest()->getStartLine()["path"].rfind("/cgi-bin/") == 0)
+					changeStateToDeleteClient(client);
+				if (client.getState() == Client::ClientState::READY_TO_WRITE
+					&& client.getRequest()->getStartLine()["path"].rfind("/cgi-bin/") == 0)
 						CGIHandler::InitCGI(client, new_fds);
-				}
 				fdFound = true;
 				break ;
 			}
@@ -243,7 +234,7 @@ void ServersManager::handleRead(int fdReadyForRead, std::vector<pollfd>& new_fds
 				}
 				catch (ProcessingError& e)
 				{
-					handleInternalFailure(server, client, "readScriptOutput() failed");
+					changeStateToDeleteClient(client);
 				}
 				fdFound = true;
 				break ;
@@ -258,8 +249,7 @@ void ServersManager::processClientCycle(Server*& server, Client& client, int fdR
 {
 	if (client.getState() == Client::ClientState::READY_TO_WRITE && !ifCGIsFd(client, fdReadyForWrite))
 	{
-		if (!server->responder(client, *server))
-			handleInternalFailure(server, client, "responder() failed");
+		server->responder(client, *server);
 		if (client.getChildPipe(0) == -1)
 		{
 			client.setState(Client::ClientState::BUILDING);
@@ -284,17 +274,16 @@ void ServersManager::processClientCycle(Server*& server, Client& client, int fdR
 		}
 		catch (ProcessingError& e)
 		{
-			server->finalizeResponse(client);
-			delete _instance;
-			throw ServerException("sendResponse() failed");
+			client.setState(Client::ClientState::FINISHED_WRITING);
 		}
 		
 	}
 	if (client.getState() == Client::ClientState::FINISHED_WRITING
 		&& (client.getChildPipe(0) == -1 || client.getCGIState() == Client::CGIState::FINISHED_SET))
 	{
+		LOG_DEBUG("Socket fd: ", client.getFd(), " will be closed");
 		server->finalizeResponse(client);
-		LOG_DEBUG("Response sent and connection closed (socket fd: ", client.getFd(), ")");
+		LOG_DEBUG("Connection closed");
 	}
 }
 
@@ -361,4 +350,10 @@ pollfd* ServersManager::findPollfdByFd(int fd)
 			return &pfd;
 	}
 	return nullptr;
+}
+
+void ServersManager::changeStateToDeleteClient(Client& client)
+{
+	client.setState(Client::ClientState::FINISHED_WRITING);
+	client.setCGIState(Client::CGIState::FINISHED_SET);
 }

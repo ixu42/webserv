@@ -47,7 +47,6 @@ class ServersManager
 		Server*								findNoIpServerByPort(int port);
 		bool								checkUniqueNameServer(ServerConfig& serverConfig, std::vector<ServerConfig>& targetServerconfigs);
 		void								moveServerConfigsToNoIpServer(int port, std::vector<ServerConfig>& serverConfigs);
-		void								handleInternalFailure(Server*& server, Client& client, std::string msg);
 		void								handleRead(int fdReadyForRead, std::vector<pollfd>& new_fds);
 		void								processClientCycle(Server*& server, Client& client, int fdReadyForWrite);
 		void								handleWrite(int fdReadyForWrite);
@@ -64,4 +63,5 @@ class ServersManager
 		void								run();
 		static void							initConfig(const char *fileNameString, const char* argv0);
 		static void							removeFromPollfd(int fd);
+		static void							changeStateToDeleteClient(Client& client);
 };

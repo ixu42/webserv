@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/08/01 21:15:30 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/02 13:57:28 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -436,13 +436,13 @@ void Server::handleCGITimeout(Client &client)
 	}
 }
 
-bool Server::responder(Client &client, Server &server)
+void Server::responder(Client &client, Server &server)
 {
 	LOG_DEBUG("Server::responder() called");
 	if ((client.getResponse() && !client.getResponse()->getBody().empty()) || formCGIConfigAbsenceResponse(client, server))
 	{
 		client.setState(Client::ClientState::FINISHED_WRITING);
-		return true;
+		return ;
 	}
 	try
 	{
@@ -461,7 +461,10 @@ bool Server::responder(Client &client, Server &server)
 	catch (ProcessingError &e)
 	{
 		if (e.getCode() == 500 && std::strcmp(e.what(), "handleParentProcess() writing failed") == 0)
-			return false;
+		{
+			ServersManager::changeStateToDeleteClient(client);
+			return ;
+		}
 		delete client.getResponse();
 		LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
 		client.setResponse(createResponse(client.getRequest(), e.getCode(), e.getHeaders()));
@@ -474,8 +477,6 @@ bool Server::responder(Client &client, Server &server)
 	}
 	if (!client.getResponse())
 		client.setResponse(createResponse(client.getRequest(), 500));
-
-	return true;
 }
 
 void Server::removeFromClients(Client &client)

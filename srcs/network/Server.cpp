@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/08/02 13:57:28 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/02 16:25:27 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,19 +35,22 @@ void Server::initServer(const char *ipAddr, int port)
 	freeaddrinfo(_res);
 
 	_serverSocket.listenForConnections(10);
-
+	
+	std::string folder = "cgi-bin/";
+	_CGIBinFolder = _webservConfig->normalizeFilePath(folder, true);
+	
 	if (isCGIBinExistAndReadable())
 		listCGIFiles();
 }
 
-Server::Server() : _serverSocket(Socket())
+Server::Server() : _serverSocket(Socket()), _webservConfig(nullptr)
 {
 	LOG_DEBUG("Server default constructor called");
 
 	initServer(nullptr, 8080);
 }
 
-Server::Server(const char *ipAddr, int port) : _serverSocket(Socket())
+Server::Server(const char *ipAddr, int port, Config* webservConfig) : _serverSocket(Socket()), _webservConfig(webservConfig)
 {
 	LOG_DEBUG("Server parameterized constructor called");
 	LOG_DEBUG("Server (port: ", port, ", ipAddr: ", ipAddr, ") created");
@@ -219,20 +222,20 @@ bool Server::handler(Server *&server, Client &client)
 			return false;
 		LOG_ERROR("Request can not be handled: ", e.what(), ": ", e.getCode());
 		std::cout << "Client state: " << int(client.getState()) << std::endl;
-		client.setState(Client::ClientState::READY_TO_WRITE);
 		client.setRequest(new Request(client));
 		client.setResponse(createResponse(client.getRequest(), e.getCode()));
 		LOG_DEBUG("Response set for ProcessingError catch");
+		CGIHandler::changeToErrorState(client);
 	}
 	catch (std::exception &e)
 	{
 		client.setRequest(new Request(client));
 		LOG_ERROR("Request handle threw an exception");
 		std::cout << "Client state: " << int(client.getState()) << std::endl;
-		client.setState(Client::ClientState::READY_TO_WRITE);
 		LOG_DEBUG("host: ", client.getRequest()->getHeaders()["host"]);
 		client.getRequest()->setHeader("host", getIpAddress()+ ":" + std::to_string(getPort())); // Fallback to default host
 		client.setResponse(createResponse(client.getRequest(), 400));
+		CGIHandler::changeToErrorState(client);
 	}
 	return true;
 }
@@ -600,7 +603,7 @@ Location Server::findLocation(Request *req)
 
 bool Server::isCGIBinExistAndReadable()
 {
-	if (access(_CGIBinFolder, F_OK) != 0 || access(_CGIBinFolder, R_OK) != 0)
+	if (access(_CGIBinFolder.c_str(), F_OK) != 0 || access(_CGIBinFolder.c_str(), R_OK) != 0)
 	{
 		LOG_WARNING("cgi-bin/ directory doesn't exist or forbidden to access");
 		return false;
@@ -613,7 +616,7 @@ void Server::listCGIFiles()
 {
 	struct dirent *entry;
 
-	DIR *dp = opendir(_CGIBinFolder);
+	DIR *dp = opendir(_CGIBinFolder.c_str());
 	if (dp == NULL)
 	{
 		throw ProcessingError(500, {}, "Error occured on opendir() function");
@@ -662,7 +665,8 @@ std::vector<struct pollfd> *Server::getFds()
 	return _managerFds;
 }
 
-const char *Server::getCGIBinFolder()
+// char *Server::getCGIBinFolder()
+std::string Server::getCGIBinFolder()
 {
 	return _CGIBinFolder;
 }

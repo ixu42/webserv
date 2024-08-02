@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/08/02 13:22:14 by ixu              ###   ########.fr       */
+/*   Updated: 2024/08/02 16:25:40 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,13 +55,15 @@ class Server
 		std::vector<struct pollfd>*	_managerFds;
 		std::vector<std::string>	_cgiBinFiles;
 
-		const char *				_CGIBinFolder = "cgi-bin/";
+		std::string					_CGIBinFolder;
 		int							_port;
 		std::string					_ipAddr;
 
+		Config*						_webservConfig;
+
 	public:
 		Server();
-		Server(const char* ipAddr, int port);
+		Server(const char* ipAddr, int port, Config* webservConfig);
 		~Server();
 
 		void						setConfig(std::vector<ServerConfig> serverConfigs);
@@ -73,7 +75,7 @@ class Server
 		int							getPort();
 		std::vector<ServerConfig>&	getConfigs();
 		std::vector<struct pollfd>*	getFds();
-		const char *				getCGIBinFolder();
+		std::string					getCGIBinFolder();
 		std::vector<std::string>	getcgiBinFiles();
 
 		int							accepter();

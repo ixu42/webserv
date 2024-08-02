@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/02 13:20:34 by ixu              ###   ########.fr       */
+/*   Updated: 2024/08/02 16:25:08 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ void CGIHandler::handleCGI(Client& client, Server& server)
 	std::string interpreter = determineInterpreter(client, client.getRequest()->getStartLine()["path"], server);
 	std::vector<std::string> envVars = setEnvironmentVariables(client.getRequest());
 	LOG_DEBUG("Enviroment has been set");
-	handleProcesses(client, interpreter, envVars);
+	handleProcesses(client, interpreter, envVars, server);
 	LOG_DEBUG("handleCGI function ended");
 }
 
@@ -40,14 +40,14 @@ std::string CGIHandler::determineInterpreter(Client& client, const std::string& 
 		throw ProcessingError(404, {}, "cgi-bin/ folder is empty or does not exist");
 	}
 
-	size_t cgiBinPos = filePath.find(server.getCGIBinFolder());
-	size_t fileStart = cgiBinPos + sizeof(server.getCGIBinFolder());
+	size_t cgiBinPos = filePath.find("/cgi-bin/");
+	size_t fileStart = cgiBinPos + 9;
 	size_t fileEnd = filePath.find('/', fileStart);
 	std::string fileName = (fileEnd == std::string::npos) ?
 							filePath.substr(fileStart) :
 							filePath.substr(fileStart, fileEnd - fileStart);
 
-	std::string fullPath = static_cast<std::string>(server.getCGIBinFolder()) + fileName;
+	std::string fullPath = static_cast<std::string>(server.getCGIBinFolder().c_str()) + fileName;
 
 	// check if the file exists
 	if (access(fullPath.c_str(), F_OK) != 0)
@@ -98,7 +98,7 @@ std::vector<std::string> CGIHandler::setEnvironmentVariables(Request* request)
 }
 
 void CGIHandler::handleChildProcess(Client& client, const std::string& interpreter,
-	const std::string& filePath, const std::vector<std::string>& envVars)
+	const std::string& filePath, const std::vector<std::string>& envVars, Server& server)
 {
 	LOG_DEBUG("Duplicating stdin and stdout");
 	if (dup2(client.getParentPipe(_in), STDIN_FILENO) < 0 ||
@@ -114,7 +114,8 @@ void CGIHandler::handleChildProcess(Client& client, const std::string& interpret
 
 	std::vector<char*> args;
 	args.push_back(const_cast<char*>(interpreter.c_str()));
-	args.push_back(const_cast<char*>(filePath.c_str()));
+	std::string absFilePath = server.getCGIBinFolder() + filePath;
+	args.push_back(const_cast<char*>(absFilePath.c_str()));
 	args.push_back(nullptr);
 	LOG_DEBUG("Agruments set");
 
@@ -141,7 +142,8 @@ void CGIHandler::handleParentProcess(Client& client, const std::string& body)
 	close(client.getChildPipe(_out));
 
 	LOG_DEBUG("Writing body of the request inside the pipe");
-	if (write(client.getParentPipe(_out), body.c_str(), body.size()) < 0)
+	int bytesRead = write(client.getParentPipe(_out), body.c_str(), body.size());
+	if (bytesRead < 0)
 	{
 		LOG_DEBUG("Child pid: ", client.getPid());
 		kill(client.getPid(), SIGTERM);
@@ -149,12 +151,14 @@ void CGIHandler::handleParentProcess(Client& client, const std::string& body)
 		changeToErrorState(client);
 		throw ProcessingError(500, {}, "handleParentProcess() writing failed");
 	}
+	if (bytesRead == 0)
+		LOG_DEBUG("bytesRead: 0");
 	close(client.getParentPipe(_out));
 	LOG_DEBUG("Wrote body of the request and closed the pipe");
 }
 
 void CGIHandler::handleProcesses(Client& client, const std::string& interpreter,
-	const std::vector<std::string>& envVars)
+	const std::vector<std::string>& envVars, Server& server)
 {
 	pid_t childPid = fork();
 	LOG_DEBUG("forked in handleProcesses");
@@ -171,7 +175,7 @@ void CGIHandler::handleProcesses(Client& client, const std::string& interpreter,
 	{
 		LOG_DEBUG("Child started");
 		handleChildProcess(client, interpreter,
-			client.getRequest()->getStartLine()["path"].erase(0, 1), envVars);
+			client.getRequest()->getStartLine()["path"].erase(0, 9), envVars, server);
 	}
 	else
 	{

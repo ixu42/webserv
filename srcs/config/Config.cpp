@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:24 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/01 02:10:57 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/02 15:26:31 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,12 @@ void Config::printConfig()
 {
 	LOG_DEBUG(TEXT_YELLOW, "=== Printing parsed config ===", RESET);
 	int i = 0;
+
+	LOG_DEBUG(BG_YELLOW, TEXT_BLACK, TEXT_BOLD, "Main config", i, RESET);
+	for (auto& [cgiName, cgiPath] : _cgis)
+	{
+		LOG_DEBUG(TEXT_YELLOW, "\t", cgiName, ": ", cgiPath, RESET);
+	}
 	for (auto& key : _serversConfigsMapKeys) 
 	{
 		std::vector<ServerConfig> serversConfigs = _serversConfigsMap[key];

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/02 13:58:18 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/02 15:43:03 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ void ServersManager::processFoundServer(Server* foundServer, std::vector<ServerC
 	{
 		try
 		{
-			_servers.push_back(new Server(serverConfigs[0].ipAddress.c_str(), serverConfigs[0].port));
+			_servers.push_back(new Server(serverConfigs[0].ipAddress.c_str(), serverConfigs[0].port, _webservConfig));
 			foundServer = _servers.back();
 		}
 		catch (const ServerException& e)

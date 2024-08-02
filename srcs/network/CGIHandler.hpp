@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/01 21:02:22 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/02 16:16:52 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,9 +45,9 @@ class CGIHandler {
 		static std::string					determineInterpreter(Client& client, const std::string& filePath, Server& server);
 		static std::vector<std::string>		setEnvironmentVariables(Request* request);
 		static void							handleProcesses(Client& client, const std::string& interpreter,
-												const std::vector<std::string>& envVars);
+												const std::vector<std::string>& envVars, Server& server);
 		static void							handleChildProcess(Client& client, const std::string& interpreter,
-												const std::string& filePath, const std::vector<std::string>& envVars);
+												const std::string& filePath, const std::vector<std::string>& envVars, Server& server);
 		static void							handleParentProcess(Client& client, const std::string& body);
 		static void							checkResponseHeaders(const std::string& result, Response* response);
 		static void							registerCGIPollFd(int fd, short events, std::vector<pollfd>& new_fds);

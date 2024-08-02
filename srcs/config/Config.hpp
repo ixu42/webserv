@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:20 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/28 20:19:41 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/02 15:43:09 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,12 +89,12 @@ class Config
 		void 												printConfig();
 		std::vector<std::string>							filterOutInvalidServerStrings(std::vector<std::string> serverStringsVec);
 		fs::path											getExecutablePath();
-		std::string											normalizeFilePath(std::string rootStr, bool closePath);
 		std::string											filterOutComments(std::string configString);
 
 	public:
 		Config(std::string filePath, const char*argv0);
 
+		std::string											normalizeFilePath(std::string rootStr, bool closePath);
 		std::map<std::string, std::vector<ServerConfig>>&	getServersConfigsMap();
 		std::list<std::string>&								getServersConfigsMapKeys();
 };

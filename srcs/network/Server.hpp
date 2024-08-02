@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/08/01 20:53:37 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/02 13:22:14 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,7 +78,7 @@ class Server
 
 		int							accepter();
 		bool						handler(Server*& server, Client& client);
-		bool						responder(Client& client, Server &server);
+		void						responder(Client& client, Server &server);
 
 		void						handleCGITimeout(Client &client);
 		void						receiveHeaders(Client &client, std::regex pattern);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/01 20:47:35 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/02 13:23:23 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,14 +173,14 @@ void ServersManager::run()
 				LOG_DEBUG("if POLLOUT for fd: ", pfd.fd);
 				handleWrite(pfd.fd);
 			}
-			if (pfd.revents & (POLLERR | POLLHUP)) 
+			if (pfd.revents & (POLLERR | POLLHUP))
 			{
 				LOG_DEBUG("Error or hangup on fd: ", pfd.fd);
 				if (pfd.revents & POLLERR )
 					LOG_DEBUG("POLLERR");
 				if (pfd.revents & POLLHUP)
 					LOG_DEBUG("POLLHUP");
-				if (close(pfd.fd) == -1)
+				if (pfd.fd != -1 && close(pfd.fd) == -1)
 					LOG_DEBUG("Failed to close fd: ", pfd.fd, " Error: ", strerror(errno));
 				else
 					LOG_DEBUG("Closed fd: ", pfd.fd);
@@ -193,13 +193,6 @@ void ServersManager::run()
 			_fds.insert(_fds.end(), new_fds.begin(), new_fds.end());
 		}
 	}
-}
-
-void ServersManager::handleInternalFailure(Server*& server, Client& client, std::string msg)
-{
-	server->finalizeResponse(client);
-	delete _instance;
-	throw ServerException(msg);
 }
 
 void	ServersManager::handleRead(struct pollfd& pfdReadyForRead, std::vector<pollfd>& new_fds)
@@ -220,7 +213,10 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead, std::vector<poll
 				&& client.getState() == Client::ClientState::READING)
 			{
 				if (!server->handler(server, client))
-					handleInternalFailure(server, client, "handler() failed");
+				{
+					client.setState(Client::ClientState::FINISHED_WRITING);
+					client.setCGIState(Client::CGIState::FINISHED_SET);
+				}
 				if (client.getState() == Client::ClientState::READY_TO_WRITE)
 				{
 					if (client.getRequest()->getStartLine()["path"].rfind("/cgi-bin/") == 0)
@@ -239,7 +235,8 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead, std::vector<poll
 				}
 				catch (ProcessingError& e)
 				{
-					handleInternalFailure(server, client, "readScriptOutput() failed");
+					client.setState(Client::ClientState::FINISHED_WRITING);
+					client.setCGIState(Client::CGIState::FINISHED_SET);
 				}
 				fdFound = true;
 				break ;
@@ -254,8 +251,7 @@ void ServersManager::processClientCycle(Server*& server, Client& client, int fdR
 {
 	if (client.getState() == Client::ClientState::READY_TO_WRITE && !ifCGIsFd(client, fdReadyForWrite))
 	{
-		if (!server->responder(client, *server))
-			handleInternalFailure(server, client, "responder() failed");
+		server->responder(client, *server);
 		if (client.getChildPipe(0) == -1)
 		{
 			client.setState(Client::ClientState::BUILDING);
@@ -280,17 +276,16 @@ void ServersManager::processClientCycle(Server*& server, Client& client, int fdR
 		}
 		catch (ProcessingError& e)
 		{
-			server->finalizeResponse(client);
-			delete _instance;
-			throw ServerException("sendResponse() failed");
+			client.setState(Client::ClientState::FINISHED_WRITING);
 		}
 		
 	}
 	if (client.getState() == Client::ClientState::FINISHED_WRITING
 		&& (client.getChildPipe(0) == -1 || client.getCGIState() == Client::CGIState::FINISHED_SET))
 	{
+		LOG_DEBUG("Socket fd: ", client.getFd(), " will be closed");
 		server->finalizeResponse(client);
-		LOG_DEBUG("Response sent and connection closed (socket fd: ", client.getFd(), ")");
+		LOG_DEBUG("Connection closed");
 	}
 }
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Signals.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/28 19:35:22 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/01 17:02:10 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/02 13:36:29 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,6 @@ void Signals::signalHandler(int signal)
 	std::cout << TEXT_WHITE << "\n[" << getCurrentTime() << "] " << RESET;
 	std::cout << TEXT_MAGENTA << "[INFO] " << RESET;
 	std::cout << TEXT_MAGENTA << "Shutting down the server(s)..." << RESET << std::endl;
-	std::cout << TEXT_MAGENTA << g_signalReceived << RESET << std::endl;
 }
 
 void Signals::trackSignals()

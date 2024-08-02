@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:53 by ixu               #+#    #+#             */
-/*   Updated: 2024/07/29 20:31:00 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/02 14:01:57 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,5 +46,5 @@ class Socket
 
 	private:
 		bool	isValidSocketFd();
-		void	printError(const std::string& msg);
+		void	closeSocketFd(const std::string& msg);
 };

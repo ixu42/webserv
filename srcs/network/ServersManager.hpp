@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.hpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/02 13:03:51 by ixu              ###   ########.fr       */
+/*   Updated: 2024/08/02 13:56:21 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,4 +63,5 @@ class ServersManager
 		void								run();
 		static void							initConfig(const char *fileNameString, const char* argv0);
 		static void							removeFromPollfd(int fd);
+		static void							changeStateToDeleteClient(Client& client);
 };

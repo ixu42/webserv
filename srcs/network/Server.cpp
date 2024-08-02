@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/08/02 13:22:06 by ixu              ###   ########.fr       */
+/*   Updated: 2024/08/02 13:57:28 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -462,8 +462,7 @@ void Server::responder(Client &client, Server &server)
 	{
 		if (e.getCode() == 500 && std::strcmp(e.what(), "handleParentProcess() writing failed") == 0)
 		{
-			client.setState(Client::ClientState::FINISHED_WRITING);
-			client.setCGIState(Client::CGIState::FINISHED_SET);
+			ServersManager::changeStateToDeleteClient(client);
 			return ;
 		}
 		delete client.getResponse();

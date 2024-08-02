@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/02 13:23:23 by ixu              ###   ########.fr       */
+/*   Updated: 2024/08/02 13:58:18 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -213,15 +213,10 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead, std::vector<poll
 				&& client.getState() == Client::ClientState::READING)
 			{
 				if (!server->handler(server, client))
-				{
-					client.setState(Client::ClientState::FINISHED_WRITING);
-					client.setCGIState(Client::CGIState::FINISHED_SET);
-				}
-				if (client.getState() == Client::ClientState::READY_TO_WRITE)
-				{
-					if (client.getRequest()->getStartLine()["path"].rfind("/cgi-bin/") == 0)
+					changeStateToDeleteClient(client);
+				if (client.getState() == Client::ClientState::READY_TO_WRITE
+					&& client.getRequest()->getStartLine()["path"].rfind("/cgi-bin/") == 0)
 						CGIHandler::InitCGI(client, new_fds);
-				}
 				fdFound = true;
 				break ;
 			}
@@ -235,8 +230,7 @@ void	ServersManager::handleRead(struct pollfd& pfdReadyForRead, std::vector<poll
 				}
 				catch (ProcessingError& e)
 				{
-					client.setState(Client::ClientState::FINISHED_WRITING);
-					client.setCGIState(Client::CGIState::FINISHED_SET);
+					changeStateToDeleteClient(client);
 				}
 				fdFound = true;
 				break ;
@@ -352,4 +346,10 @@ pollfd* ServersManager::findPollfdByFd(int fd)
 			return &pfd;
 	}
 	return nullptr;
+}
+
+void ServersManager::changeStateToDeleteClient(Client& client)
+{
+	client.setState(Client::ClientState::FINISHED_WRITING);
+	client.setCGIState(Client::CGIState::FINISHED_SET);
 }

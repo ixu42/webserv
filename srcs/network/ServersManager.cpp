@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/02 15:43:03 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/04 22:35:40 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,13 +136,17 @@ void ServersManager::moveServerConfigsToNoIpServer(int port, std::vector<ServerC
 void ServersManager::initConfig(const char *fileNameString, const char*argv0)
 {
 	_webservConfig = new Config(fileNameString, argv0);
+	throw std::bad_alloc();
 }
 
 ServersManager* ServersManager::getInstance(const char* argv0)
 {
 	// If config is not initialized with initConfig, DEFAULT_CONFIG will be used
 	if (_webservConfig == nullptr)
+	{
+		// throw std::bad_alloc();
 		_webservConfig = new Config(DEFAULT_CONFIG, argv0);
+	}
 	if (_instance == nullptr)
 		_instance = new ServersManager();
 

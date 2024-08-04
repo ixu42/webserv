@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/02 16:25:08 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/04 22:33:43 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -259,6 +259,8 @@ void CGIHandler::unregisterCGIPollFd(Server& server, int fd)
 void CGIHandler::InitCGI(Client& client, std::vector<pollfd>& new_fds)
 {
 	LOG_DEBUG("Initializing CGI");
+	// throw std::bad_alloc();
+	// Response* response = std::make_shared<Response>();
 	Response* response = new Response();
 	client.setResponse(response);
 	if (pipe(client.getParentPipeWhole()) == -1 || pipe(client.getChildPipeWhole()) == -1)

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/19 12:27:08 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/01 20:32:35 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/03 15:30:30 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ class Client
 
 		std::string									_responseString;
 		size_t										_totalBytesWritten;
-		std::chrono::_V2::system_clock::time_point	_cgiStart;
+		std::chrono::system_clock::time_point		_cgiStart;
 
 	public:
 		Client();
@@ -93,7 +93,7 @@ class Client
 		size_t										getMaxClientBodyBytes();
 		std::string									getResponseString();
 		size_t										getTotalBytesWritten();
-		std::chrono::_V2::system_clock::time_point	getCgiStart();
+		std::chrono::system_clock::time_point	getCgiStart();
 		
 		void										setFd(int fd);
 		void										setPid(pid_t pid);
@@ -113,5 +113,5 @@ class Client
 		void										setMaxClientBodyBytes(size_t maxClientBodyBytes);
 		void										setResponseString(const std::string& responseString);
 		void										setTotalBytesWritten(size_t totalBytesWritten);
-		void										setCgiStart(std::chrono::_V2::system_clock::time_point cgiStart);
+		void										setCgiStart(std::chrono::system_clock::time_point cgiStart);
 };

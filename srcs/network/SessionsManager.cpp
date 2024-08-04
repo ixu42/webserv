@@ -59,7 +59,8 @@ void SessionsManager::handleSessions(Client& client)
 	}
 }
 
-void SessionsManager::generateSession(Request* request)
+// void SessionsManager::generateSession(Request* request)
+void SessionsManager::generateSession(std::shared_ptr<Request> request)
 {
 	auto now = std::chrono::system_clock::now();
 	auto duration = now.time_since_epoch();
@@ -190,7 +191,8 @@ void SessionsManager::manageSessions(std::deque<std::string>& sessions)
 	}
 }
 
-void SessionsManager::setSessionToResponse(Response* response, std::string& sessionData)
+// void SessionsManager::setSessionToResponse(Response* response, std::string& sessionData)
+void SessionsManager::setSessionToResponse(std::shared_ptr<Response> response, std::string& sessionData)
 {
 	response->setHeader("Set-Cookie", sessionData);
 }

@@ -12,18 +12,23 @@
 
 #include "ServersManager.hpp"
 
-std::vector<Server*> ServersManager::_servers;
-ServersManager* ServersManager::_instance = nullptr;
-Config* ServersManager::_webservConfig = nullptr;
+// std::vector<Server*> ServersManager::_servers;
+std::vector<std::shared_ptr<Server>> ServersManager::_servers;
+// ServersManager* ServersManager::_instance = nullptr;
+std::shared_ptr<ServersManager> ServersManager::_instance = nullptr;
+// Config* ServersManager::_webservConfig = nullptr;
+std::shared_ptr<Config> ServersManager::_webservConfig = nullptr;
 std::vector<struct pollfd> ServersManager::_fds;
 
-void ServersManager::processFoundServer(Server* foundServer, std::vector<ServerConfig> serverConfigs)
+// void ServersManager::processFoundServer(Server* foundServer, std::vector<ServerConfig> serverConfigs)
+void ServersManager::processFoundServer(std::shared_ptr<Server> foundServer, std::vector<ServerConfig> serverConfigs)
 {
 	if (!foundServer)
 	{
 		try
 		{
-			_servers.push_back(new Server(serverConfigs[0].ipAddress.c_str(), serverConfigs[0].port, _webservConfig));
+			// _servers.push_back(new Server(serverConfigs[0].ipAddress.c_str(), serverConfigs[0].port, _webservConfig));
+			_servers.push_back(std::make_shared<Server>(serverConfigs[0].ipAddress.c_str(), serverConfigs[0].port, _webservConfig));
 			foundServer = _servers.back();
 		}
 		catch (const ServerException& e)
@@ -43,7 +48,8 @@ void ServersManager::processFoundServer(Server* foundServer, std::vector<ServerC
 void ServersManager::printServersInfo()
 {
 	LOG_INFO("ServersManager created ", _servers.size(), " servers");
-	for (Server*& server : _servers)
+	// for (Server*& server : _servers)
+	for (std::shared_ptr<Server>& server : _servers)
 	{
 		std::string ipAddr = server->getIpAddress();
 		if (ipAddr.empty())
@@ -61,7 +67,8 @@ ServersManager::ServersManager()
 	{
 		std::vector<ServerConfig> serverConfigs = _webservConfig->getServersConfigsMap()[key];
 
-		Server* foundServer = nullptr;
+		// Server* foundServer = nullptr;
+		std::shared_ptr<Server> foundServer = nullptr;
 		for (auto& server : _servers)
 		{
 			if (server->getIpAddress() == serverConfigs[0].ipAddress
@@ -75,7 +82,8 @@ ServersManager::ServersManager()
 	}
 
 	// Add all server fds to pollfd vector
-	for (Server*& server : _servers)
+	// for (Server*& server : _servers)
+	for (std::shared_ptr<Server>& server : _servers)
 	{
 		server->setFds(&_fds);
 		_fds.push_back({server->getServerSockfd(), POLLIN, 0});
@@ -83,7 +91,7 @@ ServersManager::ServersManager()
 
 	if (_servers.empty())
 	{
-		delete _webservConfig;
+		// delete _webservConfig;
 		throw ServerException("No valid servers");
 	}
 
@@ -93,16 +101,19 @@ ServersManager::ServersManager()
 ServersManager::~ServersManager()
 {
 	LOG_DEBUG(_servers.size(), " server(s) will be deleted");
-	for (Server *server : _servers)
-		delete server;
-	delete _webservConfig;
+	// for (Server *server : _servers)
+	// 	delete server;
+	// delete _webservConfig;
 }
 
-Server* ServersManager::findNoIpServerByPort(int port)
+// Server* ServersManager::findNoIpServerByPort(int port)
+std::shared_ptr<Server> ServersManager::findNoIpServerByPort(int port)
 {
 	LOG_DEBUG("ServersManager::findNoIpServerByPort() called");
-	for (Server*& server : _servers)
+	// for (Server*& server : _servers)
+	for (std::shared_ptr<Server>& server : _servers)
 	{
+	// {
 		LOG_DEBUG("ipAddr: ", server->getIpAddress());
 		if (server->getIpAddress().empty() && server->getPort() == port)
 			return server;
@@ -123,7 +134,8 @@ bool ServersManager::checkUniqueNameServer(ServerConfig& serverConfig, std::vect
 void ServersManager::moveServerConfigsToNoIpServer(int port, std::vector<ServerConfig>& serverConfigs)
 {
 	LOG_WARNING("Address already in use. All the configs will be moved to the no ip server.");
-	Server* noIpServer = findNoIpServerByPort(port);
+	// Server* noIpServer = findNoIpServerByPort(port);
+	std::shared_ptr<Server> noIpServer = findNoIpServerByPort(port);
 	if (noIpServer == nullptr)
 		return ;
 	for (ServerConfig& serverConfig : serverConfigs)
@@ -135,20 +147,29 @@ void ServersManager::moveServerConfigsToNoIpServer(int port, std::vector<ServerC
 
 void ServersManager::initConfig(const char *fileNameString, const char*argv0)
 {
-	_webservConfig = new Config(fileNameString, argv0);
-	throw std::bad_alloc();
+	// _webservConfig = new Config(fileNameString, argv0);
+	// delete _webservConfig;
+	_webservConfig = std::make_shared<Config>(fileNameString, argv0);
+	// throw std::bad_alloc();
 }
 
-ServersManager* ServersManager::getInstance(const char* argv0)
+// ServersManager* ServersManager::getInstance(const char* argv0)
+std::shared_ptr<ServersManager> ServersManager::getInstance(const char* argv0)
 {
 	// If config is not initialized with initConfig, DEFAULT_CONFIG will be used
 	if (_webservConfig == nullptr)
 	{
+		// _webservConfig = new Config(DEFAULT_CONFIG, argv0);
+		_webservConfig = std::make_shared<Config>(DEFAULT_CONFIG, argv0);
 		// throw std::bad_alloc();
-		_webservConfig = new Config(DEFAULT_CONFIG, argv0);
 	}
 	if (_instance == nullptr)
-		_instance = new ServersManager();
+	{
+		// _instance = new ServersManager();
+		// _instance = std::make_shared<ServersManager>();
+		_instance = std::shared_ptr<ServersManager>(new ServersManager());
+		// throw std::bad_alloc();
+	}
 
 	return _instance;
 }
@@ -207,7 +228,8 @@ void ServersManager::handleRead(int fdReadyForRead, std::vector<pollfd>& new_fds
 {
 	bool fdFound = false;
 
-	for (Server*& server : _servers)
+	// for (Server*& server : _servers)
+	for (std::shared_ptr<Server>& server : _servers)
 	{
 		if (fdReadyForRead == server->getServerSockfd())
 		{
@@ -249,7 +271,8 @@ void ServersManager::handleRead(int fdReadyForRead, std::vector<pollfd>& new_fds
 	}
 }
 
-void ServersManager::processClientCycle(Server*& server, Client& client, int fdReadyForWrite)
+// void ServersManager::processClientCycle(Server*& server, Client& client, int fdReadyForWrite)
+void ServersManager::processClientCycle(std::shared_ptr<Server>& server, Client& client, int fdReadyForWrite)
 {
 	if (client.getState() == Client::ClientState::READY_TO_WRITE && !ifCGIsFd(client, fdReadyForWrite))
 	{
@@ -295,7 +318,8 @@ void ServersManager::handleWrite(int fdReadyForWrite)
 {
 	bool fdFound = false;
 
-	for (Server*& server : _servers)
+	// for (Server*& server : _servers)
+	for (std::shared_ptr<Server>& server : _servers)
 	{
 		for (Client& client : server->getClients())
 		{
@@ -325,15 +349,16 @@ void ServersManager::removeFromPollfd(int fd)
 
 void ServersManager::removeClientByFd(int currentFd)
 {
-	for (Server*& server : _servers)
+	// for (Server*& server : _servers)
+	for (std::shared_ptr<Server>& server : _servers)
 	{
 		std::vector<Client>& clients = server->getClients();
 		for (auto it = clients.begin(); it != clients.end(); ++it)
 		{
 			if (it->getFd() == currentFd)
 			{
-				delete it->getRequest();
-				delete it->getResponse();
+				// delete it->getRequest();
+				// delete it->getResponse();
 				clients.erase(it);
 				break ;
 			}

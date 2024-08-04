@@ -37,9 +37,10 @@ int main(int argc, char *argv[])
 	try
 	{
 		ServersManager::initConfig(configFile.c_str(), argv[0]);
-		ServersManager* manager = ServersManager::getInstance(argv[0]);
+		// ServersManager* manager = ServersManager::getInstance(argv[0]);
+		std::shared_ptr<ServersManager> manager = ServersManager::getInstance(argv[0]);
 		manager->run();
-		delete manager->getInstance(argv[0]);
+		// delete manager->getInstance(argv[0]);
 	}
 	catch (const ServerException& e)
 	{

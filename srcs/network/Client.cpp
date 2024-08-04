@@ -80,12 +80,14 @@ std::string& Client::getRespBody()
 	return _respBody;
 }
 
-Request* Client::getRequest()
+// Request* Client::getRequest()
+std::shared_ptr<Request> Client::getRequest()
 {
 	return _request;
 }
 
-Response* Client::getResponse()
+// Response* Client::getResponse()
+std::shared_ptr<Response> Client::getResponse()
 {
 	return _response;
 }
@@ -184,12 +186,14 @@ void Client::setCGIString(const std::string& cgiString)
 	_CGIString = cgiString;
 }
 
-void Client::setRequest(Request* request)
+// void Client::setRequest(Request* request)
+void Client::setRequest(std::shared_ptr<Request> request)
 {
 	_request = request;
 }
 
-void Client::setResponse(Response* response)
+// void Client::setResponse(Response* response)
+void Client::setResponse(std::shared_ptr<Response> response)
 {
 	_response = response;
 }

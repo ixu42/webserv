@@ -74,7 +74,8 @@ std::string CGIHandler::determineInterpreter(Client& client, const std::string& 
 	return cgiPath;
 }
 
-std::vector<std::string> CGIHandler::setEnvironmentVariables(Request* request)
+// std::vector<std::string> CGIHandler::setEnvironmentVariables(Request* request)
+std::vector<std::string> CGIHandler::setEnvironmentVariables(std::shared_ptr<Request> request)
 {
 	std::vector<std::string> env;
 
@@ -187,7 +188,8 @@ void CGIHandler::handleProcesses(Client& client, const std::string& interpreter,
 	LOG_INFO(TEXT_GREEN, "CGI script executed", RESET);
 }
 
-void CGIHandler::checkResponseHeaders(const std::string& result, Response* response)
+// void CGIHandler::checkResponseHeaders(const std::string& result, Response* response)
+void CGIHandler::checkResponseHeaders(const std::string& result, std::shared_ptr<Response> response)
 {
 	LOG_DEBUG("Checking for the headers in CGI output");
 	size_t headerEnd = result.find("\n\n");
@@ -259,9 +261,9 @@ void CGIHandler::unregisterCGIPollFd(Server& server, int fd)
 void CGIHandler::InitCGI(Client& client, std::vector<pollfd>& new_fds)
 {
 	LOG_DEBUG("Initializing CGI");
+	// Response* response = new Response();
+	std::shared_ptr<Response> response = std::make_shared<Response>();
 	// throw std::bad_alloc();
-	// Response* response = std::make_shared<Response>();
-	Response* response = new Response();
 	client.setResponse(response);
 	if (pipe(client.getParentPipeWhole()) == -1 || pipe(client.getChildPipeWhole()) == -1)
 	{
@@ -278,7 +280,8 @@ void CGIHandler::InitCGI(Client& client, std::vector<pollfd>& new_fds)
 	LOG_DEBUG("Finished InitCGI()");
 }
 
-bool CGIHandler::readScriptOutput(Client& client, Server*& server)
+// bool CGIHandler::readScriptOutput(Client& client, Server*& server)
+bool CGIHandler::readScriptOutput(Client& client, std::shared_ptr<Server>& server)
 {
 	LOG_DEBUG("readScriptOutput() called");
 	char buffer[g_bufferSize];

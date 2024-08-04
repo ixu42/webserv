@@ -26,7 +26,8 @@ namespace fs = std::filesystem;
 class DirLister
 {
 	public:
-		static bool					generateSymbolicLinkRow(std::stringstream& htmlStream, fs::path filePath);
-		static Response*			createDirListResponse(Location& location, std::string requestPath);
-		static std::stringstream	generateDirectoryListingHtml(const std::string& root);
+		static bool							generateSymbolicLinkRow(std::stringstream& htmlStream, fs::path filePath);
+		// static Response*			createDirListResponse(Location& location, std::string requestPath);
+		static std::shared_ptr<Response>	createDirListResponse(Location& location, std::string requestPath);
+		static std::stringstream			generateDirectoryListingHtml(const std::string& root);
 };

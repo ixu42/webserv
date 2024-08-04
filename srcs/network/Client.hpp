@@ -50,8 +50,10 @@ class Client
 		int											_parentPipe[2];
 		int											_childPipe[2];
 		std::string									_CGIString;
-		Request*									_request;
-		Response*									_response;
+		// Request*									_request;
+		std::shared_ptr<Request>					_request;
+		// Response*									_response;
+		std::shared_ptr<Response>					_response;
 		std::string									_respBody;
 		ClientState									_state;
 		CGIState									_stateCGI;
@@ -80,8 +82,10 @@ class Client
 		int*										getParentPipeWhole();
 		std::string									getCGIString();
 		std::string&								getRespBody();
-		Request*									getRequest();
-		Response*									getResponse();
+		// Request*									getRequest();
+		std::shared_ptr<Request>					getRequest();
+		// Response*									getResponse();
+		std::shared_ptr<Response>					getResponse();
 		ClientState									getState();
 		CGIState									getCGIState();
 		std::string									getRequestString();
@@ -93,15 +97,17 @@ class Client
 		size_t										getMaxClientBodyBytes();
 		std::string									getResponseString();
 		size_t										getTotalBytesWritten();
-		std::chrono::system_clock::time_point	getCgiStart();
+		std::chrono::system_clock::time_point		getCgiStart();
 		
 		void										setFd(int fd);
 		void										setPid(pid_t pid);
 		void										setParentPipe(int index, int fd);
 		void										setChildPipe(int index, int fd);
 		void										setCGIString(const std::string& cgiString);
-		void										setRequest(Request* request);
-		void										setResponse(Response* response);
+		// void										setRequest(Request* request);
+		void										setRequest(std::shared_ptr<Request> request);
+		// void										setResponse(Response* response);
+		void										setResponse(std::shared_ptr<Response> response);
 		void										setState(ClientState state);
 		void										setCGIState(CGIState state);
 		void										setRequestString(const std::string& requestString);

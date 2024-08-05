@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/12 15:02:01 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/01 14:01:23 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/05 13:21:57 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,6 @@ void SessionsManager::handleSessions(Client& client)
 	}
 }
 
-// void SessionsManager::generateSession(Request* request)
 void SessionsManager::generateSession(std::shared_ptr<Request> request)
 {
 	auto now = std::chrono::system_clock::now();
@@ -191,7 +190,6 @@ void SessionsManager::manageSessions(std::deque<std::string>& sessions)
 	}
 }
 
-// void SessionsManager::setSessionToResponse(Response* response, std::string& sessionData)
 void SessionsManager::setSessionToResponse(std::shared_ptr<Response> response, std::string& sessionData)
 {
 	response->setHeader("Set-Cookie", sessionData);

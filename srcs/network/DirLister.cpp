@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/11 23:15:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/01 21:28:12 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/05 13:17:14 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,12 +76,10 @@ std::stringstream DirLister::generateDirectoryListingHtml(const std::string& roo
  * Creates dynamic body for Response using, current location and html template
  * html template should have 
  */
-// Response* DirLister::createDirListResponse(Location& location, std::string requestPath)
 std::shared_ptr<Response> DirLister::createDirListResponse(Location& location, std::string requestPath)
 {
 	std::string pathShortCode = "[path]";
 	std::string bodyShortCode = "[body]";
-	// Response* listingResponse = new Response();
 	std::shared_ptr<Response> listingResponse = std::make_shared<Response>();
 	std::string fileString = Utility::readFile(location.defaultListingTemplate);
 	std::stringstream htmlStream;
@@ -96,7 +94,6 @@ std::shared_ptr<Response> DirLister::createDirListResponse(Location& location, s
 	catch (const fs::filesystem_error& e)
 	{
 		LOG_ERROR("Error accessing directory: ", e.what());
-		// delete listingResponse;
 		throw ProcessingError(403, {}, "Exception has been thrown in createDirListResponse() "
 			"method of Server class");
 	}

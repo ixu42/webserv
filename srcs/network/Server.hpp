@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/08/02 16:25:40 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/05 13:19:33 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,12 +59,10 @@ class Server
 		int							_port;
 		std::string					_ipAddr;
 
-		// Config*						_webservConfig;
 		std::shared_ptr<Config>			_webservConfig;
 
 	public:
 		Server();
-		// Server(const char* ipAddr, int port, Config* webservConfig);
 		Server(const char* ipAddr, int port, std::shared_ptr<Config> webservConfig);
 		~Server();
 
@@ -81,7 +79,6 @@ class Server
 		std::vector<std::string>	getcgiBinFiles();
 
 		int							accepter();
-		// bool						handler(Server*& server, Client& client);
 		bool						handler(std::shared_ptr<Server>& server, Client& client);
 		void						responder(Client& client, Server &server);
 
@@ -91,7 +88,6 @@ class Server
 		bool						receiveRequest(Client& client);
 		bool						sendResponse(Client& client);
 		void						finalizeResponse(Client& client);
-		// ServerConfig*				findServerConfig(Request* req);
 		ServerConfig*				findServerConfig(std::shared_ptr<Request> req);
 
 	private:
@@ -108,17 +104,13 @@ class Server
 		void						handleRedirect(Client& client, Location& foundLocation);
 		int							handleDelete(Client& client, Location& foundLocation);
 		void						handleStaticFiles(Client& client, Location& foundLocation);
-		// ServerConfig*				processNamedServerConfig(Request *req);
 		ServerConfig*				processNamedServerConfig(std::shared_ptr<Request> req);
-		// Location					findLocation(Request* req);
 		Location					findLocation(std::shared_ptr<Request> req);
 		void						listCGIFiles();
 		bool						isCGIBinExistAndReadable();
-		
-		// size_t						findMaxClientBodyBytes(Request request);
+
 		size_t						findMaxClientBodyBytes(std::shared_ptr<Request> request);
 
-		// Response*					createResponse(Request* request, int code, std::map<std::string,
 		std::shared_ptr<Response>	createResponse(std::shared_ptr<Request> request, int code, std::map<std::string,
 										std::string> optionalHeaders = {});
 };

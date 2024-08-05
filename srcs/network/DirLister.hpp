@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/11 23:16:26 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/01 03:00:37 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/05 13:17:19 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,6 @@ class DirLister
 {
 	public:
 		static bool							generateSymbolicLinkRow(std::stringstream& htmlStream, fs::path filePath);
-		// static Response*			createDirListResponse(Location& location, std::string requestPath);
 		static std::shared_ptr<Response>	createDirListResponse(Location& location, std::string requestPath);
 		static std::stringstream			generateDirectoryListingHtml(const std::string& root);
 };

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/08/02 16:25:27 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/05 13:17:33 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,6 @@ Server::Server() : _serverSocket(Socket()), _webservConfig(nullptr)
 	initServer(nullptr, 8080);
 }
 
-// Server::Server(const char *ipAddr, int port, Config* webservConfig) : _serverSocket(Socket()), _webservConfig(webservConfig)
 Server::Server(const char *ipAddr, int port, std::shared_ptr<Config> webservConfig) : _serverSocket(Socket()), _webservConfig(webservConfig)
 {
 	
@@ -67,10 +66,6 @@ Server::~Server()
 	for (Client &client : _clients)
 	{
 		close(client.getFd());
-		// if (client.getRequest())
-		// 	delete client.getRequest();
-		// if (client.getResponse())
-		// 	delete client.getResponse();
 	}
 }
 
@@ -456,7 +451,7 @@ void Server::responder(Client &client, Server &server)
 	LOG_DEBUG("Server::responder() called");
 	if ((client.getResponse() && !client.getResponse()->getBody().empty()) || formCGIConfigAbsenceResponse(client, server))
 	{
-		client.setState(Client::ClientState::FINISHED_WRITING);
+		CGIHandler::changeToErrorState(client);
 		return ;
 	}
 	try

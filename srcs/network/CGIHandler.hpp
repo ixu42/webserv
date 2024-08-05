@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/02 16:16:52 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/05 13:16:16 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,14 +43,12 @@ class CGIHandler {
 		const static int					_out = 1;
 
 		static std::string					determineInterpreter(Client& client, const std::string& filePath, Server& server);
-		// static std::vector<std::string>		setEnvironmentVariables(Request* request);
 		static std::vector<std::string>		setEnvironmentVariables(std::shared_ptr<Request> request);
 		static void							handleProcesses(Client& client, const std::string& interpreter,
 												const std::vector<std::string>& envVars, Server& server);
 		static void							handleChildProcess(Client& client, const std::string& interpreter,
 												const std::string& filePath, const std::vector<std::string>& envVars, Server& server);
 		static void							handleParentProcess(Client& client, const std::string& body);
-		// static void							checkResponseHeaders(const std::string& result, Response* response);
 		static void							checkResponseHeaders(const std::string& result, std::shared_ptr<Response> response);
 		static void							registerCGIPollFd(int fd, short events, std::vector<pollfd>& new_fds);
 		static void							unregisterCGIPollFd(Server& server, int fd);
@@ -60,7 +58,6 @@ class CGIHandler {
 		static void							changeToErrorState(Client& client);
 		static void							handleCGI(Client& client, Server& server);
 		static void							InitCGI(Client& client, std::vector<pollfd>& new_fds);
-		// static bool							readScriptOutput(Client& client, Server*& server);
 		static bool							readScriptOutput(Client& client, std::shared_ptr<Server>& server);
 		static void							closeFds(Client& client);
 		static void							setToInit(Client& client);

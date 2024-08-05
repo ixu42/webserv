@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   SessionsManager.hpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/12 12:23:32 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/07/23 18:47:32 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/05 13:23:29 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,11 +26,9 @@ class SessionsManager {
 		const static size_t			_MAX_SESSIONS = 500;
 		
 		static bool					sessionExistsCheck(std::string& sessionData);
-		// static void					generateSession(Request* request);
 		static void					generateSession(std::shared_ptr<Request> request);
 		static void					addSessionToFile(std::string& sessionData);
 		static void					manageSessions(std::deque<std::string>& sessions);
-		// static void					setSessionToResponse(Response* response, std::string& sessionData);
 		static void					setSessionToResponse(std::shared_ptr<Response> response, std::string& sessionData);
 		static bool					isHTMLRequest(Client& client);
 		static void					checkPermissions();

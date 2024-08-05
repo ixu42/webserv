@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/19 12:27:08 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/03 15:30:30 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/05 13:16:54 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,9 +50,7 @@ class Client
 		int											_parentPipe[2];
 		int											_childPipe[2];
 		std::string									_CGIString;
-		// Request*									_request;
 		std::shared_ptr<Request>					_request;
-		// Response*									_response;
 		std::shared_ptr<Response>					_response;
 		std::string									_respBody;
 		ClientState									_state;
@@ -82,9 +80,7 @@ class Client
 		int*										getParentPipeWhole();
 		std::string									getCGIString();
 		std::string&								getRespBody();
-		// Request*									getRequest();
 		std::shared_ptr<Request>					getRequest();
-		// Response*									getResponse();
 		std::shared_ptr<Response>					getResponse();
 		ClientState									getState();
 		CGIState									getCGIState();
@@ -104,9 +100,7 @@ class Client
 		void										setParentPipe(int index, int fd);
 		void										setChildPipe(int index, int fd);
 		void										setCGIString(const std::string& cgiString);
-		// void										setRequest(Request* request);
 		void										setRequest(std::shared_ptr<Request> request);
-		// void										setResponse(Response* response);
 		void										setResponse(std::shared_ptr<Response> response);
 		void										setState(ClientState state);
 		void										setCGIState(CGIState state);

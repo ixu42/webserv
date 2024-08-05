@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ConfigValidator.hpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:16 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/28 20:19:44 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/05 13:35:49 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ class ConfigValidator
 		static int	validateServerNamePerIpPort(std::vector<std::string> serverStrings, size_t i, std::map<std::string, std::regex> patterns);
 		static int	countMatchInRegex(std::string str, std::regex pattern);
 		static int	validateMandatoryFields(std::string str, std::vector<std::string> mandatoryFields,
-						std::map<std::string, std::regex> patterns);
+						std::map<std::string, std::regex> patterns, std::string type);
 
 	public:
 		static int	validateMainConfig(std::string mainConfig);

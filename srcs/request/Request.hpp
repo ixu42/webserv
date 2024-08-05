@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:40 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/28 16:38:05 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/05 13:25:42 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,11 +42,8 @@ class Request
 	public:
 		Request();
 		Request(Client& client);
-		// Request(std::string request);
-
 
 		void					parse(Client& client);
-		// void					parse(std::string request);
 
 		/* Getters and setters */
 		QueryStringParameters	getStartLine();

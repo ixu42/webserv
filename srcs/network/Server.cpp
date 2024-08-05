@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/08/02 16:25:27 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/05 13:17:33 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,8 +50,9 @@ Server::Server() : _serverSocket(Socket()), _webservConfig(nullptr)
 	initServer(nullptr, 8080);
 }
 
-Server::Server(const char *ipAddr, int port, Config* webservConfig) : _serverSocket(Socket()), _webservConfig(webservConfig)
+Server::Server(const char *ipAddr, int port, std::shared_ptr<Config> webservConfig) : _serverSocket(Socket()), _webservConfig(webservConfig)
 {
+	
 	LOG_DEBUG("Server parameterized constructor called");
 	LOG_DEBUG("Server (port: ", port, ", ipAddr: ", ipAddr, ") created");
 
@@ -65,10 +66,6 @@ Server::~Server()
 	for (Client &client : _clients)
 	{
 		close(client.getFd());
-		if (client.getRequest())
-			delete client.getRequest();
-		if (client.getResponse())
-			delete client.getResponse();
 	}
 }
 
@@ -105,9 +102,10 @@ int Server::findContentLength(std::string request)
 }
 
 /* When headers and start line are read in receiveRequest, maxClientBodySize can be found */
-size_t Server::findMaxClientBodyBytes(Request request)
+size_t Server::findMaxClientBodyBytes(std::shared_ptr<Request> request)
 {
-	ServerConfig *serverConfig = findServerConfig(&request);
+
+	ServerConfig *serverConfig = findServerConfig(request);
 	std::string sizeString = serverConfig->clientMaxBodySize;
 
 	// Parse the numeric part of the string
@@ -153,7 +151,8 @@ void Server::receiveHeaders(Client &client, std::regex pattern)
 		// Find maxClientBodySize
 		// only calculate if the value is initial
 		if (client.getMaxClientBodyBytes() == std::numeric_limits<size_t>::max())
-			client.setMaxClientBodyBytes(findMaxClientBodyBytes(Request(client)));
+			// client.setMaxClientBodyBytes(findMaxClientBodyBytes(Request(client)));
+			client.setMaxClientBodyBytes(findMaxClientBodyBytes(std::make_shared<Request>(client)));
 	}
 }
 
@@ -209,12 +208,14 @@ bool Server::receiveRequest(Client &client)
 	return true;
 }
 
-bool Server::handler(Server *&server, Client &client)
+// bool Server::handler(Server *&server, Client &client)
+bool Server::handler(std::shared_ptr<Server> &server, Client &client)
 {
 	try
 	{
 		if (server->receiveRequest(client))
-			client.setRequest(new Request(client));
+			// client.setRequest(new Request(client));
+			client.setRequest(std::make_shared<Request>(client));
 	}
 	catch (ProcessingError &e) // For example, maxClientBodySize exceeded
 	{
@@ -222,14 +223,16 @@ bool Server::handler(Server *&server, Client &client)
 			return false;
 		LOG_ERROR("Request can not be handled: ", e.what(), ": ", e.getCode());
 		std::cout << "Client state: " << int(client.getState()) << std::endl;
-		client.setRequest(new Request(client));
+		// client.setRequest(new Request(client));
+		client.setRequest(std::make_shared<Request>(client));
 		client.setResponse(createResponse(client.getRequest(), e.getCode()));
 		LOG_DEBUG("Response set for ProcessingError catch");
 		CGIHandler::changeToErrorState(client);
 	}
 	catch (std::exception &e)
 	{
-		client.setRequest(new Request(client));
+		// client.setRequest(new Request(client));
+		client.setRequest(std::make_shared<Request>(client));
 		LOG_ERROR("Request handle threw an exception");
 		std::cout << "Client state: " << int(client.getState()) << std::endl;
 		LOG_DEBUG("host: ", client.getRequest()->getHeaders()["host"]);
@@ -240,10 +243,12 @@ bool Server::handler(Server *&server, Client &client)
 	return true;
 }
 
-Response* Server::createResponse(Request *request, int code, std::map<std::string, std::string> optionalHeaders)
+// Response* Server::createResponse(Request *request, int code, std::map<std::string, std::string> optionalHeaders)
+std::shared_ptr<Response> Server::createResponse(std::shared_ptr<Request> request, int code, std::map<std::string, std::string> optionalHeaders)
 {
 	LOG_DEBUG("createResponse() called");
-	return new Response(code, findServerConfig(request), optionalHeaders);
+	// return new Response(code, findServerConfig(request), optionalHeaders);
+	return std::make_shared<Response>(code, findServerConfig(request), optionalHeaders);
 }
 
 bool Server::sendResponse(Client &client)
@@ -365,7 +370,8 @@ void Server::handleStaticFiles(Client &client, Location &foundLocation)
 									 "method of Server class");
 
 	// If path ends with /, check for index file and directory listing, otherwise throw 403
-	Response *locationResp = nullptr;
+	// Response* locationResp = nullptr;
+	std::shared_ptr<Response> locationResp = nullptr;
 	if (requestPath.back() == '/')
 	{
 		if (access((filePath + foundLocation.index).c_str(), F_OK) == 0)
@@ -382,13 +388,14 @@ void Server::handleStaticFiles(Client &client, Location &foundLocation)
 	}
 
 	// Checks if location response was formed, otherwise creates Response from filePath
-	client.setResponse(locationResp ? locationResp : new Response(200, filePath));
+	// client.setResponse(locationResp ? locationResp : new Response(200, filePath));
+	client.setResponse(locationResp ? locationResp : std::make_shared<Response>(200, filePath));
 }
 
 void Server::finalizeResponse(Client &client)
 {
-	delete client.getRequest();
-	delete client.getResponse();
+	// delete client.getRequest();
+	// delete client.getResponse();
 	client.setRequest(nullptr);
 	client.setResponse(nullptr);
 	close(client.getFd());
@@ -434,7 +441,7 @@ void Server::handleCGITimeout(Client &client)
 		kill(client.getPid(), SIGTERM);
 		CGIHandler::removeFromPids(client.getPid());
 		CGIHandler::changeToErrorState(client);
-		delete client.getResponse();
+		// delete client.getResponse();
 		client.setResponse(createResponse(client.getRequest(), 500));
 	}
 }
@@ -444,7 +451,7 @@ void Server::responder(Client &client, Server &server)
 	LOG_DEBUG("Server::responder() called");
 	if ((client.getResponse() && !client.getResponse()->getBody().empty()) || formCGIConfigAbsenceResponse(client, server))
 	{
-		client.setState(Client::ClientState::FINISHED_WRITING);
+		CGIHandler::changeToErrorState(client);
 		return ;
 	}
 	try
@@ -468,13 +475,13 @@ void Server::responder(Client &client, Server &server)
 			ServersManager::changeStateToDeleteClient(client);
 			return ;
 		}
-		delete client.getResponse();
+		// delete client.getResponse();
 		LOG_ERROR("Responder caught an error: ", e.what(), ": ", e.getCode());
 		client.setResponse(createResponse(client.getRequest(), e.getCode(), e.getHeaders()));
 	}
 	catch (const std::exception &e)
 	{
-		delete client.getResponse();
+		// delete client.getResponse();
 		LOG_ERROR("Responder caught an exception: ", e.what());
 		client.setResponse(createResponse(client.getRequest(), 500));
 	}
@@ -501,7 +508,8 @@ std::string Server::whoAmI() const
 }
 
 /** If no match found, the first config will be used */
-ServerConfig *Server::findServerConfig(Request *req)
+// ServerConfig *Server::findServerConfig(Request* req)
+ServerConfig *Server::findServerConfig(std::shared_ptr<Request> req)
 {
 	// If request host is an ip address:port or if the ip is not specified for current server,
 	// the first config for the server is used
@@ -545,7 +553,8 @@ ServerConfig *Server::findServerConfig(Request *req)
 	return &_configs[0];
 }
 
-ServerConfig* Server::processNamedServerConfig(Request *req)
+// ServerConfig* Server::processNamedServerConfig(Request *req)
+ServerConfig* Server::processNamedServerConfig(std::shared_ptr<Request> req)
 {
 	LOG_INFO("Searching for server for current location...");
 	if (!req)
@@ -568,7 +577,8 @@ ServerConfig* Server::processNamedServerConfig(Request *req)
 	return namedServerConfig;
 }
 
-Location Server::findLocation(Request *req)
+// Location Server::findLocation(Request *req)
+Location Server::findLocation(std::shared_ptr<Request> req)
 {
 	ServerConfig* namedServerConfig = processNamedServerConfig(req);
 	

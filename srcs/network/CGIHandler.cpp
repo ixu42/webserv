@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/02 16:25:08 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/05 13:18:20 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,7 @@ std::string CGIHandler::determineInterpreter(Client& client, const std::string& 
 	return cgiPath;
 }
 
-std::vector<std::string> CGIHandler::setEnvironmentVariables(Request* request)
+std::vector<std::string> CGIHandler::setEnvironmentVariables(std::shared_ptr<Request> request)
 {
 	std::vector<std::string> env;
 
@@ -105,7 +105,6 @@ void CGIHandler::handleChildProcess(Client& client, const std::string& interpret
 		dup2(client.getChildPipe(_out), STDOUT_FILENO) < 0)
 	{
 		closeFds(client);
-		changeToErrorState(client);
 		std::exit(EXIT_FAILURE);
 	}
 
@@ -131,13 +130,11 @@ void CGIHandler::handleChildProcess(Client& client, const std::string& interpret
 	execve(interpreter.c_str(), args.data(), envp.data());
 	close(client.getParentPipe(_in));
 	close(client.getChildPipe(_out));
-	changeToErrorState(client);
 	std::exit(EXIT_FAILURE);
 }
 
 void CGIHandler::handleParentProcess(Client& client, const std::string& body)
 {
-	(void)body;
 	close(client.getParentPipe(_in));
 	close(client.getChildPipe(_out));
 
@@ -187,7 +184,7 @@ void CGIHandler::handleProcesses(Client& client, const std::string& interpreter,
 	LOG_INFO(TEXT_GREEN, "CGI script executed", RESET);
 }
 
-void CGIHandler::checkResponseHeaders(const std::string& result, Response* response)
+void CGIHandler::checkResponseHeaders(const std::string& result, std::shared_ptr<Response> response)
 {
 	LOG_DEBUG("Checking for the headers in CGI output");
 	size_t headerEnd = result.find("\n\n");
@@ -259,7 +256,7 @@ void CGIHandler::unregisterCGIPollFd(Server& server, int fd)
 void CGIHandler::InitCGI(Client& client, std::vector<pollfd>& new_fds)
 {
 	LOG_DEBUG("Initializing CGI");
-	Response* response = new Response();
+	std::shared_ptr<Response> response = std::make_shared<Response>();
 	client.setResponse(response);
 	if (pipe(client.getParentPipeWhole()) == -1 || pipe(client.getChildPipeWhole()) == -1)
 	{
@@ -276,7 +273,7 @@ void CGIHandler::InitCGI(Client& client, std::vector<pollfd>& new_fds)
 	LOG_DEBUG("Finished InitCGI()");
 }
 
-bool CGIHandler::readScriptOutput(Client& client, Server*& server)
+bool CGIHandler::readScriptOutput(Client& client, std::shared_ptr<Server>& server)
 {
 	LOG_DEBUG("readScriptOutput() called");
 	char buffer[g_bufferSize];

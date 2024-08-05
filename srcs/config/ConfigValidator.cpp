@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:11 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/01 02:06:07 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/05 13:35:36 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,7 +103,7 @@ int ConfigValidator::countMatchInRegex(std::string str, std::regex pattern)
 	return std::distance(words_begin, words_end);
 }
 int ConfigValidator::validateMandatoryFields(std::string str, std::vector<std::string> mandatoryFields,
-	std::map<std::string, std::regex> patterns)
+	std::map<std::string, std::regex> patterns, std::string type)
 {
 	int stringErrorsCount = 0;
 
@@ -111,7 +111,7 @@ int ConfigValidator::validateMandatoryFields(std::string str, std::vector<std::s
 	{
 		if (countMatchInRegex(str, patterns[field]) == 0)
 		{
-			LOG_DEBUG("Line not valid: ", TEXT_RED, "Location should have at least 1 ", field, RESET);
+			LOG_DEBUG("Line not valid: ", TEXT_RED, type, " should have at least 1 ", field, RESET);
 			stringErrorsCount++;
 		}
 	}
@@ -183,7 +183,7 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 	std::vector<std::string> mandatoryFields = {"port"};
 
 
-	generalConfigErrorsCount += validateMandatoryFields(generalConfig, mandatoryFields, patterns);
+	generalConfigErrorsCount += validateMandatoryFields(generalConfig, mandatoryFields, patterns, "Server");
 	generalConfigErrorsCount += validateServerNamePerIpPort(serverStrings, i, patterns);
 
 	std::istringstream stream(generalConfig); 
@@ -266,7 +266,7 @@ int ConfigValidator::validateLocationConfig(std::string locationString)
 
 
 	LOG_DEBUG("Let's validate location...");
-	validateMandatoryFields(locationString, mandatoryFields, patterns);
+	validateMandatoryFields(locationString, mandatoryFields, patterns, "Location");
 
 	std::istringstream stream(locationString); 
 	std::string line;

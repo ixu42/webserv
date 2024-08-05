@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/19 12:29:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/01 20:32:31 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/05 13:24:54 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,12 +80,12 @@ std::string& Client::getRespBody()
 	return _respBody;
 }
 
-Request* Client::getRequest()
+std::shared_ptr<Request> Client::getRequest()
 {
 	return _request;
 }
 
-Response* Client::getResponse()
+std::shared_ptr<Response> Client::getResponse()
 {
 	return _response;
 }
@@ -144,7 +144,7 @@ size_t Client::getTotalBytesWritten()
 	return _totalBytesWritten;
 }
 
-std::chrono::_V2::system_clock::time_point Client::getCgiStart()
+std::chrono::system_clock::time_point Client::getCgiStart()
 {
 	return _cgiStart;
 }
@@ -184,12 +184,12 @@ void Client::setCGIString(const std::string& cgiString)
 	_CGIString = cgiString;
 }
 
-void Client::setRequest(Request* request)
+void Client::setRequest(std::shared_ptr<Request> request)
 {
 	_request = request;
 }
 
-void Client::setResponse(Response* response)
+void Client::setResponse(std::shared_ptr<Response> response)
 {
 	_response = response;
 }
@@ -249,7 +249,7 @@ void Client::setTotalBytesWritten(size_t totalBytesWritten)
 	_totalBytesWritten = totalBytesWritten;
 }
 
-void Client::setCgiStart(std::chrono::_V2::system_clock::time_point cgiStart)
+void Client::setCgiStart(std::chrono::system_clock::time_point cgiStart)
 {
 	_cgiStart = cgiStart;
 }

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/19 12:27:08 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/01 20:32:35 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/05 13:16:54 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,8 +50,8 @@ class Client
 		int											_parentPipe[2];
 		int											_childPipe[2];
 		std::string									_CGIString;
-		Request*									_request;
-		Response*									_response;
+		std::shared_ptr<Request>					_request;
+		std::shared_ptr<Response>					_response;
 		std::string									_respBody;
 		ClientState									_state;
 		CGIState									_stateCGI;
@@ -66,7 +66,7 @@ class Client
 
 		std::string									_responseString;
 		size_t										_totalBytesWritten;
-		std::chrono::_V2::system_clock::time_point	_cgiStart;
+		std::chrono::system_clock::time_point		_cgiStart;
 
 	public:
 		Client();
@@ -80,8 +80,8 @@ class Client
 		int*										getParentPipeWhole();
 		std::string									getCGIString();
 		std::string&								getRespBody();
-		Request*									getRequest();
-		Response*									getResponse();
+		std::shared_ptr<Request>					getRequest();
+		std::shared_ptr<Response>					getResponse();
 		ClientState									getState();
 		CGIState									getCGIState();
 		std::string									getRequestString();
@@ -93,15 +93,15 @@ class Client
 		size_t										getMaxClientBodyBytes();
 		std::string									getResponseString();
 		size_t										getTotalBytesWritten();
-		std::chrono::_V2::system_clock::time_point	getCgiStart();
+		std::chrono::system_clock::time_point		getCgiStart();
 		
 		void										setFd(int fd);
 		void										setPid(pid_t pid);
 		void										setParentPipe(int index, int fd);
 		void										setChildPipe(int index, int fd);
 		void										setCGIString(const std::string& cgiString);
-		void										setRequest(Request* request);
-		void										setResponse(Response* response);
+		void										setRequest(std::shared_ptr<Request> request);
+		void										setResponse(std::shared_ptr<Response> response);
 		void										setState(ClientState state);
 		void										setCGIState(CGIState state);
 		void										setRequestString(const std::string& requestString);
@@ -113,5 +113,5 @@ class Client
 		void										setMaxClientBodyBytes(size_t maxClientBodyBytes);
 		void										setResponseString(const std::string& responseString);
 		void										setTotalBytesWritten(size_t totalBytesWritten);
-		void										setCgiStart(std::chrono::_V2::system_clock::time_point cgiStart);
+		void										setCgiStart(std::chrono::system_clock::time_point cgiStart);
 };

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/08/01 17:09:22 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/05 13:26:05 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,9 +37,8 @@ int main(int argc, char *argv[])
 	try
 	{
 		ServersManager::initConfig(configFile.c_str(), argv[0]);
-		ServersManager* manager = ServersManager::getInstance(argv[0]);
+		std::shared_ptr<ServersManager> manager = ServersManager::getInstance(argv[0]);
 		manager->run();
-		delete manager->getInstance(argv[0]);
 	}
 	catch (const ServerException& e)
 	{

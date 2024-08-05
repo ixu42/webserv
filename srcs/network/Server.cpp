@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/08/02 16:25:27 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/05 12:56:18 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -276,8 +276,9 @@ bool Server::sendResponse(Client &client)
 bool Server::formCGIConfigAbsenceResponse(Client &client, Server &server)
 {
 	if (server.findServerConfig(client.getRequest())->cgis->size() < 1
-		&& client.getRequest()->getStartLine()["path"].find("/cgi-bin") != std::string::npos)
+		&& client.getRequest()->getStartLine()["path"].rfind("/cgi-bin/", 0) == 0)
 	{
+		delete client.getResponse();
 		client.setResponse(createResponse(client.getRequest(), 404));
 		return true;
 	}
@@ -442,9 +443,10 @@ void Server::handleCGITimeout(Client &client)
 void Server::responder(Client &client, Server &server)
 {
 	LOG_DEBUG("Server::responder() called");
-	if ((client.getResponse() && !client.getResponse()->getBody().empty()) || formCGIConfigAbsenceResponse(client, server))
+	if ((client.getResponse() && !client.getResponse()->getBody().empty())
+		|| formCGIConfigAbsenceResponse(client, server))
 	{
-		client.setState(Client::ClientState::FINISHED_WRITING);
+		CGIHandler::changeToErrorState(client);
 		return ;
 	}
 	try
@@ -454,6 +456,7 @@ void Server::responder(Client &client, Server &server)
 
 		if (client.getRequest()->getStartLine()["path"].rfind("/cgi-bin/", 0) == 0 && client.getCGIState() == Client::CGIState::INIT)
 		{
+			LOG_DEBUG("handleCGI called");
 			CGIHandler::handleCGI(client, server);
 			client.setCGIState(Client::CGIState::FORKED);
 			LOG_DEBUG("cgi switched to forked");

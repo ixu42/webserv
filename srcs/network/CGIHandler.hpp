@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/02 16:16:52 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/05 12:27:51 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,16 +45,16 @@ class CGIHandler {
 		static std::string					determineInterpreter(Client& client, const std::string& filePath, Server& server);
 		static std::vector<std::string>		setEnvironmentVariables(Request* request);
 		static void							handleProcesses(Client& client, const std::string& interpreter,
-												const std::vector<std::string>& envVars, Server& server);
+												std::vector<std::string>& envVars, Server& server);
 		static void							handleChildProcess(Client& client, const std::string& interpreter,
-												const std::string& filePath, const std::vector<std::string>& envVars, Server& server);
+												const std::string& filePath, std::vector<std::string>& envVars, Server& server);
 		static void							handleParentProcess(Client& client, const std::string& body);
 		static void							checkResponseHeaders(const std::string& result, Response* response);
 		static void							registerCGIPollFd(int fd, short events, std::vector<pollfd>& new_fds);
 		static void							unregisterCGIPollFd(Server& server, int fd);
 
 	public:
-		CGIHandler()						= delete;
+		~CGIHandler();
 		static void							changeToErrorState(Client& client);
 		static void							handleCGI(Client& client, Server& server);
 		static void							InitCGI(Client& client, std::vector<pollfd>& new_fds);

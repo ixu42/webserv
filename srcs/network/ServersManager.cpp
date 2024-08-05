@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/02 15:43:03 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/05 11:55:40 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -145,6 +145,11 @@ ServersManager* ServersManager::getInstance(const char* argv0)
 		_webservConfig = new Config(DEFAULT_CONFIG, argv0);
 	if (_instance == nullptr)
 		_instance = new ServersManager();
+	for (Server*& server : _servers)
+	{
+		LOG_DEBUG("Adding pointer to _instance to each server object");
+		server->_ServersManagerInstance = _instance;
+	}
 
 	return _instance;
 }
@@ -155,12 +160,12 @@ void ServersManager::checkRevents(std::vector<pollfd>& new_fds)
 	{
 		if (pfd.revents & POLLIN)
 		{
-			LOG_DEBUG("if POLLIN for fd: ", pfd.fd);
+			// LOG_DEBUG("if POLLIN for fd: ", pfd.fd);
 			handleRead(pfd.fd, new_fds);
 		}
 		if (pfd.revents & POLLOUT)
 		{
-			LOG_DEBUG("if POLLOUT for fd: ", pfd.fd);
+			// LOG_DEBUG("if POLLOUT for fd: ", pfd.fd);
 			handleWrite(pfd.fd);
 		}
 		if (pfd.revents & (POLLERR | POLLHUP)) 

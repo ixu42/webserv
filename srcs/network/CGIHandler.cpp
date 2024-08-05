@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/02 16:25:08 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/05 12:53:45 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 
 const std::string CGIHandler::_python_interpr = "/usr/bin/python3";
 const std::string CGIHandler::_php_interpr = "/usr/bin/php";
+
+CGIHandler::~CGIHandler() {}
 
 void CGIHandler::handleCGI(Client& client, Server& server)
 {
@@ -52,12 +54,14 @@ std::string CGIHandler::determineInterpreter(Client& client, const std::string& 
 	// check if the file exists
 	if (access(fullPath.c_str(), F_OK) != 0)
 	{
+		LOG_ERROR("File", fullPath, "does not exist");
 		changeToErrorState(client);
 		throw ProcessingError(404, {}, "File does not exist");
 	}
 	// check if the file has read permissions
 	if (access(fullPath.c_str(), R_OK) != 0)
 	{
+		LOG_ERROR("File", fullPath, "does not have read permissions");
 		changeToErrorState(client);
 		throw ProcessingError(403, {}, "File is not readable");
 	}
@@ -67,6 +71,7 @@ std::string CGIHandler::determineInterpreter(Client& client, const std::string& 
 	
 	if (cgiPath == "")
 	{
+		LOG_ERROR("No CGI path provided for this file extension");
 		changeToErrorState(client);
 		throw ProcessingError(500, {}, "Unknown file extension");
 	}
@@ -98,7 +103,7 @@ std::vector<std::string> CGIHandler::setEnvironmentVariables(Request* request)
 }
 
 void CGIHandler::handleChildProcess(Client& client, const std::string& interpreter,
-	const std::string& filePath, const std::vector<std::string>& envVars, Server& server)
+	const std::string& filePath, std::vector<std::string>& envVars, Server& server)
 {
 	LOG_DEBUG("Duplicating stdin and stdout");
 	if (dup2(client.getParentPipe(_in), STDIN_FILENO) < 0 ||
@@ -128,16 +133,18 @@ void CGIHandler::handleChildProcess(Client& client, const std::string& interpret
 	LOG_DEBUG("Environment casted");
 
 	LOG_DEBUG("About to start execve");
-	execve(interpreter.c_str(), args.data(), envp.data());
-	close(client.getParentPipe(_in));
-	close(client.getChildPipe(_out));
-	changeToErrorState(client);
-	std::exit(EXIT_FAILURE);
+	if (execve(interpreter.c_str(), args.data(), envp.data()) < 0)
+	{
+		delete client.getResponse();
+		delete server._ServersManagerInstance;
+		close(client.getParentPipe(_in));
+		close(client.getChildPipe(_out));
+		std::exit(EXIT_FAILURE);
+	}
 }
 
 void CGIHandler::handleParentProcess(Client& client, const std::string& body)
 {
-	(void)body;
 	close(client.getParentPipe(_in));
 	close(client.getChildPipe(_out));
 
@@ -158,7 +165,7 @@ void CGIHandler::handleParentProcess(Client& client, const std::string& body)
 }
 
 void CGIHandler::handleProcesses(Client& client, const std::string& interpreter,
-	const std::vector<std::string>& envVars, Server& server)
+	std::vector<std::string>& envVars, Server& server)
 {
 	pid_t childPid = fork();
 	LOG_DEBUG("forked in handleProcesses");

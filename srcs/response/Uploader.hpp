@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   Uploader.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/16 17:53:36 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/30 20:02:20 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/06 17:47:11 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include "Client.hpp"
+#include "../network/Client.hpp"
 #include <string>
 #include "../config/Config.hpp"
 #include "../response/Response.hpp"

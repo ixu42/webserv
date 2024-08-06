@@ -179,6 +179,7 @@ void ServersManager::run()
 {
 	while (!g_signalReceived.load())
 	{
+		std::exit(0);
 		std::vector<pollfd> new_fds;
 		int ready = poll(_fds.data(), _fds.size(), -1);
 		if (ready == -1)

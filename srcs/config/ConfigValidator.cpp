@@ -219,14 +219,17 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 				}
 				else if (pattern.first == "port" && std::regex_match(line, pattern.second))
 				{
-					int port = std::stoi(Utility::trim(Utility::splitStr(line, " ")[1]));
-					if (port < 1 || port > 65535)
+					std::vector<std::string> split = Utility::splitStr(line, " ");
+					if (split.size() == 2)
 					{
-						LOG_DEBUG("Line not valid: ", TEXT_RED, line, RESET);
-						generalConfigErrorsCount++;
-						errorCaught = 1;
-						break;
+						int port = std::stoi(Utility::trim(split[1]));
+						if (port >= 1 && port <= 65535)
+							break;
 					}
+					LOG_DEBUG("Line not valid: ", TEXT_RED, line, RESET);
+					generalConfigErrorsCount++;
+					errorCaught = 1;
+					break;
 				}
 				else if (pattern.first == "error" && (errorCaught = checkUnique(line)) == 1)
 				{

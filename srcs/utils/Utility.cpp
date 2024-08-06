@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:11:23 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/01 14:01:23 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/06 15:32:04 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,8 +49,6 @@ std::string Utility::trimChars(std::string str, std::string chars)
 	}
 	return result;
 }
-
-
 
 // Splits string with string delimiter
 std::vector<std::string> Utility::splitStr(const std::string &str, const std::string &delimiter)

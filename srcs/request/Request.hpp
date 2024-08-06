@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:40 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/05 13:25:42 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/06 15:30:41 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,8 @@ class Request
 		Request();
 		Request(Client& client);
 
+		void					parseHeaders(std::vector<std::string> headerLines);
+		void					parseBody(Client& client);
 		void					parse(Client& client);
 
 		/* Getters and setters */

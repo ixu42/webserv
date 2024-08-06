@@ -37,3 +37,7 @@ echo -e "GET / HTTP/1.1\r\nHost: 127.0.0.1:8006\r\n\r\n" | nc 127.0.0.1 8006
 ```
 echo -e "GET / HTTP/1.0\r\nHost: 127.0.0.1:8006\r\n\r\n" | nc 127.0.0.1 8006
 ```
+
+```
+http://127.0.0.1:8007/cgi-bin/html_test.py?file=html/index_cgi.html
+```

@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/05 13:21:20 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/06 15:19:04 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,7 +132,6 @@ void ServersManager::initConfig(const char *fileNameString, const char*argv0)
 	_webservConfig = std::make_shared<Config>(fileNameString, argv0);
 }
 
-// ServersManager* ServersManager::getInstance(const char* argv0)
 std::shared_ptr<ServersManager> ServersManager::getInstance(const char* argv0)
 {
 	// If config is not initialized with initConfig, DEFAULT_CONFIG will be used

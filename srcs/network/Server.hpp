@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:59 by ixu               #+#    #+#             */
-/*   Updated: 2024/08/05 13:19:33 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/06 15:23:22 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,8 @@
 #include "../utils/logUtils.hpp"
 #include "../request/Request.hpp"
 #include "../utils/ServerException.hpp"
-#include "DirLister.hpp"
-#include "Uploader.hpp"
+#include "../response/DirLister.hpp"
+#include "../response/Uploader.hpp"
 #include <vector>
 #include <string>
 #include <cstring> // memset()

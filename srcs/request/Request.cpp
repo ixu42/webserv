@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:37 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/28 17:08:42 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/06 15:31:13 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,41 @@ Request::Request(Client& client)
 	parse(client);
 }
 
+void Request::parseHeaders(std::vector<std::string> headerLines)
+{
+	for (unsigned int i = 1; i < headerLines.size(); i++)
+	{
+		size_t colonPos = headerLines[i].find(':');
+		if (colonPos != std::string::npos) {
+			std::string key = headerLines[i].substr(0, colonPos);
+			std::string value = headerLines[i].substr(colonPos + 1);
+			key = Utility::strToLower(Utility::trim(key));
+			value = Utility::trim(value);
+			_headers[key] = value;
+		}
+	}
+}
+
+void Request::parseBody(Client& client)
+{
+
+	if (client.getIsBodyRead())
+	{
+		std::string body = Utility::trim(client.getRequestString().substr(client.getEmptyLinePos() + 2));
+		// Unchunk the body if necessary
+		if (_headers.find("transfer-encoding") != _headers.end()
+			&& Utility::strToLower(_headers["transfer-encoding"]) == "chunked")
+		{
+			_body = unchunkBody(body);
+		}
+		else
+		{
+			// Parse the body
+			_body = Utility::trim(body);
+		}
+	}
+}
+
 void Request::parse(Client& client)
 {
 	LOG_DEBUG("Request::parse() called");
@@ -38,18 +73,14 @@ void Request::parse(Client& client)
 	if (client.getEmptyLinePos() != -1)
 	{
 		std::string headers = Utility::trim(client.getRequestString().substr(0, client.getEmptyLinePos()));
-		
 		// Split headers into lines
 		std::vector<std::string> headerLines = Utility::splitStr(headers, "\n");
 		LOG_DEBUG("Request::parse() splitting headerLines");
-		
 		// Check if headers are not empty
 		if (headers.size() < 1)
 			return;
-
 		// Parse the start line
 		std::vector<std::string> startLineSplit = Utility::splitStr(headerLines[0], " ");
-		
 		// Check start line after split
 		if (startLineSplit.size() != 3)
 			return;
@@ -64,34 +95,9 @@ void Request::parse(Client& client)
 		else
 			_startLine["query"] = "";
 
-		// Parse the headers and convert to lower case
-		for (unsigned int i = 1; i < headerLines.size(); i++)
-		{
-			size_t colonPos = headerLines[i].find(':');
-			if (colonPos != std::string::npos) {
-				std::string key = headerLines[i].substr(0, colonPos);
-				std::string value = headerLines[i].substr(colonPos + 1);
-				key = Utility::strToLower(Utility::trim(key));
-				value = Utility::trim(value);
-				_headers[key] = value;
-			}
-		}
+		parseHeaders(headerLines);
+		parseBody(client);
 
-		if (client.getIsBodyRead())
-		{
-			std::string body = Utility::trim(client.getRequestString().substr(client.getEmptyLinePos() + 2));
-			// Unchunk the body if necessary
-			if (_headers.find("transfer-encoding") != _headers.end()
-				&& Utility::strToLower(_headers["transfer-encoding"]) == "chunked")
-			{
-				_body = unchunkBody(body);
-			}
-			else
-			{
-				// Parse the body
-				_body = Utility::trim(body);
-			}
-		}
 	}
 }
 

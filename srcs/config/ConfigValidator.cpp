@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:11 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/05 13:35:36 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/06 15:11:47 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,6 +68,11 @@ int ConfigValidator::validateServerNamePerIpPort(std::vector<std::string> server
 int ConfigValidator::checkUnique(std::string line)
 {
 	std::vector<std::string> lineSplit = Utility::splitStr(Utility::replaceWhiteSpaces(line, ' '), " ");
+	if (lineSplit.size() < 2)
+	{
+		LOG_DEBUG("Line not valid: ", TEXT_RED, line, RESET);
+		return 1;
+	}
 	std::vector<std::string> errorCodesStrings = Utility::splitStr(lineSplit[1], ",");
 	std::set<std::string> uniqueErrorCodesStrings(errorCodesStrings.begin(), errorCodesStrings.end());
 	if (errorCodesStrings.size() != uniqueErrorCodesStrings.size())

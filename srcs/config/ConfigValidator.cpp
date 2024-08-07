@@ -258,7 +258,7 @@ int ConfigValidator::validateLocationConfig(std::string locationString)
 	// linePattern is more broad and should have characters from more specific cases
 	std::regex linePattern(R"(\s*(path|redirect|index|root|methods|upload|autoindex)\s+[a-zA-Z0-9~\-_./,:$%"' ]+\s*)");
 	std::map<std::string, std::regex> patterns = {
-		{"path", std::regex(R"(\s*path\s+\/([a-zA-Z0-9_\-~.]+\/?)*([a-zA-Z0-9_\-~.]+\.[a-zA-Z0-9_\-~.]+)?\s*)")},
+		{"path", std::regex(R"(\s*path\s+\/([a-zA-Z0-9_\-~.]+\/)*([a-zA-Z0-9_\-~.]+\.[a-zA-Z0-9_\-~.]+)?\s*)")},
 		{"index", std::regex(R"(\s*index\s+([^,\s]+(?:\.html|\.htm))\s*)")},
 		{"redirect", std::regex(R"(\s*redirect\s+((\w+:(\/\/[^\/\s]+)?[^\s]*)|(\/([a-zA-Z0-9-_~%./]*)))\s*)")},
 

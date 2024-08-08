@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/05 13:18:20 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/08 10:58:54 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -286,8 +286,6 @@ bool CGIHandler::readScriptOutput(Client& client, std::shared_ptr<Server>& serve
 		LOG_DEBUG(TEXT_GREEN, "Response body: ", buffer, RESET);
 		client.getRespBody().append(buffer, bytesRead);
 	}
-
-	LOG_INFO(TEXT_YELLOW, "bytesRead in readScriptOutput: ", bytesRead, RESET);
 	
 	if (bytesRead < 0)
 	{
@@ -300,7 +298,7 @@ bool CGIHandler::readScriptOutput(Client& client, std::shared_ptr<Server>& serve
 		return false;
 	}
 	
-	LOG_DEBUG(TEXT_YELLOW, "readScriptOutput read the whole body", RESET);
+	LOG_INFO(TEXT_GREEN, "CGI script output read correctly", RESET);
 	
 	checkResponseHeaders(client.getRespBody(), client.getResponse());
 	close(client.getChildPipe(_in));

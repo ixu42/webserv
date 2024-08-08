@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:20 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/02 15:43:09 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/08 13:46:36 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,6 +63,8 @@ struct ServerConfig
 																		{411, "pages/411.html"},
 																		{413, "pages/413.html"},
 																		{500, "pages/500.html"},
+																		{502, "pages/502.html"},
+																		{504, "pages/504.html"},
 																		{505, "pages/505.html"}
 																	};
 	std::map<int, std::string>								errorPages;

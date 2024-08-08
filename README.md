@@ -1,6 +1,14 @@
 # webserv
 HTTP server in C++ developed by [@ixu42](https://github.com/ixu42), [@nikkxll](https://github.com/nikkxll), [@madfcat](https://github.com/madfcat).
+##
+<img width="600" alt="Screenshot 2024-08-08 at 11 00 02" src="https://github.com/user-attachments/assets/41031dcd-0d92-4ec4-8fd9-09ed44df6cc1">
 
+*Terminal logs preview*
+##
+<img width="600" alt="Screenshot 2024-08-08 at 11 00 28" src="https://github.com/user-attachments/assets/265e00a7-756b-4d77-87a0-595278d2e723">
+
+*Server main page*
+##
 Name-based virtual hosting allows several `serverName`s to be served from the same `ipAddress`:`port`
 
 ## Config file syntax
@@ -224,7 +232,5 @@ To compile and run the program in DEBUG mode
 ```
 make debug && ./webserv
 ```
----
-Developed by Hive Helsinki students
-
+##
 ixu: ixu@student.hive.fi | dnikifor: dnikifor@student.hive.fi | vshchuki: vshchuki@student.hive.fi

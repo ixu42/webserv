@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/08/06 15:18:51 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/08 10:25:45 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -429,7 +429,7 @@ void Server::handleCGITimeout(Client &client)
 		kill(client.getPid(), SIGTERM);
 		CGIHandler::removeFromPids(client.getPid());
 		CGIHandler::changeToErrorState(client);
-		client.setResponse(createResponse(client.getRequest(), 500));
+		client.setResponse(createResponse(client.getRequest(), 504));
 	}
 }
 

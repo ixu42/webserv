@@ -68,7 +68,7 @@ std::string CGIHandler::determineInterpreter(Client& client, const std::string& 
 	if (cgiPath == "")
 	{
 		changeToErrorState(client);
-		throw ProcessingError(500, {}, "Unknown file extension");
+		throw ProcessingError(502, {}, "Unknown file extension");
 	}
 
 	return cgiPath;
@@ -146,7 +146,7 @@ void CGIHandler::handleParentProcess(Client& client, const std::string& body)
 		kill(client.getPid(), SIGTERM);
 		removeFromPids(client.getPid());
 		changeToErrorState(client);
-		throw ProcessingError(500, {}, "handleParentProcess() writing failed");
+		throw ProcessingError(502, {}, "handleParentProcess() writing failed");
 	}
 	if (bytesRead == 0)
 		LOG_DEBUG("bytesRead: 0");
@@ -165,7 +165,7 @@ void CGIHandler::handleProcesses(Client& client, const std::string& interpreter,
 		kill(client.getPid(), SIGTERM);
 		removeFromPids(client.getPid());
 		changeToErrorState(client);
-		throw ProcessingError(500, {}, "Exception (fork) has been thrown in handleParentProcess() "
+		throw ProcessingError(502, {}, "Exception (fork) has been thrown in handleParentProcess() "
 			"method of CGIHandler class");
 	}
 	else if (client.getPid() == 0)
@@ -261,7 +261,7 @@ void CGIHandler::InitCGI(Client& client, std::vector<pollfd>& new_fds)
 	if (pipe(client.getParentPipeWhole()) == -1 || pipe(client.getChildPipeWhole()) == -1)
 	{
 		changeToErrorState(client);
-		throw ProcessingError(500, {}, "Exception (pipe) has been thrown in InitCGI() "
+		throw ProcessingError(502, {}, "Exception (pipe) has been thrown in InitCGI() "
 			"method of CGIHandler class");
 	}
 
@@ -290,7 +290,7 @@ bool CGIHandler::readScriptOutput(Client& client, std::shared_ptr<Server>& serve
 	if (bytesRead < 0)
 	{
 		changeToErrorState(client);
-		throw ProcessingError(500, {}, "readScriptOutput() reading failed");
+		throw ProcessingError(502, {}, "readScriptOutput() reading failed");
 	}
 	if (bytesRead != 0)
 	{

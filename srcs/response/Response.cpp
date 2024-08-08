@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/07/29 12:57:26 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/08 10:40:02 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,8 @@ static const std::map<int, std::string> statusMessages = {
 	{411, "Length Required"}, // Content-Length not provided
 	{413, "Payload Too Large"}, // if the request body size exceeds the clientMaxBodySize
 	{500, "Internal Server Error"}, // can be used when the server runs into unexpected issues processing the request, including memory allocation failures
+	{502, "Bad Gateway"},
+	{504, "Gateway Timeout"},
 	{505, "HTTP Version Not Supported"}
 };
 

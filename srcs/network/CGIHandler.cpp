@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/09 13:50:57 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/09 17:55:40 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -295,6 +295,8 @@ bool CGIHandler::readScriptOutput(Client& client, std::shared_ptr<Server>& serve
 	
 	if (bytesRead < 0)
 	{
+		kill(client.getPid(), SIGTERM);
+		removeFromPids(client.getPid());
 		throw ProcessingError(502, {}, "readScriptOutput() reading failed");
 	}
 	if (bytesRead != 0)

@@ -6,7 +6,7 @@
 #    By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/08 17:44:55 by ixu               #+#    #+#              #
-#    Updated: 2024/07/28 20:35:46 by dnikifor         ###   ########.fr        #
+#    Updated: 2024/08/09 13:47:57 by dnikifor         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -96,6 +96,7 @@ clean:
 
 fclean: clean
 	@rm -f $(NAME)
+	@rm -f sessions
 	@echo "$(RED)Removed executable(s)$(COLOR_RESET)"
 
 re: fclean all

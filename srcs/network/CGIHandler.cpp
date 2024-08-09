@@ -6,14 +6,11 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/08 10:58:54 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/09 13:50:57 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "CGIHandler.hpp"
-
-const std::string CGIHandler::_python_interpr = "/usr/bin/python3";
-const std::string CGIHandler::_php_interpr = "/usr/bin/php";
 
 void CGIHandler::handleCGI(Client& client, Server& server)
 {
@@ -110,7 +107,7 @@ void CGIHandler::handleChildProcess(Client& client, const std::string& interpret
 
 	close(client.getParentPipe(_out));
 	close(client.getChildPipe(_in));
-
+	
 	std::vector<char*> args;
 	args.push_back(const_cast<char*>(interpreter.c_str()));
 	std::string absFilePath = server.getCGIBinFolder() + filePath;
@@ -276,12 +273,21 @@ void CGIHandler::InitCGI(Client& client, std::vector<pollfd>& new_fds)
 bool CGIHandler::readScriptOutput(Client& client, std::shared_ptr<Server>& server)
 {
 	LOG_DEBUG("readScriptOutput() called");
+	
 	char buffer[g_bufferSize];
 	ssize_t bytesRead;
-
+	ssize_t currPipeSize = 0;
+	
 	std::fill(buffer, buffer + g_bufferSize, 0);
 	while ((bytesRead = read(client.getChildPipe(_in), buffer, sizeof(buffer))) > 0)
 	{
+		currPipeSize += bytesRead;
+		if (currPipeSize >= _pipeMaxSize)
+		{
+			kill(client.getPid(), SIGTERM);
+			removeFromPids(client.getPid());
+			throw ProcessingError(502, {}, "Pipe overflowed");
+		}
 		LOG_DEBUG(TEXT_GREEN, "Populating response body with: ", bytesRead, RESET);
 		LOG_DEBUG(TEXT_GREEN, "Response body: ", buffer, RESET);
 		client.getRespBody().append(buffer, bytesRead);
@@ -289,7 +295,6 @@ bool CGIHandler::readScriptOutput(Client& client, std::shared_ptr<Server>& serve
 	
 	if (bytesRead < 0)
 	{
-		changeToErrorState(client);
 		throw ProcessingError(502, {}, "readScriptOutput() reading failed");
 	}
 	if (bytesRead != 0)

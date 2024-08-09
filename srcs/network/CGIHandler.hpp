@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 15:53:37 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/05 13:16:16 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/09 13:46:50 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,10 +37,9 @@ class Server;
 
 class CGIHandler {
 	private:
-		const static std::string			_python_interpr;
-		const static std::string			_php_interpr;
-		const static int					_in = 0;
-		const static int					_out = 1;
+		static const int					_pipeMaxSize = 65536;
+		static const int					_in = 0;
+		static const int					_out = 1;
 
 		static std::string					determineInterpreter(Client& client, const std::string& filePath, Server& server);
 		static std::vector<std::string>		setEnvironmentVariables(std::shared_ptr<Request> request);

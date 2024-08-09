@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/08 10:58:54 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/09 17:47:06 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,7 +109,9 @@ void CGIHandler::handleChildProcess(Client& client, const std::string& interpret
 	}
 
 	close(client.getParentPipe(_out));
+	client.setParentPipe(_out, -1);
 	close(client.getChildPipe(_in));
+	client.setChildPipe(_in, -1);
 
 	std::vector<char*> args;
 	args.push_back(const_cast<char*>(interpreter.c_str()));
@@ -129,14 +131,18 @@ void CGIHandler::handleChildProcess(Client& client, const std::string& interpret
 	LOG_DEBUG("About to start execve");
 	execve(interpreter.c_str(), args.data(), envp.data());
 	close(client.getParentPipe(_in));
+	client.setParentPipe(_in, -1);
 	close(client.getChildPipe(_out));
+	client.setChildPipe(_out, -1);
 	std::exit(EXIT_FAILURE);
 }
 
 void CGIHandler::handleParentProcess(Client& client, const std::string& body)
 {
 	close(client.getParentPipe(_in));
+	client.setParentPipe(_in, -1);
 	close(client.getChildPipe(_out));
+	client.setChildPipe(_out, -1);
 
 	LOG_DEBUG("Writing body of the request inside the pipe");
 	int bytesRead = write(client.getParentPipe(_out), body.c_str(), body.size());
@@ -151,6 +157,7 @@ void CGIHandler::handleParentProcess(Client& client, const std::string& body)
 	if (bytesRead == 0)
 		LOG_DEBUG("bytesRead: 0");
 	close(client.getParentPipe(_out));
+	client.setParentPipe(_out, -1);
 	LOG_DEBUG("Wrote body of the request and closed the pipe");
 }
 
@@ -265,7 +272,7 @@ void CGIHandler::InitCGI(Client& client, std::vector<pollfd>& new_fds)
 			"method of CGIHandler class");
 	}
 
-	LOG_DEBUG("Pipes numbers: ",client.getParentPipe(_in)," ",client.getParentPipe(_out),
+	LOG_INFO("Pipes numbers: ",client.getParentPipe(_in)," ",client.getParentPipe(_out),
 		" ", client.getChildPipe(_in)," ",client.getChildPipe(_out));
 	
 	registerCGIPollFd(client.getChildPipe(_in), POLLIN, new_fds);
@@ -302,6 +309,7 @@ bool CGIHandler::readScriptOutput(Client& client, std::shared_ptr<Server>& serve
 	
 	checkResponseHeaders(client.getRespBody(), client.getResponse());
 	close(client.getChildPipe(_in));
+	client.setChildPipe(_in, -1);
 	unregisterCGIPollFd(*server, client.getChildPipe(_in));
 	unregisterCGIPollFd(*server, client.getParentPipe(_out));
 	

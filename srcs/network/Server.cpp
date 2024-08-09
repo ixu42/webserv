@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/08/08 10:25:45 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/09 17:47:23 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -386,14 +386,16 @@ void Server::finalizeResponse(Client &client)
 {
 	client.setRequest(nullptr);
 	client.setResponse(nullptr);
+	LOG_DEBUG("closing fd: ", client.getFd());
 	close(client.getFd());
 	if (client.getChildPipe(0) != -1)
 		CGIHandler::closeFds(client);
+	LOG_DEBUG("removing from poll fd: ", client.getFd());
 	ServersManager::removeFromPollfd(client.getFd());
-	ServersManager::removeFromPollfd(client.getChildPipe(0));
-	ServersManager::removeFromPollfd(client.getChildPipe(1));
-	ServersManager::removeFromPollfd(client.getParentPipe(0));
-	ServersManager::removeFromPollfd(client.getParentPipe(1));
+	// ServersManager::removeFromPollfd(client.getChildPipe(0));
+	// ServersManager::removeFromPollfd(client.getChildPipe(1));
+	// ServersManager::removeFromPollfd(client.getParentPipe(0));
+	// ServersManager::removeFromPollfd(client.getParentPipe(1));
 	if (client.getChildPipe(0) != -1)
 		CGIHandler::setToInit(client);
 	client.setFd(-1);
@@ -416,6 +418,7 @@ void Server::validateRequest(Client &client)
 
 void Server::handleCGITimeout(Client &client)
 {
+	LOG_DEBUG("handleCGITimeout() called");
 	float timeout = 15.0;
 
 	auto cgiEnd = std::chrono::system_clock::now();
@@ -423,14 +426,16 @@ void Server::handleCGITimeout(Client &client)
 	std::chrono::duration<double> elapsed_seconds = cgiEnd - client.getCgiStart();
 	std::time_t end_time = std::chrono::system_clock::to_time_t(cgiEnd);
 
+	// LOG_ERROR("checking cgi timeout... client fd: ", client.getFd(), "|", client.getChildPipeWhole()[0], client.getChildPipeWhole()[1], client.getParentPipeWhole()[0], client.getParentPipeWhole()[1]);
 	if (elapsed_seconds.count() >= timeout && client.getCGIState() == Client::CGIState::FORKED)
 	{
-		LOG_DEBUG("Cgi timeouted at: ", std::ctime(&end_time));
+		LOG_ERROR("Cgi timeouted at: ", std::ctime(&end_time), "client fd: ", client.getFd());
 		kill(client.getPid(), SIGTERM);
 		CGIHandler::removeFromPids(client.getPid());
 		CGIHandler::changeToErrorState(client);
 		client.setResponse(createResponse(client.getRequest(), 504));
 	}
+	LOG_DEBUG("end of handleCGITimeout(), client fd: ", client.getFd());
 }
 
 void Server::responder(Client &client, Server &server)
@@ -472,6 +477,7 @@ void Server::responder(Client &client, Server &server)
 	}
 	if (!client.getResponse())
 		client.setResponse(createResponse(client.getRequest(), 500));
+	LOG_DEBUG("end of responder(), client fd: ", client.getFd());
 }
 
 void Server::removeFromClients(Client &client)

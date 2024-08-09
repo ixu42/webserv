@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/06 15:19:04 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/09 17:26:39 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,6 +148,7 @@ void ServersManager::checkRevents(std::vector<pollfd>& new_fds)
 {
 	for (struct pollfd& pfd : _fds)
 	{
+		LOG_DEBUG("pfd.fd: ", pfd.fd, ", pfd.events: ", pfd.events, ", pfd.revents: ", pfd.revents);
 		if (pfd.revents & POLLIN)
 		{
 			LOG_DEBUG("if POLLIN for fd: ", pfd.fd);
@@ -179,7 +180,8 @@ void ServersManager::run()
 {
 	while (!g_signalReceived.load())
 	{
-		std::vector<pollfd> new_fds;
+		// std::vector<pollfd> new_fds;
+		LOG_DEBUG("calling poll()...");
 		int ready = poll(_fds.data(), _fds.size(), -1);
 		if (ready == -1)
 		{
@@ -188,22 +190,25 @@ void ServersManager::run()
 			else
 				throw ServerException("poll() error");
 		}
-		checkRevents(new_fds);
-		if (!new_fds.empty())
-			_fds.insert(_fds.end(), new_fds.begin(), new_fds.end());
+		// checkRevents(new_fds);
+		checkRevents(_fds);
+		// if (!new_fds.empty())
+		// 	_fds.insert(_fds.end(), new_fds.begin(), new_fds.end());
 	}
 }
 
-void ServersManager::handleRead(int fdReadyForRead, std::vector<pollfd>& new_fds)
+// void ServersManager::handleRead(int fdReadyForRead, std::vector<pollfd>& new_fds)
+void ServersManager::handleRead(int fdReadyForRead, std::vector<pollfd>& fds)
 {
 	bool fdFound = false;
-
+	(void)fds;
 	for (std::shared_ptr<Server>& server : _servers)
 	{
 		if (fdReadyForRead == server->getServerSockfd())
 		{
 			int clientSockfd = server->accepter();
-			new_fds.push_back({clientSockfd, POLLIN | POLLOUT | POLLERR | POLLHUP, 0}); 
+			// new_fds.push_back({clientSockfd, POLLIN | POLLOUT | POLLERR | POLLHUP, 0}); 
+			_fds.push_back({clientSockfd, POLLIN | POLLOUT | POLLERR | POLLHUP, 0}); 
 			break ;
 		}
 		for (Client& client : server->getClients())
@@ -215,7 +220,8 @@ void ServersManager::handleRead(int fdReadyForRead, std::vector<pollfd>& new_fds
 					changeStateToDeleteClient(client);
 				if (client.getState() == Client::ClientState::READY_TO_WRITE
 					&& client.getRequest()->getStartLine()["path"].rfind("/cgi-bin/") == 0)
-						CGIHandler::InitCGI(client, new_fds);
+						CGIHandler::InitCGI(client, _fds);
+						// CGIHandler::InitCGI(client, new_fds);
 				fdFound = true;
 				break ;
 			}
@@ -280,6 +286,7 @@ void ServersManager::processClientCycle(std::shared_ptr<Server>& server, Client&
 		server->finalizeResponse(client);
 		LOG_DEBUG("Connection closed");
 	}
+	LOG_DEBUG("end of processClientCycle(), client fd: ", client.getFd());
 }
 
 void ServersManager::handleWrite(int fdReadyForWrite)

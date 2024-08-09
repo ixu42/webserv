@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+         #
+#    By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/06/08 17:44:55 by ixu               #+#    #+#              #
-#    Updated: 2024/07/28 20:35:46 by dnikifor         ###   ########.fr        #
+#    Updated: 2024/08/09 10:51:54 by ixu              ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -32,6 +32,7 @@ OBJS = $(addprefix $(OBJS_DIR), $(SRCS:.cpp=.o))
 
 # Compiler and flags
 COMPILER := c++
+# COMPILER := afl-c++
 FLAGS := -Wall -Wextra -Werror -Wshadow -std=c++17 -g
 DEBUG_FLAGS := -DDEBUG_MODE
 

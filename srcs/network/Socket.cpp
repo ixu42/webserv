@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:09:46 by ixu               #+#    #+#             */
-/*   Updated: 2024/08/02 14:01:57 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/09 17:31:34 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,6 +101,7 @@ int Socket::acceptConnection(struct sockaddr_in addr)
 
 	socklen_t addrlen = sizeof(addr);
 	int acceptedSocketFd = accept(_sockfd, (struct sockaddr*)&addr, &addrlen);
+	LOG_INFO("new client socket fd is: ", acceptedSocketFd);
 	if (acceptedSocketFd < 0)
 	{
 		closeSocketFd("accept() error: ");

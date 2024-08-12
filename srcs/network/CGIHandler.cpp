@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   CGIHandler.cpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/12 11:13:51 by ixu              ###   ########.fr       */
+/*   Updated: 2024/08/12 14:54:08 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,10 +151,13 @@ void CGIHandler::handleParentProcess(Client& client, const std::string& body)
 		changeToErrorState(client);
 		throw ProcessingError(502, {}, "handleParentProcess() writing failed");
 	}
+
+	close(client.getParentPipe(_out));
+	ServersManager::removeFromPollfd(client.getParentPipe(1));
+	client.setParentPipe(_out, -1);
+	
 	if (bytesRead == 0)
 		LOG_DEBUG("bytesRead: 0");
-	close(client.getParentPipe(_out));
-	client.setParentPipe(_out, -1);
 	LOG_DEBUG("Wrote body of the request and closed the pipe");
 }
 
@@ -299,7 +302,6 @@ bool CGIHandler::readScriptOutput(Client& client, std::shared_ptr<Server>& serve
 		LOG_DEBUG(TEXT_GREEN, "Response body: ", buffer, RESET);
 		client.getRespBody().append(buffer, bytesRead);
 	}
-	
 	if (bytesRead < 0)
 	{
 		kill(client.getPid(), SIGTERM);
@@ -315,10 +317,13 @@ bool CGIHandler::readScriptOutput(Client& client, std::shared_ptr<Server>& serve
 	LOG_INFO(TEXT_GREEN, "CGI script output read correctly", RESET);
 	
 	checkResponseHeaders(client.getRespBody(), client.getResponse());
+	
 	close(client.getChildPipe(_in));
-	client.setChildPipe(_in, -1);
 	unregisterCGIPollFd(*server, client.getChildPipe(_in));
+	client.setChildPipe(_in, -1);
+	close(client.getParentPipe(_out));
 	unregisterCGIPollFd(*server, client.getParentPipe(_out));
+	client.setParentPipe(_out, -1);
 	
 	auto it = std::find(g_childPids.begin(), g_childPids.end(), client.getPid());
 	if (it != g_childPids.end())

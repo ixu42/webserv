@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServersManager.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:50 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/12 11:17:18 by ixu              ###   ########.fr       */
+/*   Updated: 2024/08/12 14:38:47 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,7 +148,6 @@ void ServersManager::checkRevents(std::vector<pollfd>& new_fds)
 {
 	for (struct pollfd& pfd : _fds)
 	{
-		LOG_DEBUG("pfd.fd: ", pfd.fd, ", pfd.events: ", pfd.events, ", pfd.revents: ", pfd.revents);
 		if (pfd.revents & POLLIN)
 		{
 			LOG_DEBUG("if POLLIN for fd: ", pfd.fd);
@@ -159,20 +158,6 @@ void ServersManager::checkRevents(std::vector<pollfd>& new_fds)
 			LOG_DEBUG("if POLLOUT for fd: ", pfd.fd);
 			handleWrite(pfd.fd);
 		}
-		if (pfd.revents & (POLLERR | POLLHUP)) 
-		{
-			LOG_DEBUG("Error or hangup on fd: ", pfd.fd);
-			if (pfd.revents & POLLERR )
-				LOG_DEBUG("POLLERR");
-			if (pfd.revents & POLLHUP)
-				LOG_DEBUG("POLLHUP");
-			if (close(pfd.fd) == -1)
-				LOG_DEBUG("Failed to close fd: ", pfd.fd, " Error: ", strerror(errno));
-			else
-				LOG_DEBUG("Closed fd: ", pfd.fd);
-			removeClientByFd(pfd.fd);
-			removeFromPollfd(pfd.fd);
-		}
 	}
 }
 
@@ -181,7 +166,6 @@ void ServersManager::run()
 	while (!g_signalReceived.load())
 	{
 		std::vector<pollfd> new_fds;
-		LOG_DEBUG("calling poll()...");
 		int ready = poll(_fds.data(), _fds.size(), -1);
 		if (ready == -1)
 		{
@@ -278,11 +262,10 @@ void ServersManager::processClientCycle(std::shared_ptr<Server>& server, Client&
 	if (client.getState() == Client::ClientState::FINISHED_WRITING
 		&& (client.getChildPipe(0) == -1 || client.getCGIState() == Client::CGIState::FINISHED_SET))
 	{
-		LOG_DEBUG("Socket fd: ", client.getFd(), " will be closed");
+		LOG_INFO("Socket fd: ", client.getFd(), " will be closed");
 		server->finalizeResponse(client);
-		LOG_DEBUG("Connection closed");
+		LOG_INFO("Connection closed");
 	}
-	LOG_DEBUG("end of processClientCycle(), client fd: ", client.getFd());
 }
 
 void ServersManager::handleWrite(int fdReadyForWrite)

@@ -6,7 +6,7 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:10:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/09 17:26:01 by ixu              ###   ########.fr       */
+/*   Updated: 2024/08/12 11:17:56 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,16 +43,14 @@ class ServersManager
 		std::shared_ptr<Server>						findNoIpServerByPort(int port);
 		bool										checkUniqueNameServer(ServerConfig& serverConfig, std::vector<ServerConfig>& targetServerconfigs);
 		void										moveServerConfigsToNoIpServer(int port, std::vector<ServerConfig>& serverConfigs);
-		// void										handleRead(int fdReadyForRead, std::vector<pollfd>& new_fds);
-		void										handleRead(int fdReadyForRead, std::vector<pollfd>& fds);
+		void										handleRead(int fdReadyForRead, std::vector<pollfd>& new_fds);
 		void										processClientCycle(std::shared_ptr<Server>& server, Client& client, int fdReadyForWrite);
 		void										handleWrite(int fdReadyForWrite);
 		void										removeClientByFd(int fd);
 		bool										ifCGIsFd(Client& client, int fd);
 		pollfd*										findPollfdByFd(int fd);
 		static void									printServersInfo();
-		void										checkRevents(std::vector<pollfd>& _fds);
-		// void										checkRevents(std::vector<pollfd>& new_fds);
+		void										checkRevents(std::vector<pollfd>& new_fds);
 
 		ServersManager();
 		ServersManager(const ServersManager&) = delete;

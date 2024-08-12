@@ -6,14 +6,11 @@
 /*   By: ixu <ixu@student.hive.fi>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/09 17:47:06 by ixu              ###   ########.fr       */
+/*   Updated: 2024/08/12 11:13:51 by ixu              ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "CGIHandler.hpp"
-
-const std::string CGIHandler::_python_interpr = "/usr/bin/python3";
-const std::string CGIHandler::_php_interpr = "/usr/bin/php";
 
 void CGIHandler::handleCGI(Client& client, Server& server)
 {
@@ -283,12 +280,21 @@ void CGIHandler::InitCGI(Client& client, std::vector<pollfd>& new_fds)
 bool CGIHandler::readScriptOutput(Client& client, std::shared_ptr<Server>& server)
 {
 	LOG_DEBUG("readScriptOutput() called");
+	
 	char buffer[g_bufferSize];
 	ssize_t bytesRead;
-
+	ssize_t currPipeSize = 0;
+	
 	std::fill(buffer, buffer + g_bufferSize, 0);
 	while ((bytesRead = read(client.getChildPipe(_in), buffer, sizeof(buffer))) > 0)
 	{
+		currPipeSize += bytesRead;
+		if (currPipeSize >= _pipeMaxSize)
+		{
+			kill(client.getPid(), SIGTERM);
+			removeFromPids(client.getPid());
+			throw ProcessingError(502, {}, "Pipe overflowed");
+		}
 		LOG_DEBUG(TEXT_GREEN, "Populating response body with: ", bytesRead, RESET);
 		LOG_DEBUG(TEXT_GREEN, "Response body: ", buffer, RESET);
 		client.getRespBody().append(buffer, bytesRead);
@@ -296,7 +302,8 @@ bool CGIHandler::readScriptOutput(Client& client, std::shared_ptr<Server>& serve
 	
 	if (bytesRead < 0)
 	{
-		changeToErrorState(client);
+		kill(client.getPid(), SIGTERM);
+		removeFromPids(client.getPid());
 		throw ProcessingError(502, {}, "readScriptOutput() reading failed");
 	}
 	if (bytesRead != 0)

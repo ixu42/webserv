@@ -6,7 +6,7 @@
 /*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:11 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/06 15:11:47 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/13 00:18:54 by vshchuki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,7 +178,7 @@ int ConfigValidator::validateGeneralConfig(std::string generalConfig, std::vecto
 	std::regex linePattern(R"(\s*(ipAddress|port|serverName|clientMaxBodySize|error|cgis|)\s+[a-zA-Z0-9~\-_.,]+\s*[a-zA-Z0-9~\-_.,\/"' ]*\s*)");
 	std::map<std::string, std::regex> patterns = {
 		{"ipAddress", std::regex(R"(\s*ipAddress\s+((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}\s*)")},
-		{"port", std::regex(R"(\s*port\s+[0-9]+\s*)")},
+		{"port", std::regex(R"(\s*port\s+[0-9]{1,5}\s*)")},
 		{"serverName", std::regex(R"(\s*serverName\s+(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\s*)")},
 		{"clientMaxBodySize", std::regex(R"(\s*clientMaxBodySize\s+[1-9]+[0-9]*(G|M|K|B))")},
 		{"error", std::regex(R"(\s*error\s+[4-5][0-9]{2}(?:,[4-5][0-9]{2})*\s+((["'])*[^,]+(?:\.html|\.htm)(\2)*)\s*)")}

@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/02 13:17:21 by dnikifor          #+#    #+#             */
-/*   Updated: 2024/08/12 14:54:08 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/13 10:42:03 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,7 +153,7 @@ void CGIHandler::handleParentProcess(Client& client, const std::string& body)
 	}
 
 	close(client.getParentPipe(_out));
-	ServersManager::removeFromPollfd(client.getParentPipe(1));
+	ServersManager::removeFromPollfd(client.getParentPipe(_out));
 	client.setParentPipe(_out, -1);
 	
 	if (bytesRead == 0)
@@ -272,7 +272,7 @@ void CGIHandler::InitCGI(Client& client, std::vector<pollfd>& new_fds)
 			"method of CGIHandler class");
 	}
 
-	LOG_INFO("Pipes numbers: ",client.getParentPipe(_in)," ",client.getParentPipe(_out),
+	LOG_DEBUG("Pipes numbers: ",client.getParentPipe(_in)," ",client.getParentPipe(_out),
 		" ", client.getChildPipe(_in)," ",client.getChildPipe(_out));
 	
 	registerCGIPollFd(client.getChildPipe(_in), POLLIN, new_fds);
@@ -321,9 +321,6 @@ bool CGIHandler::readScriptOutput(Client& client, std::shared_ptr<Server>& serve
 	close(client.getChildPipe(_in));
 	unregisterCGIPollFd(*server, client.getChildPipe(_in));
 	client.setChildPipe(_in, -1);
-	close(client.getParentPipe(_out));
-	unregisterCGIPollFd(*server, client.getParentPipe(_out));
-	client.setParentPipe(_out, -1);
 	
 	auto it = std::find(g_childPids.begin(), g_childPids.end(), client.getPid());
 	if (it != g_childPids.end())

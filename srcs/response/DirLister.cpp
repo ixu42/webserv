@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   DirLister.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/11 23:15:53 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/05 13:17:14 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/13 10:48:51 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,7 +84,7 @@ std::shared_ptr<Response> DirLister::createDirListResponse(Location& location, s
 	std::string fileString = Utility::readFile(location.defaultListingTemplate);
 	std::stringstream htmlStream;
 
-	// Find the root for requstPath
+	// Find the root for requestPath
 	std::string root = location.root + requestPath.substr(location.path.length());
 
 	try

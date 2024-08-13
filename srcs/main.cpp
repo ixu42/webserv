@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/19 11:04:36 by ixu               #+#    #+#             */
-/*   Updated: 2024/08/05 13:26:05 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/13 10:46:13 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 std::atomic<bool>	g_signalReceived(false);
 std::vector<pid_t>	g_childPids;
 const size_t		g_bufferSize = 102400;
+const float			g_timeout = 15.0;
 
 int main(int argc, char *argv[])
 {

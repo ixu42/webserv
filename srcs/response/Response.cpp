@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:08:46 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/08 10:40:02 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/13 10:49:19 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,6 +104,7 @@ Response::Response(int code, std::string filePath, std::map<std::string, std::st
 
 	std::string fileContent;
 	size_t size = 0;
+	
 	// filePath can be empty for 3XX Status request as it does not require body
 	setStatusFromCode(code);
 	if (!filePath.empty())

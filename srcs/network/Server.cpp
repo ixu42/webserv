@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/20 11:20:56 by ixu               #+#    #+#             */
-/*   Updated: 2024/08/12 14:53:49 by dnikifor         ###   ########.fr       */
+/*   Updated: 2024/08/13 10:46:50 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -239,13 +239,12 @@ bool Server::handler(std::shared_ptr<Server> &server, Client &client)
 std::shared_ptr<Response> Server::createResponse(std::shared_ptr<Request> request, int code, std::map<std::string, std::string> optionalHeaders)
 {
 	LOG_DEBUG("createResponse() called");
-	// return new Response(code, findServerConfig(request), optionalHeaders);
 	return std::make_shared<Response>(code, findServerConfig(request), optionalHeaders);
 }
 
 bool Server::sendResponse(Client &client)
 {
-	size_t bytesToWrite = client.getResponseString().length(); // maybe copy to struct to optimize
+	size_t bytesToWrite = client.getResponseString().length();
 
 	// Calculate the remaining bytes to write
 	size_t remainingBytes = bytesToWrite - client.getTotalBytesWritten();
@@ -255,7 +254,7 @@ bool Server::sendResponse(Client &client)
 	ssize_t bytesWritten = write(client.getFd(), client.getResponseString().c_str() + client.getTotalBytesWritten(), bytesToWriteNow);
 	LOG_DEBUG(TEXT_GREEN, "Bytes written: ", bytesWritten, RESET);
 
-	if (bytesWritten == -1) // We can not use EAGAIN or EWOULDBLOCK here
+	if (bytesWritten == -1)
 		throw ProcessingError(500, {}, "sendResponse() writing failed");
 	client.setTotalBytesWritten(client.getTotalBytesWritten() + bytesWritten);
 	LOG_DEBUG(TEXT_GREEN, "client.totalBytesWritten: ", client.getTotalBytesWritten(), RESET);
@@ -415,13 +414,12 @@ void Server::validateRequest(Client &client)
 void Server::handleCGITimeout(Client &client)
 {
 	LOG_DEBUG("handleCGITimeout() called");
-	float timeout = 15.0;
 
 	auto cgiEnd = std::chrono::system_clock::now();
 
 	std::chrono::duration<double> elapsed_seconds = cgiEnd - client.getCgiStart();
 
-	if (elapsed_seconds.count() >= timeout && client.getCGIState() == Client::CGIState::FORKED)
+	if (elapsed_seconds.count() >= g_timeout && client.getCGIState() == Client::CGIState::FORKED)
 	{
 		LOG_WARNING("Cgi has been timeouted");
 		kill(client.getPid(), SIGTERM);

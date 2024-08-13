@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Utility.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: vshchuki <vshchuki@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/01 19:11:23 by vshchuki          #+#    #+#             */
-/*   Updated: 2024/08/06 15:32:04 by vshchuki         ###   ########.fr       */
+/*   Updated: 2024/08/13 10:49:53 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,7 +107,6 @@ std::string Utility::readFile(std::string filePath)
 
 	return ss.str();
 }
-
 
 // Date: Sun, 18 Oct 2012 10:36:20 GMT
 std::string Utility::getDate()
